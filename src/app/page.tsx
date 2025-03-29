@@ -18,7 +18,7 @@ const Home = () => {
             {status === 'loading'
               ? 'Loading...'
               : userName
-                ? `Welcome, ${userName}!`
+                ? `Welcome ${userName}!`
                 : 'Welcome to the Webinar'}
           </h1>
           <div className="w-full max-w-6xl">
