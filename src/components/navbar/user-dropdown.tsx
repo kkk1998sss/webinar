@@ -87,7 +87,7 @@ export const UserDropdown = ({ session: { user } }: { session: Session }) => {
           </Button> */}
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
+        <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
           <Icons.logOut className="mr-2 size-4" /> <span>{m.log_out()}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

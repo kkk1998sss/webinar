@@ -38,7 +38,7 @@ export const SignInButton = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {session?.user ? (
-          <DropdownMenuItem onClick={() => signOut()}>
+          <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/' })}>
             <Icons.logOut className="mr-2 size-4" /> {m.sign_out()}
           </DropdownMenuItem>
         ) : (
