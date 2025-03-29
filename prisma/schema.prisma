@@ -47,7 +47,7 @@ model User {
   image              String?
   stripeCustomerId   String?             @unique
   isActive           Boolean             @default(false)
-  isAdmin            Boolean             @default(false) // 👈 Add this field
+  isAdmin            Boolean             @default(false) 
   verificationTokens VerificationToken[]
   accounts           Account[]
   sessions           Session[]
