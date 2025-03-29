@@ -37,6 +37,7 @@ CREATE TABLE "User" (
     "image" TEXT,
     "stripeCustomerId" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT false,
+    "isAdmin" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );

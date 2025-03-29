@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (res?.error) {
         setError('Invalid email or password');
       } else {
-        router.push('/');
+        router.push('/users/live-webinar');
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -101,7 +101,7 @@ export default function LoginPage() {
       if (signInRes?.error) {
         setError('Login failed. Please try again.');
       } else {
-        router.push('/'); // Redirect on success
+        router.push('/users/live-webinar');
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -237,7 +237,7 @@ export default function LoginPage() {
 
       <p className="mt-4 text-center text-sm">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="text-blue-500 hover:underline">
+        <Link href="/auth/register" className="text-blue-500 hover:underline">
           Sign up
         </Link>
       </p>

@@ -17,6 +17,7 @@ module.exports = {
         endOfLine: 'auto',
       },
     ],
+    'jsx-a11y/media-has-caption': 'off',
     'sort-imports': 'off',
     'tailwindcss/no-custom-classname': 'off',
     '@typescript-eslint/no-var-requires': 'off',

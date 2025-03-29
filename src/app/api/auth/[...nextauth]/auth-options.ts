@@ -1,3 +1,4 @@
+import Google from '@auth/core/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import NextAuth from 'next-auth';
 import type { Adapter } from 'next-auth/adapters';
@@ -15,6 +16,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     GitHubProvider({
       clientId: env.GITHUB_ID,
       clientSecret: env.GITHUB_SECRET,
+    }),
+    Google({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
 
     CredentialsProvider({
@@ -61,30 +66,35 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id;
         token.name = user.name;
-        token.email = user.email;
+        token.email = user.email ?? undefined;
         token.image = user.image;
         token.isActive = user.isActive;
         token.stripeCustomerId = user.stripeCustomerId ?? null;
+
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email as string },
+          select: { isAdmin: true },
+        });
+        token.isAdmin = dbUser?.isAdmin || false;
       }
       return token;
     },
 
     async session({ session, token }) {
-      if (token) {
-        session.user = {
-          id: token.id ?? undefined, // Convert null to undefined
-          email: token.email,
-          name: token.name,
-          image: token.picture || null,
-          stripeCustomerId: token.stripeCustomerId ?? undefined,
-          isActive: token.isActive,
-        };
-      }
+      session.user = {
+        id: token.id ?? undefined,
+        email: token.email,
+        name: token.name,
+        image: token.picture || null,
+        stripeCustomerId: token.stripeCustomerId ?? undefined,
+        isActive: token.isActive,
+        isAdmin: token.isAdmin,
+      };
       return session;
     },
   },
 
-  pages: { signIn: '/login' },
+  pages: { signIn: '/auth/login' },
 
   events: {
     createUser: async ({ user }) => {

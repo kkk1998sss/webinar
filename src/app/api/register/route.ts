@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       data: {
         identifier: email,
         token: verificationToken,
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hours expiration
+        expires: new Date(Date.now() + 5 * 60 * 60 * 24),
         userId: user.id,
       },
     });
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const verificationLink = `${process.env.NEXT_PUBLIC_BASE_URL}/verify?token=${verificationToken}`;
+    const verificationLink = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/verify?token=${verificationToken}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,

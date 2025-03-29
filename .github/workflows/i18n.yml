@@ -5,8 +5,8 @@ on: pull_request_target
 
 permissions:
   pull-requests: write # Necessary to comment on PRs
-  issues: read         # Necessary to read issue comments
-  contents: read       # Necessary to access the repo content
+  issues: read # Necessary to read issue comments
+  contents: read # Necessary to access the repo content
 
 jobs:
   ninja-i18n:
@@ -19,4 +19,3 @@ jobs:
         uses: opral/ninja-i18n-action@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    

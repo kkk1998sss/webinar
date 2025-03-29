@@ -1,5 +1,5 @@
-
 ## 🎉 Features
+
 - 🚀 Next.js 15 (App router)
 - ⚛️ React 19
 - 📘 Typescript
@@ -8,7 +8,7 @@
 - 💵 Stripe - Payment handler
 - 🔒 Next-auth - Easy authentication library for Next.js (GitHub provider)
 - 🛡️ Prisma - ORM for node.js
-- 📋 React-hook-form - Manage your forms easy and efficient 
+- 📋 React-hook-form - Manage your forms easy and efficient
 - 🔍 Zod - Schema validation library
 - 🧪 Jest & React Testing Library - Configured for unit testing
 - 🎭 Playwright - Configured for e2e testing
@@ -26,11 +26,13 @@
 - 🌐 I18n with Paraglide
 
 ## 🚀 Deployment
+
 Easily deploy your Next.js app with <a href="https://vercel.com/">Vercel</a> by clicking the button below:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Skolaczk/next-starter)
 
 ## 🎯 Getting started
+
 ### 1. Clone this template in one of three ways
 
 1. Using this repository as template
@@ -42,12 +44,13 @@ Easily deploy your Next.js app with <a href="https://vercel.com/">Vercel</a> by 
    ```bash
    npx create-next-app -e https://github.com/Skolaczk/next-starter my-project-name
    ```
-    
+
 3. Using `git clone`
 
    ```bash
    git clone https://github.com/Skolaczk/next-starter my-project-name
    ```
+
 ### 2. Install dependencies
 
 ```bash
@@ -55,9 +58,11 @@ npm install
 ```
 
 ### 3. Set up environment variables
+
 Create `.env` file and set env variables from `.env.example` file.
 
 ### 4. Prepare husky
+
 It is required if you want husky to work
 
 ```bash
@@ -91,13 +96,15 @@ and open http://localhost:3000/ to see this app.
     ├── lib                         # Functions and utilities
     ├── styles                      # Styles folder
     ├── types                       # Type definitions
-    ├── messages                    # Messages for i18n 
-    ├── paraglide                   # (generated) compiled i18n messages 
+    ├── messages                    # Messages for i18n
+    ├── paraglide                   # (generated) compiled i18n messages
     └── env.mjs                     # Env variables config file
 ```
 
 ## ⚙️ Scripts overview
+
 The following scripts are available in the `package.json`:
+
 - `dev`: Run development server
 - `build`: Build the app
 - `start`: Run production server
@@ -115,10 +122,11 @@ The following scripts are available in the `package.json`:
 - `prepare`: Install Husky for managing Git hooks
 
 ## 🤝 Contribution
+
 To contribute, please follow these steps:
+
 1. Fork the repository.
 2. Create a new branch.
 3. Make your changes, and commit them.
 4. Push your changes to the forked repository.
 5. Create a pull request.
-

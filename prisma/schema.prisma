@@ -47,10 +47,12 @@ model User {
   image              String?
   stripeCustomerId   String?             @unique
   isActive           Boolean             @default(false)
+  isAdmin            Boolean             @default(false) // 👈 Add this field
   verificationTokens VerificationToken[]
   accounts           Account[]
   sessions           Session[]
 }
+
 
 model VerificationToken {
   id         String   @id @default(cuid()) // Add a primary key

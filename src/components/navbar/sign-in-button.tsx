@@ -52,7 +52,7 @@ export const SignInButton = () => {
             <DropdownMenuItem onClick={() => signIn('twitter')}>
               <Icons.twitter className="mr-2 size-4" /> {m.sign_in()} (Twitter)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/login')}>
+            <DropdownMenuItem onClick={() => router.push('/auth/login')}>
               <Icons.user className="mr-2 size-4" /> {m.sign_up()} (Email)
             </DropdownMenuItem>
           </>

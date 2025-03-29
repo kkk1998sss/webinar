@@ -1,4 +1,5 @@
 const { paraglide } = require('@inlang/paraglide-next/plugin');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -6,6 +7,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // ✅ Add Google profile image host
       },
     ],
   },

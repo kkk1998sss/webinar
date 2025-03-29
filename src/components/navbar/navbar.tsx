@@ -1,6 +1,7 @@
-import { LanguageSwitcher } from './language-switcher';
+'use client';
+import { signOut, useSession } from 'next-auth/react';
 
-import { auth } from '@/app/api/auth/[...nextauth]/auth-options';
+// import { LanguageSwitcher } from "./language-switcher";
 import { SignInButton } from '@/components/navbar/sign-in-button';
 import { SolutionsDropdown } from '@/components/navbar/solutions-dropdown';
 import { UseCasesDropdown } from '@/components/navbar/use-cases-dropdown';
@@ -8,8 +9,8 @@ import { UserDropdown } from '@/components/navbar/user-dropdown';
 import { Link } from '@/lib/i18n';
 import * as m from '@/paraglide/messages';
 
-export const Navbar = async () => {
-  const session = await auth();
+export const Navbar = () => {
+  const { data: session } = useSession(); // ✅ Use useSession() in client components
 
   const navItems = [
     { href: '/features', label: m.features() },
@@ -41,20 +42,32 @@ export const Navbar = async () => {
           <UseCasesDropdown />
         </nav>
 
-        {/* Right Section: Auth + Language Switcher */}
+        {/* Right Section: Auth + Language Switcher + Logout */}
         <div className="flex items-center gap-2">
           {session?.user ? (
-            session.user.image ? (
-              <UserDropdown session={session} />
-            ) : (
-              <span className="font-medium text-gray-700">
-                {session.user.name || 'User'}
-              </span>
-            )
+            <>
+              {session.user.image ? (
+                <UserDropdown session={session} />
+              ) : (
+                <span className="font-medium text-gray-700">
+                  {session.user.name || 'User'}
+                </span>
+              )}
+              {/* <LanguageSwitcher /> */}
+              {/* 🔴 Logout Button */}
+              <button
+                onClick={() => signOut()}
+                className="ml-2 rounded bg-red-500 px-3 py-2 text-white hover:bg-red-600"
+              >
+                Logout
+              </button>
+            </>
           ) : (
-            <SignInButton />
+            <>
+              <SignInButton />
+              {/* <LanguageSwitcher /> */}
+            </>
           )}
-          <LanguageSwitcher />
         </div>
       </div>
     </header>
