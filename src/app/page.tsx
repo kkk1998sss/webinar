@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 
 import { Footer } from '@/components/footer';
 import Pricing from '@/components/landing/Pricing';
+import Sells from '@/components/landing/Sells';
 import WebinarPage1 from '@/components/landing/WebinarPage1';
 
 const Home = () => {
@@ -23,6 +24,7 @@ const Home = () => {
           </h1>
           <div className="w-full max-w-6xl">
             <WebinarPage1 />
+            <Sells />
             <Pricing />
           </div>
         </div>
