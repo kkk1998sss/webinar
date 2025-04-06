@@ -11,13 +11,30 @@ import { Label } from '@/components/ui/label';
 const JustInTimeModal = ({
   open,
   onClose,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
+  onSave: (data: {
+    justInTimeEnabled: boolean;
+    selectedSession: string;
+  }) => void;
 }) => {
-  const [instantWatchEnabled, setInstantWatchEnabled] = useState(true);
+  const [justInTimeEnabled, setInstantWatchEnabled] = useState(true);
   const [selectedSession, setSelectedSession] = useState('Time');
   const options = ['1 min', '5 min', '1 hr'];
+
+  const handleJustInTimeSubmit = () => {
+    // const payload = {
+    //   justInTimeEnabled: instantWatchEnabled,
+    //   firstSessionAvailableIn: selectedSession,
+    // };
+
+    // console.log('Just In Time Payload:', payload);
+    // onClose();
+    onSave({ justInTimeEnabled, selectedSession });
+    onClose();
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
@@ -38,13 +55,13 @@ const JustInTimeModal = ({
           <div className="mt-4 flex items-center justify-between">
             <Label>Toggle Just In Time Session</Label>
             <Switch
-              checked={instantWatchEnabled}
+              checked={justInTimeEnabled}
               onCheckedChange={setInstantWatchEnabled}
               className="relative h-6 w-10 rounded-full bg-gray-300 transition"
             >
               <span
                 className={`absolute top-1 block size-4 rounded-full bg-white transition-all ${
-                  instantWatchEnabled
+                  justInTimeEnabled
                     ? 'translate-x-5 bg-blue-500'
                     : 'translate-x-1'
                 }`}
@@ -66,7 +83,10 @@ const JustInTimeModal = ({
             <Dialog.Close asChild>
               <Button variant="outline">Cancel</Button>
             </Dialog.Close>
-            <Button className="bg-blue-500 text-white" onClick={onClose}>
+            <Button
+              className="bg-blue-500 text-white"
+              onClick={handleJustInTimeSubmit}
+            >
               Save
             </Button>
           </div>

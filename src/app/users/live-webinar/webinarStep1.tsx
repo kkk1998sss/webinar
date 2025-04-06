@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import React from 'react';
 import { Switch } from '@radix-ui/react-switch';
+import { Trash } from 'lucide-react';
 
+import AddDateModal from '@/components/Models/AddDateModal';
 import InstantWatchModal from '@/components/Models/InstantWatchModal';
 import JustInTimeModal from '@/components/Models/JustInTime';
 import { Badge } from '@/components/ui/badge';
@@ -9,18 +11,19 @@ import { CardContent } from '@/components/ui/card';
 import CustomSelect from '@/components/ui/CustomSelect';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScheduledDate, WebinarFormData } from '@/types/user';
 
-const WebinarForm = () => {
-  const [webinarName, setWebinarName] = useState('');
-  const [webinarTitle, setWebinarTitle] = useState('');
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
-  const [attendeeSignIn, setAttendeeSignIn] = useState(false);
-  const [passwordProtected, setPasswordProtected] = useState(false);
-  const [webinarDate, setWebinarDate] = useState('');
-  const [webinarTime, setWebinarTime] = useState('');
-  const [selectedValue, setSelectedValue] = useState('Choose language');
+type WebinarFormProps = {
+  formData: WebinarFormData;
+  setFormData: React.Dispatch<React.SetStateAction<WebinarFormData>>;
+};
+const WebinarForm = ({ formData, setFormData }: WebinarFormProps) => {
+  const [isDateModalOpen, setIsDateModalOpen] = React.useState(false);
+  const [isInstantWatchModalOpen, setIsInstantWatchModalOpen] =
+    React.useState(false);
+  const [isJustInTimeModalOpen, setIsJustInTimeModalOpen] =
+    React.useState(false);
+
   const options = [
     'English',
     'Spanish',
@@ -44,39 +47,27 @@ const WebinarForm = () => {
     'Vietnamese',
   ];
 
-  const [brandImage, setBrandImage] = useState<File | null>(null);
-  const [scheduledDates, setScheduledDates] = useState<string[]>([]);
-  const [isInstantWatchModalOpen, setIsInstantWatchModalOpen] = useState(false);
-  const [isJustInTimeModalOpen, setIsJustInTimeModalOpen] = useState(false);
-  //   const [instantWatch, setInstantWatch] = useState<boolean>(true);
-  //   const [justInTime, setJustInTime] = useState<boolean>(true);
-  //   const [dateFormat, setDateFormat] = useState<string>(
-  //     'English (United States)'
-  //   );
-  const [instantWatch] = useState<boolean>(true);
-  const [justInTime] = useState<boolean>(true);
-  const [dateFormat] = useState<string>('English (United States)');
+  // const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = event.target.files;
+  //   if (files && files.length > 0) {
+  //     const file = files[0];
+  //     setFormData(
+  //       (prev: WebinarFormData): WebinarFormData => ({
+  //         ...prev,
+  //         brandImage: file.name,
+  //       })
+  //     );
+  //   }
+  // };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setBrandImage(event.target.files[0]);
-    }
-  };
-
-  const handleSubmit = () => {
-    const formData = {
-      webinarName,
-      webinarTitle,
-      duration: { hours, minutes, seconds },
-      attendeeSignIn,
-      passwordProtected,
-      webinarDate,
-      webinarTime,
-      selectedValue,
-      brandImage: brandImage ? brandImage.name : null,
-      scheduledDates,
-    };
-    console.log('Submitted Data:', formData);
+  const handleDeleteSchedule = (index: number) => {
+    const updated = formData.scheduledDates.filter((_, i) => i !== index);
+    setFormData(
+      (prev: WebinarFormData): WebinarFormData => ({
+        ...prev,
+        scheduledDates: updated,
+      })
+    );
   };
 
   return (
@@ -87,8 +78,13 @@ const WebinarForm = () => {
           <Input
             id="webinar-name"
             type="text"
-            value={webinarName}
-            onChange={(e) => setWebinarName(e.target.value)}
+            value={formData.webinarName || ''}
+            onChange={(e) =>
+              setFormData((prev: WebinarFormData) => ({
+                ...prev,
+                webinarName: e.target.value,
+              }))
+            }
           />
         </div>
 
@@ -97,28 +93,48 @@ const WebinarForm = () => {
           <Input
             id="webinar-title"
             type="text"
-            value={webinarTitle}
-            onChange={(e) => setWebinarTitle(e.target.value)}
+            value={formData.webinarTitle || ''}
+            onChange={(e) =>
+              setFormData((prev: WebinarFormData) => ({
+                ...prev,
+                webinarTitle: e.target.value,
+              }))
+            }
           />
         </div>
 
-        {/* Webinar Duration */}
         <div>
           <Label>Webinar Duration</Label>
           <div className="grid grid-cols-3 gap-4">
             <Input
               id="hours"
               type="number"
-              value={hours}
-              onChange={(e) => setHours(parseInt(e.target.value))}
+              value={formData.duration?.hours || 0}
+              onChange={(e) =>
+                setFormData((prev: WebinarFormData) => ({
+                  ...prev,
+                  duration: {
+                    ...prev.duration,
+                    hours: parseInt(e.target.value) || 0,
+                  },
+                }))
+              }
               min="0"
               placeholder="Hours"
             />
             <Input
               id="minutes"
               type="number"
-              value={minutes}
-              onChange={(e) => setMinutes(parseInt(e.target.value))}
+              value={formData.duration?.minutes || 0}
+              onChange={(e) =>
+                setFormData((prev: WebinarFormData) => ({
+                  ...prev,
+                  duration: {
+                    ...prev.duration,
+                    minutes: parseInt(e.target.value) || 0,
+                  },
+                }))
+              }
               min="0"
               max="59"
               placeholder="Minutes"
@@ -126,8 +142,16 @@ const WebinarForm = () => {
             <Input
               id="seconds"
               type="number"
-              value={seconds}
-              onChange={(e) => setSeconds(parseInt(e.target.value))}
+              value={formData.duration?.seconds || 0}
+              onChange={(e) =>
+                setFormData((prev: WebinarFormData) => ({
+                  ...prev,
+                  duration: {
+                    ...prev.duration,
+                    seconds: parseInt(e.target.value) || 0,
+                  },
+                }))
+              }
               min="0"
               max="59"
               placeholder="Seconds"
@@ -141,8 +165,13 @@ const WebinarForm = () => {
             <Input
               id="webinar-date"
               type="date"
-              value={webinarDate}
-              onChange={(e) => setWebinarDate(e.target.value)}
+              value={formData.webinarDate || ''}
+              onChange={(e) =>
+                setFormData((prev: WebinarFormData) => ({
+                  ...prev,
+                  webinarDate: e.target.value,
+                }))
+              }
             />
           </div>
           <div>
@@ -150,38 +179,77 @@ const WebinarForm = () => {
             <Input
               id="webinar-time"
               type="time"
-              value={webinarTime}
-              onChange={(e) => setWebinarTime(e.target.value)}
+              value={formData.webinarTime || ''}
+              onChange={(e) =>
+                setFormData((prev: WebinarFormData) => ({
+                  ...prev,
+                  webinarTime: e.target.value,
+                }))
+              }
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <Label>Attendee Sign-in</Label>
-          <Switch
-            checked={attendeeSignIn}
-            onCheckedChange={setAttendeeSignIn}
-          />
-        </div>
+        <div className="grid grid-cols-1 gap-4">
+          <div className="flex items-center justify-between rounded-lg bg-blue-100 p-4">
+            <Label className="font-medium text-gray-700">
+              Attendee Sign-in
+            </Label>
+            <div className="flex items-center gap-3">
+              <Badge
+                className={`rounded-full px-3 py-1 ${formData.attendeeSignIn ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}
+              >
+                {formData.attendeeSignIn ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Switch
+                checked={formData.attendeeSignIn}
+                onCheckedChange={(checked) => {
+                  //  setAttendeeSignIn(checked);
+                  setFormData((prev: WebinarFormData) => ({
+                    ...prev,
+                    attendeeSignIn: checked,
+                  }));
+                }}
+                className="relative h-6 w-12 rounded-full data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-400"
+              />
+            </div>
+          </div>
 
-        <div className="flex items-center justify-between">
-          <Label>Password Protection</Label>
-          <Switch
-            checked={passwordProtected}
-            onCheckedChange={setPasswordProtected}
-          />
+          <div className="flex items-center justify-between rounded-lg bg-blue-100 p-4">
+            <Label className="font-medium text-gray-700">
+              Password Protection
+            </Label>
+            <div className="flex items-center gap-3">
+              <Badge
+                className={`rounded-full px-3 py-1 ${formData.passwordProtected ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}
+              >
+                {formData.passwordProtected ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Switch
+                checked={formData.passwordProtected}
+                onCheckedChange={(checked) => {
+                  // setPasswordProtected(checked);
+                  setFormData((prev: WebinarFormData) => ({
+                    ...prev,
+                    passwordProtected: checked,
+                  }));
+                }}
+                className="relative h-6 w-12 rounded-full data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-gray-400"
+              />
+            </div>
+          </div>
         </div>
 
         <div>
           <Label htmlFor="brand-image">Brand Image</Label>
-          <Input
+          {/* <Input
             id="brand-image"
             type="file"
             accept="image/*"
             onChange={handleFileChange}
-          />
+          /> */}
           <span className="text-sm text-gray-500">
-            {brandImage ? brandImage.name : 'No file chosen'}
+            {formData.brandImage || 'No file chosen'}
           </span>
         </div>
 
@@ -190,7 +258,7 @@ const WebinarForm = () => {
             <Label>
               Instant Watch{' '}
               <Badge className="mr-2 rounded-full bg-blue-100 text-blue-800">
-                {instantWatch ? 'Enabled' : 'Disabled'}
+                {formData.instantWatch ? 'Enabled' : 'Disabled'}
               </Badge>
             </Label>
             <Button
@@ -202,13 +270,20 @@ const WebinarForm = () => {
             <InstantWatchModal
               open={isInstantWatchModalOpen}
               onClose={() => setIsInstantWatchModalOpen(false)}
+              onSave={(data) =>
+                setFormData((prev: WebinarFormData) => ({
+                  ...prev,
+                  instantWatch: data.instantWatchEnabled,
+                  instantWatchSession: data.selectedSession,
+                }))
+              }
             />
           </div>
           <div className="flex items-center justify-between">
             <Label>
               Just-in-time Sessions{' '}
               <Badge className="mr-2 rounded-full bg-blue-100 text-blue-800">
-                {justInTime ? 'Enabled' : 'Disabled'}
+                {formData.justInTime ? 'Enabled' : 'Disabled'}
               </Badge>
             </Label>
             <Button
@@ -220,62 +295,83 @@ const WebinarForm = () => {
             <JustInTimeModal
               open={isJustInTimeModalOpen}
               onClose={() => setIsJustInTimeModalOpen(false)}
+              onSave={(data) =>
+                setFormData((prev: WebinarFormData) => ({
+                  ...prev,
+                  justInTime: data.justInTimeEnabled,
+                  justInTimeSession: data.selectedSession,
+                }))
+              }
             />
           </div>
         </div>
 
         <div className="flex items-center justify-between">
-          <Label>
-            Date format{' '}
-            <Badge className="mr-2 rounded-full bg-blue-100 text-blue-800">
-              {dateFormat}
-            </Badge>
-          </Label>
+          <Label>Date format</Label>
           <CustomSelect
-            value={selectedValue}
-            onChange={setSelectedValue}
+            value={formData.selectedValue || 'Choose language'}
+            onChange={(value) =>
+              setFormData((prev: WebinarFormData) => ({
+                ...prev,
+                selectedValue: value,
+              }))
+            }
             options={options}
             width="w-80"
           />
         </div>
 
-        <div>
+        <div className="flex items-center justify-between">
           <Label>Scheduled Webinar Dates</Label>
-          {scheduledDates.length === 0 ? (
-            <p className="text-sm text-gray-500">No dates scheduled.</p>
-          ) : (
-            <ul className="list-disc pl-5 text-gray-700">
-              {scheduledDates.map((date, index) => (
-                <li key={index}>{date}</li>
-              ))}
-            </ul>
-          )}
           <Button
-            variant="outline"
-            className="mt-2"
-            onClick={() =>
-              setScheduledDates([...scheduledDates, new Date().toDateString()])
-            }
+            onClick={() => setIsDateModalOpen(true)}
+            className="bg-yellow-200 text-yellow-700 hover:bg-yellow-600 hover:text-white"
           >
             Add Date
           </Button>
+          <AddDateModal
+            open={isDateModalOpen}
+            onClose={() => setIsDateModalOpen(false)}
+            onSave={(newDate: ScheduledDate) => {
+              const updated = [...(formData.scheduledDates || []), newDate];
+              setFormData((prev: WebinarFormData) => ({
+                ...prev,
+                scheduledDates: updated,
+              }));
+            }}
+          />
         </div>
 
-        <div className="mt-6 flex items-center justify-between gap-3">
-          <div className="gap-3">
-            <Button className=" bg-red-200 text-red-700 hover:bg-red-600 hover:text-white">
-              Delete
-            </Button>
-            <Button className="bg-green-200 text-green-700 hover:bg-green-600 hover:text-white">
-              Clone
-            </Button>
-          </div>
-          <Button
-            className="bg-blue-600 text-white hover:bg-blue-200 hover:text-blue-600"
-            onClick={handleSubmit}
-          >
-            Save Webinar
-          </Button>
+        <div>
+          {formData.scheduledDates?.length > 0 ? (
+            <div className="w-full rounded-lg bg-blue-100 p-4 shadow-sm">
+              <ul className="space-y-2">
+                {formData.scheduledDates.map(
+                  (schedule: ScheduledDate, index: number) => (
+                    <li
+                      key={index}
+                      className="flex items-center justify-between rounded-md bg-white p-3 shadow-sm"
+                    >
+                      <span className="text-md font-medium text-gray-700">
+                        {schedule.date} - {schedule.time} {schedule.period} (
+                        {schedule.timeZone})
+                      </span>
+                      <button
+                        onClick={() => handleDeleteSchedule(index)}
+                        className="text-red-600 transition duration-200 hover:text-red-800"
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          ) : (
+            <p className="w-full rounded-lg bg-blue-100 p-4 text-center text-gray-600 shadow-sm">
+              No dates scheduled.
+            </p>
+          )}
         </div>
       </div>
     </CardContent>

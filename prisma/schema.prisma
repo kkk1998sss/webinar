@@ -72,3 +72,44 @@ model Otp {
   otp         String
   expires     DateTime
 }
+
+model WebinarDetails {
+  id                  String  @id @default(uuid())
+  webinarSettingsId   String? @unique  // Add @unique here
+  webinarSettings     WebinarSettings? @relation(fields: [webinarSettingsId], references: [id])
+
+  webinarName         String
+  webinarTitle        String
+  durationHours       Int
+  durationMinutes     Int
+  durationSeconds     Int
+  attendeeSignIn      Boolean
+  passwordProtected   Boolean
+  webinarDate         DateTime
+  webinarTime         String?
+  selectedLanguage    String?
+  brandImage          String?
+  instantWatchEnabled Boolean
+  instantWatchSession String?
+  justInTimeEnabled   Boolean
+  justInTimeSession   String?
+  scheduledDates      Json?
+  createdAt           DateTime @default(now())
+}
+
+
+model WebinarSettings {
+  id                 String   @id @default(uuid())
+  name               String?
+  emailNotifications Json?
+  textNotifications  Json?
+  integration        String?
+  sharingEnabled     Boolean  @default(false)
+  sharingName        String?
+  sharingUrl         String?
+  createdAt          DateTime @default(now())
+  registrants        Int      @default(0)
+  attendees          Int      @default(0)
+  status             String?   @default("Active")
+  webinarDetails     WebinarDetails?
+}

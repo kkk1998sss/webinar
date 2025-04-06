@@ -11,9 +11,14 @@ import { Label } from '@/components/ui/label';
 const InstantWatchModal = ({
   open,
   onClose,
+  onSave,
 }: {
   open: boolean;
   onClose: () => void;
+  onSave: (data: {
+    instantWatchEnabled: boolean;
+    selectedSession: string;
+  }) => void;
 }) => {
   const [instantWatchEnabled, setInstantWatchEnabled] = useState(true);
   const [selectedSession, setSelectedSession] = useState('session-1');
@@ -22,6 +27,18 @@ const InstantWatchModal = ({
     'Instant watch session 2',
     'Instant watch session 3',
   ];
+
+  const handleInstantWatchSubmit = () => {
+    // const payload = {
+    //   instantWatchEnabled,
+    //   selectedSession,
+    // };
+
+    // console.log('Instant Watch Payload:', payload);
+    // onClose();
+    onSave({ instantWatchEnabled, selectedSession });
+    onClose();
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
@@ -74,7 +91,10 @@ const InstantWatchModal = ({
             <Dialog.Close asChild>
               <Button variant="outline">Cancel</Button>
             </Dialog.Close>
-            <Button className="bg-blue-500 text-white" onClick={onClose}>
+            <Button
+              className="bg-blue-500 text-white"
+              onClick={handleInstantWatchSubmit}
+            >
               Save
             </Button>
           </div>

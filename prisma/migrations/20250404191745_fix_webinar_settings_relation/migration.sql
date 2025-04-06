@@ -63,6 +63,49 @@ CREATE TABLE "Otp" (
     CONSTRAINT "Otp_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "WebinarDetails" (
+    "id" TEXT NOT NULL,
+    "webinarSettingsId" TEXT,
+    "webinarName" TEXT NOT NULL,
+    "webinarTitle" TEXT NOT NULL,
+    "durationHours" INTEGER NOT NULL,
+    "durationMinutes" INTEGER NOT NULL,
+    "durationSeconds" INTEGER NOT NULL,
+    "attendeeSignIn" BOOLEAN NOT NULL,
+    "passwordProtected" BOOLEAN NOT NULL,
+    "webinarDate" TIMESTAMP(3) NOT NULL,
+    "webinarTime" TEXT,
+    "selectedLanguage" TEXT,
+    "brandImage" TEXT,
+    "instantWatchEnabled" BOOLEAN NOT NULL,
+    "instantWatchSession" TEXT,
+    "justInTimeEnabled" BOOLEAN NOT NULL,
+    "justInTimeSession" TEXT,
+    "scheduledDates" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "WebinarDetails_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WebinarSettings" (
+    "id" TEXT NOT NULL,
+    "name" TEXT,
+    "emailNotifications" JSONB,
+    "textNotifications" JSONB,
+    "integration" TEXT,
+    "sharingEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "sharingName" TEXT,
+    "sharingUrl" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "registrants" INTEGER NOT NULL DEFAULT 0,
+    "attendees" INTEGER NOT NULL DEFAULT 0,
+    "status" TEXT DEFAULT 'Active',
+
+    CONSTRAINT "WebinarSettings_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE INDEX "Account_userId_idx" ON "Account"("userId");
 
@@ -96,6 +139,9 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 -- CreateIndex
 CREATE UNIQUE INDEX "Otp_phoneNumber_key" ON "Otp"("phoneNumber");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "WebinarDetails_webinarSettingsId_key" ON "WebinarDetails"("webinarSettingsId");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -104,3 +150,6 @@ ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "VerificationToken" ADD CONSTRAINT "VerificationToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WebinarDetails" ADD CONSTRAINT "WebinarDetails_webinarSettingsId_fkey" FOREIGN KEY ("webinarSettingsId") REFERENCES "WebinarSettings"("id") ON DELETE SET NULL ON UPDATE CASCADE;
