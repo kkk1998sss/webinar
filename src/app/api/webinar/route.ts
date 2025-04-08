@@ -159,6 +159,7 @@ export async function GET() {
         createdAt: 'desc',
       },
     });
+    console.log('webinars', webinars);
 
     return NextResponse.json({ success: true, webinars }, { status: 200 });
   } catch (error) {

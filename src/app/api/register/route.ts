@@ -89,3 +89,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
+export async function GET() {
+  try {
+    const users = await prisma.user.findMany({
+      // orderBy: {
+      //   createdAt: 'desc', // 👈 Now this should work
+      // },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+        isActive: true,
+        // createdAt: true,
+      },
+    });
+
+    return NextResponse.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch users' },
+      { status: 500 }
+    );
+  }
+}

@@ -20,7 +20,6 @@ import { WebinarFormData } from '@/types/user';
 
 export default function WebinarSetupPage() {
   const [currentStep, setCurrentStep] = useState(0);
-
   const [formData, setFormData] = useState<WebinarFormData>({
     webinarId: '',
     webinarName: '',
@@ -36,7 +35,7 @@ export default function WebinarSetupPage() {
     instantWatchSession: '',
     justInTime: false,
     justInTimeSession: '',
-    scheduledDates: [], // ✅ Correct type
+    scheduledDates: [],
 
     emailNotifications: {
       confirmation: true,
@@ -67,6 +66,7 @@ export default function WebinarSetupPage() {
 
         if (response.ok) {
           alert('Webinar created!');
+          window.location.reload();
         } else {
           alert('Failed to create webinar.');
         }
