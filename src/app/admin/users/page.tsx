@@ -59,6 +59,7 @@ export default function UsersPage() {
             <table className="w-full rounded border border-gray-200 text-sm text-gray-700">
               <thead className="bg-gray-100">
                 <tr>
+                  <th className="p-3 text-left">S.No</th>
                   <th className="px-4 py-2 text-left">Name</th>
                   <th className="px-4 py-2 text-left">Email</th>
                   <th className="px-4 py-2 text-left">Phone</th>
@@ -67,11 +68,12 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {users.map((user, index) => (
                   <tr
                     key={user.id}
                     className="border-t transition hover:bg-gray-50"
                   >
+                    <td className="p-3">{index + 1}</td>
                     <td className="px-4 py-3">{user.name}</td>
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">{user.phoneNumber}</td>

@@ -7,11 +7,20 @@ import * as Popover from '@radix-ui/react-popover';
 import * as Separator from '@radix-ui/react-separator';
 import Link from 'next/link';
 
+type ScheduledDate = {
+  date: string;
+  time: string;
+  period: string;
+  timeZone: string;
+};
+
 type Webinar = {
   id: string;
   webinarName: string;
   webinarTitle: string;
   webinarDate: string;
+  selectedLanguage?: string;
+  scheduledDates?: ScheduledDate[];
   createdAt: string;
 };
 
@@ -64,22 +73,38 @@ export default function WebinarList() {
           <table className="min-w-full rounded-md border bg-white text-sm shadow-md">
             <thead>
               <tr className="bg-gray-100 text-xs uppercase text-gray-700">
+                <th className="p-3 text-left">S.No</th>
                 <th className="p-3 text-left">Title</th>
                 <th className="p-3 text-left">Name</th>
-                <th className="p-3 text-left">Date</th>
+                <th className="p-3 text-left">Webinar Date</th>
+                <th className="p-3 text-left">Language</th>
+                <th className="p-3 text-left">Schedule(s)</th>
                 <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {webinars.map((webinar) => (
+              {webinars.map((webinar, index) => (
                 <tr
                   key={webinar.id}
                   className="border-t transition hover:bg-gray-50"
                 >
+                  <td className="p-3">{index + 1}</td>
                   <td className="p-3">{webinar.webinarTitle}</td>
                   <td className="p-3">{webinar.webinarName}</td>
                   <td className="p-3">
                     {new Date(webinar.webinarDate).toLocaleDateString()}
+                  </td>
+                  <td className="p-3">{webinar.selectedLanguage || '—'}</td>
+
+                  <td className="whitespace-pre-wrap p-3">
+                    {Array.isArray(webinar.scheduledDates)
+                      ? webinar.scheduledDates
+                          .map(
+                            (s: ScheduledDate) =>
+                              `${s.date} ${s.time} ${s.period} (${s.timeZone})`
+                          )
+                          .join('\n')
+                      : '—'}
                   </td>
                   <td className="flex items-center gap-4 p-3">
                     <Link

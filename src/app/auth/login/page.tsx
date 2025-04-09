@@ -36,7 +36,7 @@ export default function LoginPage() {
       if (res?.error) {
         setError('Invalid email or password');
       } else {
-        router.push('/users/live-webinar');
+        router.push('/admin/users');
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -101,7 +101,7 @@ export default function LoginPage() {
       if (signInRes?.error) {
         setError('Login failed. Please try again.');
       } else {
-        router.push('/users/live-webinar');
+        router.push('/admin/users');
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
