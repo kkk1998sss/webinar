@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaStar } from 'react-icons/fa';
 import Image from 'next/image';
+// import webinarImg1 from './../../../public/assets/webinar 1 (3).jpg'
 
 export default function WebinarPage1() {
   return (
@@ -25,13 +26,13 @@ export default function WebinarPage1() {
           <div className="mt-8 flex justify-center lg:mt-0 lg:w-1/2">
             <div className="relative h-[220px] w-[380px] sm:h-[240px] sm:w-[420px] md:h-[260px] md:w-[450px]">
               <Image
-                src="/webinar-thumbnail.png"
+                src="/assets/webinar 1 (3).jpg"
                 layout="fill"
                 objectFit="cover"
                 className="rounded-md"
                 alt="Webinar Thumbnail"
               />
-              <button className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 p-3 shadow-md">
+              <button className="absolute left-1/2 top-1/2 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-500 shadow-md">
                 ▶
               </button>
             </div>

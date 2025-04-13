@@ -5,7 +5,7 @@ const WebinarkitSectionBuild = () => {
   return (
     <section className="flex flex-col items-start justify-between gap-10 bg-white px-6 py-16 md:flex-row md:px-16">
       {/* Left Section - Text */}
-      <div className="md:w-1/2">
+      <div className="text-left md:w-1/2">
         <h1 className="mb-6 text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
           Build Automated Webinars <br /> & Virtual Events That Sell <br /> for
           You 24/7
@@ -52,7 +52,7 @@ const WebinarkitSectionBuild = () => {
               WebinarKit
             </div>
             <Image
-              src="/image.png"
+              src="/assets/webinar 1 (2).jpg"
               alt="Webinar Preview"
               width={800}
               height={450}

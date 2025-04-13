@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { EyeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { getSession, signIn } from 'next-auth/react';
 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,10 +35,19 @@ export default function LoginPage() {
         password,
       });
 
+      console.log('response', res);
+
       if (res?.error) {
         setError('Invalid email or password');
       } else {
-        router.push('/admin/users');
+        const session = await getSession();
+        console.log('session', session);
+
+        if (session?.user?.isAdmin) {
+          router.push('/admin/users');
+        } else {
+          router.push('/users/live-webinar');
+        }
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -155,19 +166,31 @@ export default function LoginPage() {
             />
           </div>
 
-          <div>
+          <div className="relative">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-[70%] -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
+            </button>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-blue-200 text-blue-700 hover:bg-blue-500 hover:text-white"
+          >
             {isLoading ? 'Signing In...' : 'Sign In'}
           </Button>
         </form>

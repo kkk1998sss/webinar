@@ -7,7 +7,7 @@ export default function WebinarKitSection() {
       {/* Illustration */}
       <div className="mb-10 w-full md:mb-0 md:w-1/2">
         <Image
-          src="/images/webinarkit-illustration.png"
+          src="/assets/webinar 1 (4).jpg"
           alt="WebinarKit Illustration"
           width={600}
           height={400}

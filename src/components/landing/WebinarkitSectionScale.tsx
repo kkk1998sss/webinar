@@ -7,7 +7,7 @@ const WebinarkitSectionScale = () => {
   return (
     <section className="flex flex-col items-start justify-between gap-10 bg-white px-6 py-16 md:flex-row md:px-16">
       {/* Left Content */}
-      <div className="md:w-1/2">
+      <div className="text-left md:w-1/2">
         <h2 className="mb-6 text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
           Scale Without Limits — Unlimited Webinars, Registrants & Attendees
         </h2>
@@ -49,7 +49,7 @@ const WebinarkitSectionScale = () => {
               WebinarKit
             </div>
             <Image
-              src="/image.png" // Ensure this image is placed inside your public/ folder
+              src="/assets/webinar 1 (3).jpg" // Ensure this image is placed inside your public/ folder
               alt="Webinar Preview"
               width={800}
               height={450}

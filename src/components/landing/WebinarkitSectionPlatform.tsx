@@ -12,7 +12,7 @@ const WebinarkitSectionPlatform = () => {
               WebinarKit
             </div>
             <Image
-              src="/image.png"
+              src="/assets/webinar 1 (1).jpg"
               alt="Webinar Preview"
               width={800}
               height={450}
@@ -30,7 +30,7 @@ const WebinarkitSectionPlatform = () => {
       </div>
 
       {/* Right Image Card */}
-      <div className="md:w-1/2">
+      <div className="text-left md:w-1/2">
         <h2 className="mb-6 text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
           The Only Platform Designed for <br className="hidden md:block" />
           Maximum Leads, Attendees & Conversions

@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 export type TUser = {
   id: string;
   email: string;
@@ -51,3 +53,54 @@ export type WebinarFormData = {
     url: string;
   };
 };
+
+export interface Webinar {
+  id: string;
+  webinarName: string;
+  webinarTitle: string;
+  createdAt: string;
+  webinarDate: string;
+  selectedLanguage: string;
+  webinarTime: string;
+  durationHours: number;
+  durationMinutes: number;
+  durationSeconds: number;
+  brandImage: string;
+  instantWatchEnabled: boolean;
+  instantWatchSession: string;
+  justInTimeEnabled: boolean;
+  justInTimeSession: string;
+  passwordProtected: boolean;
+  scheduledDates: {
+    date: string;
+    time: string;
+    period: string;
+    timeZone: string;
+  }[];
+  webinarSettings: {
+    id: string;
+    name: string;
+    attendees: number;
+    registrants: number;
+    status: string;
+    integration: string;
+    emailNotifications: {
+      confirmation: boolean;
+      oneDayReminder: boolean;
+      thirtyMinuteReminder: boolean;
+    };
+    textNotifications: {
+      confirmation: boolean;
+      oneDayReminder: boolean;
+      thirtyMinuteReminder: boolean;
+    };
+    sharingEnabled: boolean;
+    sharingName: string;
+    sharingUrl: string;
+  };
+  // Custom renderable fields
+  title?: ReactNode;
+  attendees?: ReactNode;
+  status?: ReactNode;
+  webinarPageUrl?: string; // optional if needed for dynamic redirect
+}

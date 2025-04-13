@@ -1,7 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MoreVertical } from 'lucide-react';
+import {
+  compareAsc,
+  compareDesc,
+  differenceInSeconds,
+  format,
+  isFuture,
+  isPast,
+  isToday,
+  isValid,
+  parse,
+  parseISO,
+} from 'date-fns';
+import { useRouter } from 'next/navigation';
 
 import WebinarSetupPage from './webinarsetup1';
 
@@ -12,18 +24,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-interface Webinar {
-  id: string;
-  webinarName: string;
-  webinarTitle: string;
-  createdAt: string;
-  webinarSettings: {
-    registrants: number;
-    attendees: number;
-    status: string;
-  };
-}
+import WebinarTable from '@/components/WebinarTable';
+import { Webinar } from '@/types/user';
 
 interface Session {
   user?: {
@@ -36,7 +38,8 @@ export default function WebinarDashboard({ session }: { session: Session }) {
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [loading, setLoading] = useState(true);
   const [openWebinars, setOpenWebinars] = useState<string[]>([]);
-
+  const [countdown, setCountdown] = useState<string>('');
+  const router = useRouter();
   useEffect(() => {
     const fetchWebinars = async () => {
       try {
@@ -60,6 +63,74 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     setOpenWebinars((prev) => [...prev, type]);
   };
 
+  const todaysWebinars = webinars
+    .filter((w) => isToday(parseISO(w.webinarDate)))
+    .sort((a, b) =>
+      compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+    );
+
+  const upcomingWebinars = webinars
+    .filter(
+      (w) =>
+        isFuture(parseISO(w.webinarDate)) && !isToday(parseISO(w.webinarDate))
+    )
+    .sort((a, b) =>
+      compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+    );
+
+  const pastWebinars = webinars
+    .filter(
+      (w) =>
+        isPast(parseISO(w.webinarDate)) && !isToday(parseISO(w.webinarDate))
+    )
+    .sort((a, b) =>
+      compareDesc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+    );
+
+  // Countdown timer logic
+  const getCountdown = (webinarDate: string, webinarTime: string) => {
+    const parsedDate = parseISO(webinarDate);
+    const datePart = format(parsedDate, 'yyyy-MM-dd');
+    const combined = `${datePart} ${webinarTime}`;
+    const finalDate = parse(combined, 'yyyy-MM-dd HH:mm', new Date());
+
+    if (!isValid(finalDate)) {
+      return 'Invalid webinar date/time';
+    }
+
+    const now = new Date();
+    const diffSeconds = differenceInSeconds(finalDate, now);
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    const diffHours = Math.floor(diffMinutes / 60);
+    const remainingMinutes = diffMinutes % 60;
+    const remainingSeconds = diffSeconds % 60;
+
+    if (diffSeconds <= 0) {
+      return 'Already started';
+    }
+
+    return `${diffHours}:${remainingMinutes}:${remainingSeconds}`;
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (todaysWebinars.length > 0) {
+        setCountdown(
+          getCountdown(
+            todaysWebinars[0].webinarDate,
+            todaysWebinars[0].webinarTime
+          )
+        );
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [todaysWebinars]);
+
+  const handleJoinWebinar = (id: string) => {
+    // Redirect to the webinar page or open a modal
+    router.push(`/playing-area/${id}`); // assuming you're using Next.js
+  };
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="container mx-auto px-6 py-10">
@@ -123,7 +194,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           (!loading && webinars.length === 0 ? (
             <div className="rounded-md border bg-white py-20 text-center shadow-md">
               <p className="text-lg text-gray-700">
-                {`You haven't created any awesome webinars yet 😞`}
+                {`You haven't created any awesome webinars yet 😞`}{' '}
               </p>
               <p className="mt-2 text-gray-500">
                 All your webinars will appear on this screen. Try creating a new
@@ -140,49 +211,85 @@ export default function WebinarDashboard({ session }: { session: Session }) {
               )}
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {webinars.map((webinar) => (
-                <div
-                  key={webinar.id}
-                  className="relative rounded-lg bg-white p-4 shadow-md"
-                >
-                  <div className="absolute right-2 top-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="size-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem>Edit webinar</DropdownMenuItem>
-                        <DropdownMenuItem>Get links</DropdownMenuItem>
-                        <DropdownMenuItem>View analytics</DropdownMenuItem>
-                        <DropdownMenuItem>View chat history</DropdownMenuItem>
-                        <DropdownMenuItem>Edit tags</DropdownMenuItem>
-                        <DropdownMenuItem>Clone webinar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
-                          Delete webinar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            <div className="grid gap-4">
+              <div className="p-6">
+                {/* Calendar-style date header */}
+                <div className="flex w-full">
+                  {/* Left 1/3 */}
+                  <div className="w-1/3">
+                    <div className="mb-6 text-center">
+                      <h2 className="text-3xl font-bold text-gray-800">
+                        {format(new Date(), 'eeee, MMMM do yyyy')}
+                      </h2>
+                      <p className="text-gray-500">Webinar Schedule</p>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold">
-                    {webinar.webinarTitle}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    {webinar.webinarSettings?.registrants || 0} registrants,{' '}
-                    {webinar.webinarSettings?.attendees || 0} attendees
-                  </p>
-                  <div className="mt-2 flex gap-2">
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                      Automated
-                    </span>
-                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                      {webinar.webinarSettings?.status || 'Active'}
-                    </span>
+
+                  {/* Right 2/3 */}
+                  <div className="w-2/3 space-y-4 px-4 text-sm">
+                    {/* Today's Webinars */}
+                    {todaysWebinars.length > 0 && (
+                      <section>
+                        <h3 className="mb-3 text-xl font-semibold text-blue-600">
+                          {`Today's Webinars`}
+                        </h3>
+                        <div className="flex flex-wrap gap-4">
+                          {todaysWebinars.map((webinar) => (
+                            <div
+                              key={webinar.id}
+                              className="w-full rounded-lg border border-gray-200 bg-white p-4 shadow-md sm:w-1/2 md:w-1/3"
+                            >
+                              <h3 className="text-xl font-semibold text-gray-800">
+                                {webinar.webinarTitle}
+                              </h3>
+                              <p className="flex justify-between gap-2">
+                                <span className="font-medium">Time:</span>
+                                <span className="text-blue-600">
+                                  {webinar.webinarTime}
+                                </span>
+                              </p>
+                              <p className="flex justify-between gap-2">
+                                <span className="font-medium">Starts in:</span>
+                                <span className="text-blue-400">
+                                  {getCountdown(
+                                    webinar.webinarDate,
+                                    webinar.webinarTime
+                                  )}
+                                </span>
+                                <span className="text-blue-500">
+                                  {countdown}
+                                </span>
+                              </p>
+
+                              {/* Join Now Button */}
+                              <button
+                                className="mt-4 w-full rounded bg-green-300 px-4 py-2 font-semibold text-green-800 hover:bg-green-400"
+                                onClick={() => handleJoinWebinar(webinar.id)}
+                              >
+                                Join Now
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    )}
                   </div>
                 </div>
-              ))}
+
+                {/* Tables */}
+                <WebinarTable
+                  title="📅 Today’s Webinars"
+                  webinars={todaysWebinars}
+                />
+                <WebinarTable
+                  title="🔮 Upcoming Webinars"
+                  webinars={upcomingWebinars}
+                />
+                <WebinarTable
+                  title="🕰 Past Webinars"
+                  webinars={pastWebinars}
+                />
+              </div>
             </div>
           ))}
       </main>

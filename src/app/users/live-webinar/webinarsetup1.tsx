@@ -8,11 +8,7 @@ import WebinarStep2 from './webinarStep2';
 import WebinarStep3 from './webinarStep3';
 import WebinarSettings from './webinarStep4';
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from '@/components/ui/breadcrumb';
+import { Breadcrumb, BreadcrumbItem } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ProgressBar from '@/components/ui/ProgressBar';
@@ -87,13 +83,13 @@ export default function WebinarSetupPage() {
       <div className="p-4 md:p-6">
         <Breadcrumb>
           <BreadcrumbItem>
-            <BreadcrumbLink
-              href="/users/live-webinar"
+            <button
+              onClick={() => window.location.reload()}
               className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
             >
               <ArrowLeft className="size-4" />
               Back to dashboard
-            </BreadcrumbLink>
+            </button>
           </BreadcrumbItem>
         </Breadcrumb>
 

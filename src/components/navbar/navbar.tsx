@@ -1,4 +1,8 @@
 'use client';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { DropdownMenuPortal } from '@radix-ui/react-dropdown-menu';
+import { DashboardIcon, ExitIcon } from '@radix-ui/react-icons';
+import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 
 import { SignInButton } from '@/components/navbar/sign-in-button';
@@ -12,6 +16,7 @@ import * as m from '@/paraglide/messages';
 
 export const Navbar = () => {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const navItems = [
     { href: '/features', label: m.features() },
@@ -47,17 +52,69 @@ export const Navbar = () => {
               {session.user.image ? (
                 <UserDropdown session={session} />
               ) : (
-                <span className="font-medium text-gray-700">
-                  {session.user.name || 'User'}
-                </span>
+                <DropdownMenu.Root>
+                  <DropdownMenu.Trigger asChild>
+                    <button className="flex size-10 items-center justify-center rounded-full bg-blue-100 text-sm font-medium text-blue-800 hover:bg-blue-200">
+                      <span className="font-medium text-blue-800">
+                        {session.user.name
+                          ? session.user.name
+                              .split(' ')
+                              .map((n: string) => n.charAt(0).toUpperCase())
+                              .join('')
+                          : 'U'}
+                      </span>
+                    </button>
+                  </DropdownMenu.Trigger>
+
+                  <DropdownMenuPortal>
+                    <DropdownMenu.DropdownMenuContent
+                      className="min-w-[220px] rounded-md border bg-white p-2 shadow-lg"
+                      sideOffset={5}
+                    >
+                      {/* Profile Preview */}
+                      <div className="mb-1 border-b px-2 py-1.5">
+                        <p className="truncate text-sm font-semibold text-blue-800">
+                          {session.user.name}
+                        </p>
+                        <p className="truncate text-xs text-gray-500">
+                          {session.user.email}
+                        </p>
+                      </div>
+
+                      {/* Menu Items */}
+                      <DropdownMenu.DropdownMenuItem
+                        // onClick={() => router.push('/admin/users')}
+                        onClick={() => {
+                          if (session?.user?.isAdmin === true) {
+                            router.push('/admin/users');
+                          } else {
+                            router.push('/users/live-webinar');
+                          }
+                        }}
+                        className="group flex cursor-pointer items-center gap-2 rounded p-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        <DashboardIcon className="size-4 text-gray-500 group-hover:text-gray-700" />
+                        Dashboard
+                      </DropdownMenu.DropdownMenuItem>
+
+                      <DropdownMenu.DropdownMenuItem
+                        onClick={() => signOut({ callbackUrl: '/' })}
+                        className="group flex cursor-pointer items-center gap-2 rounded p-2 text-sm text-red-600 hover:bg-red-100"
+                      >
+                        <ExitIcon className="size-4 text-red-500 group-hover:text-red-600" />
+                        Logout
+                      </DropdownMenu.DropdownMenuItem>
+                    </DropdownMenu.DropdownMenuContent>
+                  </DropdownMenuPortal>
+                </DropdownMenu.Root>
               )}
               {/* <LanguageSwitcher /> */}
-              <button
+              {/* <button
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="ml-2 rounded bg-red-500 px-3 py-2 text-white hover:bg-red-600"
               >
                 Logout
-              </button>
+              </button> */}
             </>
           ) : (
             <>
