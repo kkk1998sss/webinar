@@ -27,6 +27,13 @@ export type NotificationState = {
   oneDayReminder: boolean;
   thirtyMinuteReminder: boolean;
 };
+export type VideoUploadData = {
+  id: string;
+  // file: File;
+  title: string;
+  url?: string;
+  publicId?: string;
+};
 // types/user.ts
 export type WebinarFormData = {
   webinarId: string;
@@ -52,9 +59,11 @@ export type WebinarFormData = {
     name: string;
     url: string;
   };
+  videoUploads: VideoUploadData[];
 };
 
 export interface Webinar {
+  resources: Resource[];
   id: string;
   webinarName: string;
   webinarTitle: string;
@@ -98,9 +107,22 @@ export interface Webinar {
     sharingName: string;
     sharingUrl: string;
   };
+  video: {
+    id: string;
+    // file: File;
+    title: string;
+    url?: string;
+    publicId?: string;
+  };
   // Custom renderable fields
   title?: ReactNode;
   attendees?: ReactNode;
   status?: ReactNode;
   webinarPageUrl?: string; // optional if needed for dynamic redirect
 }
+
+export type Resource = {
+  name: string;
+  url: string;
+  type?: 'pdf' | 'doc' | 'ppt' | 'image'; // Optional type specifier
+};

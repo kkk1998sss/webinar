@@ -3,7 +3,7 @@ interface ProgressBarProps {
 }
 
 export default function ProgressBar({ currentStep }: ProgressBarProps) {
-  const steps = ['Details', 'Register', 'Watch', 'Other'];
+  const steps = ['Details', 'Video upload', 'Watch', 'Other'];
 
   return (
     <div className="relative mb-12 px-4 md:px-6">

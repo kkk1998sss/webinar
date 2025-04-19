@@ -75,7 +75,7 @@ model Otp {
 
 model WebinarDetails {
   id                  String  @id @default(uuid())
-  webinarSettingsId   String? @unique  // Add @unique here
+  webinarSettingsId   String? @unique
   webinarSettings     WebinarSettings? @relation(fields: [webinarSettingsId], references: [id])
 
   webinarName         String
@@ -89,12 +89,16 @@ model WebinarDetails {
   webinarTime         String?
   selectedLanguage    String?
   brandImage          String?
-  instantWatchEnabled Boolean
+  instantWatchEnabled Boolean @default(false)
   instantWatchSession String?
   justInTimeEnabled   Boolean
   justInTimeSession   String?
   scheduledDates      Json?
   createdAt           DateTime @default(now())
+
+  video               Video?  @relation(fields: [videoId], references: [id])
+  videoId             String? @unique
+  resources           Json?
 }
 
 
@@ -112,4 +116,14 @@ model WebinarSettings {
   attendees          Int      @default(0)
   status             String?   @default("Active")
   webinarDetails     WebinarDetails?
+}
+
+model Video {
+  id              String   @id @default(uuid())
+  title           String?
+  url             String?
+  publicId        String?
+  createdAt       DateTime @default(now())
+
+  webinarDetails  WebinarDetails?
 }

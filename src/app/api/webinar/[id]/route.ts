@@ -14,6 +14,7 @@ export async function GET(
       where: { id },
       include: {
         webinarSettings: true,
+        video: true,
       },
     });
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ClipLoader } from 'react-spinners';
 import { format, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
 
@@ -8,9 +9,14 @@ import { Webinar } from '@/types/user';
 interface WebinarTableProps {
   title: string;
   webinars: Webinar[];
+  loading: boolean;
 }
 
-const WebinarTable: React.FC<WebinarTableProps> = ({ title, webinars }) => {
+const WebinarTable: React.FC<WebinarTableProps> = ({
+  title,
+  webinars,
+  loading,
+}) => {
   const router = useRouter();
 
   return (
@@ -39,7 +45,16 @@ const WebinarTable: React.FC<WebinarTableProps> = ({ title, webinars }) => {
             </tr>
           </thead>
           <tbody>
-            {webinars.length === 0 ? (
+            {loading ? ( // Add loading state
+              <tr>
+                <td className="p-3 text-center" colSpan={15}>
+                  <div className="flex items-center justify-center gap-2">
+                    <ClipLoader size={18} color="#000" />
+                    Loading webinars...
+                  </div>
+                </td>
+              </tr>
+            ) : webinars.length === 0 ? (
               <tr>
                 <td className="p-3 italic text-gray-500" colSpan={15}>
                   No webinars found.

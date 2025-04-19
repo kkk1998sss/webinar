@@ -78,12 +78,13 @@ CREATE TABLE "WebinarDetails" (
     "webinarTime" TEXT,
     "selectedLanguage" TEXT,
     "brandImage" TEXT,
-    "instantWatchEnabled" BOOLEAN NOT NULL,
+    "instantWatchEnabled" BOOLEAN NOT NULL DEFAULT false,
     "instantWatchSession" TEXT,
     "justInTimeEnabled" BOOLEAN NOT NULL,
     "justInTimeSession" TEXT,
     "scheduledDates" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "videoId" TEXT,
 
     CONSTRAINT "WebinarDetails_pkey" PRIMARY KEY ("id")
 );
@@ -104,6 +105,17 @@ CREATE TABLE "WebinarSettings" (
     "status" TEXT DEFAULT 'Active',
 
     CONSTRAINT "WebinarSettings_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Video" (
+    "id" TEXT NOT NULL,
+    "title" TEXT,
+    "url" TEXT,
+    "publicId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Video_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -142,6 +154,9 @@ CREATE UNIQUE INDEX "Otp_phoneNumber_key" ON "Otp"("phoneNumber");
 -- CreateIndex
 CREATE UNIQUE INDEX "WebinarDetails_webinarSettingsId_key" ON "WebinarDetails"("webinarSettingsId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "WebinarDetails_videoId_key" ON "WebinarDetails"("videoId");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -153,3 +168,6 @@ ALTER TABLE "VerificationToken" ADD CONSTRAINT "VerificationToken_userId_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "WebinarDetails" ADD CONSTRAINT "WebinarDetails_webinarSettingsId_fkey" FOREIGN KEY ("webinarSettingsId") REFERENCES "WebinarSettings"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WebinarDetails" ADD CONSTRAINT "WebinarDetails_videoId_fkey" FOREIGN KEY ("videoId") REFERENCES "Video"("id") ON DELETE SET NULL ON UPDATE CASCADE;

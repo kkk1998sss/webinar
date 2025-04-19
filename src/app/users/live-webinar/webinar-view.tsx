@@ -128,8 +128,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
   }, [todaysWebinars]);
 
   const handleJoinWebinar = (id: string) => {
-    // Redirect to the webinar page or open a modal
-    router.push(`/playing-area/${id}`); // assuming you're using Next.js
+    router.push(`/users/playing-area/${id}`);
   };
   return (
     <div className="min-h-screen bg-gray-100">
@@ -215,7 +214,6 @@ export default function WebinarDashboard({ session }: { session: Session }) {
               <div className="p-6">
                 {/* Calendar-style date header */}
                 <div className="flex w-full">
-                  {/* Left 1/3 */}
                   <div className="w-1/3">
                     <div className="mb-6 text-center">
                       <h2 className="text-3xl font-bold text-gray-800">
@@ -225,7 +223,6 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     </div>
                   </div>
 
-                  {/* Right 2/3 */}
                   <div className="w-2/3 space-y-4 px-4 text-sm">
                     {/* Today's Webinars */}
                     {todaysWebinars.length > 0 && (
@@ -280,14 +277,17 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                 <WebinarTable
                   title="📅 Today’s Webinars"
                   webinars={todaysWebinars}
+                  loading={loading}
                 />
                 <WebinarTable
                   title="🔮 Upcoming Webinars"
                   webinars={upcomingWebinars}
+                  loading={loading}
                 />
                 <WebinarTable
                   title="🕰 Past Webinars"
                   webinars={pastWebinars}
+                  loading={loading}
                 />
               </div>
             </div>

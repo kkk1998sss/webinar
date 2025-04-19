@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import WebinarStep1 from './webinarStep1';
 import WebinarStep2 from './webinarStep2';
@@ -16,6 +17,7 @@ import { WebinarFormData } from '@/types/user';
 
 export default function WebinarSetupPage() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<WebinarFormData>({
     webinarId: '',
     webinarName: '',
@@ -32,7 +34,7 @@ export default function WebinarSetupPage() {
     justInTime: false,
     justInTimeSession: '',
     scheduledDates: [],
-
+    videoUploads: [],
     emailNotifications: {
       confirmation: true,
       oneDayReminder: true,
@@ -53,6 +55,7 @@ export default function WebinarSetupPage() {
 
   const nextStep = async () => {
     if (currentStep === 3) {
+      setLoading(true);
       try {
         const response = await fetch('/api/webinar', {
           method: 'POST',
@@ -69,6 +72,8 @@ export default function WebinarSetupPage() {
       } catch (error) {
         console.error(error);
         alert('Error submitting webinar.');
+      } finally {
+        setLoading(false);
       }
     } else {
       setCurrentStep((prev) => Math.min(prev + 1, 3));
@@ -115,8 +120,8 @@ export default function WebinarSetupPage() {
           )}
 
           {currentStep === 1 && (
-            // <WebinarStep2 formData={formData} setFormData={setFormData} />
-            <WebinarStep2 />
+            <WebinarStep2 formData={formData} setFormData={setFormData} />
+            // <WebinarStep2 />
           )}
 
           {currentStep === 2 && <WebinarStep3 />}
@@ -136,8 +141,18 @@ export default function WebinarSetupPage() {
             <Button
               onClick={nextStep}
               className="bg-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white"
+              disabled={loading}
             >
-              {currentStep === 3 ? 'Submit' : 'Next'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  {currentStep === 3 ? 'Submitting...' : 'Loading...'}
+                </>
+              ) : currentStep === 3 ? (
+                'Submit'
+              ) : (
+                'Next'
+              )}
             </Button>
           </div>
         </CardContent>
