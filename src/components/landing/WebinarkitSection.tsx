@@ -6,12 +6,10 @@ import Link from 'next/link';
 export default function WebinarKitSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-white to-blue-50 px-6 py-20 md:px-20">
-      {/* Background decorative elements */}
       <div className="absolute -right-20 -top-20 size-80 rounded-full bg-blue-100 opacity-30 blur-3xl"></div>
       <div className="absolute -bottom-20 -left-20 size-80 rounded-full bg-indigo-100 opacity-30 blur-3xl"></div>
 
       <div className="relative flex flex-col items-center justify-between gap-12 md:flex-row">
-        {/* Illustration */}
         <motion.div
           className="w-full md:w-1/2"
           initial={{ opacity: 0, x: -50 }}
