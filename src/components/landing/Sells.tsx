@@ -5,7 +5,7 @@ import { FaDollarSign, FaLayerGroup, FaToggleOn } from 'react-icons/fa';
 
 export default function WebinarFeatures() {
   return (
-    <section className="w-full bg-white px-4 py-16 md:px-20">
+    <section id="features" className="w-full bg-white px-4 py-16 md:px-20">
       <div className="grid grid-cols-1 gap-12 text-center md:grid-cols-3 md:text-left">
         {/* Block 1 */}
         <div>

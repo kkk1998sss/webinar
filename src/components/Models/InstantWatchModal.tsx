@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Switch } from '@radix-ui/react-switch';
-import { X } from 'lucide-react';
-
-import CustomSelect from '../ui/CustomSelect';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Check, ChevronRight, Clock, Play, X, Zap } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const InstantWatchModal = ({
   open,
@@ -20,84 +26,239 @@ const InstantWatchModal = ({
     selectedSession: string;
   }) => void;
 }) => {
-  const [instantWatchEnabled, setInstantWatchEnabled] = useState(true);
-  const [selectedSession, setSelectedSession] = useState('session-1');
+  const [instantWatchEnabled, setInstantWatchEnabled] = useState(false);
+  const [selectedSession, setSelectedSession] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const options = [
-    'Instant watch session 1',
-    'Instant watch session 2',
-    'Instant watch session 3',
-  ];
+    { value: 'instant-watch-1', label: 'Instant Watch Session 1' },
+    { value: 'instant-watch-2', label: 'Instant Watch Session 2' },
+    { value: 'instant-watch-3', label: 'Instant Watch Session 3' },
+    { value: 'instant-watch-4', label: 'Instant Watch Session 4' },
+    { value: 'instant-watch-5', label: 'Instant Watch Session 5' },
+    { value: 'instant-watch-6', label: 'Instant Watch Session 6' },
+    { value: 'instant-watch-7', label: 'Instant Watch Session 7' },
+    { value: 'instant-watch-8', label: 'Instant Watch Session 8' },
+    { value: 'instant-watch-9', label: 'Instant Watch Session 9' },
+    { value: 'instant-watch-10', label: 'Instant Watch Session 10' },
+  ] as const;
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (open) {
+      setShowSuccess(false);
+      setIsSaving(false);
+    }
+  }, [open]);
 
   const handleInstantWatchSubmit = () => {
-    // const payload = {
-    //   instantWatchEnabled,
-    //   selectedSession,
-    // };
+    setIsSaving(true);
 
-    // console.log('Instant Watch Payload:', payload);
-    // onClose();
-    onSave({ instantWatchEnabled, selectedSession });
-    onClose();
+    // Simulate saving with a delay
+    setTimeout(() => {
+      onSave({ instantWatchEnabled, selectedSession });
+      setIsSaving(false);
+      setShowSuccess(true);
+
+      // Close modal after showing success
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    }, 800);
   };
 
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6 shadow-lg">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b pb-2">
-            <Dialog.Title className="text-lg font-semibold">
-              Instant Watch Settings
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <button className="text-gray-600 hover:text-black">
-                <X size={20} />
-              </button>
-            </Dialog.Close>
-          </div>
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[450px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-white shadow-2xl">
+          <AnimatePresence>
+            {showSuccess ? (
+              <motion.div
+                className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 p-8 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <motion.div
+                  className="mb-4 flex size-16 items-center justify-center rounded-full bg-green-500"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                >
+                  <Check className="size-8 text-white" />
+                </motion.div>
+                <motion.h3
+                  className="mb-2 text-xl font-bold text-green-800"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  Settings Saved!
+                </motion.h3>
+                <motion.p
+                  className="text-green-700"
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  Your Instant Watch settings have been updated successfully.
+                </motion.p>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Header */}
+                <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
+                  <div className="absolute -right-4 -top-4 size-24 rounded-full bg-white/10" />
+                  <div className="absolute -bottom-4 -left-4 size-16 rounded-full bg-white/10" />
+                  <div className="relative flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="rounded-lg bg-white/20 p-2">
+                        <Clock className="size-5" />
+                      </div>
+                      <Dialog.Title className="text-lg font-semibold">
+                        Instant Watch Settings
+                      </Dialog.Title>
+                    </div>
+                    <Dialog.Close asChild>
+                      <motion.button
+                        className="rounded-full bg-white/20 p-1 text-white hover:bg-white/30"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <X size={18} />
+                      </motion.button>
+                    </Dialog.Close>
+                  </div>
+                </div>
 
-          {/* Toggle Instant Watch Session */}
-          <div className="mt-4 flex items-center justify-between">
-            <Label>Toggle Instant Watch Session</Label>
-            <Switch
-              checked={instantWatchEnabled}
-              onCheckedChange={setInstantWatchEnabled}
-              className="relative h-6 w-10 rounded-full bg-gray-300 transition"
-            >
-              <span
-                className={`absolute top-1 block size-4 rounded-full bg-white transition-all ${
-                  instantWatchEnabled
-                    ? 'translate-x-5 bg-blue-500'
-                    : 'translate-x-1'
-                }`}
-              />
-            </Switch>
-          </div>
+                <div className="p-6">
+                  {/* Feature Card */}
+                  <motion.div
+                    className="mb-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-4 shadow-sm"
+                    whileHover={{ scale: 1.01 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-lg bg-blue-100 p-2">
+                        <Zap className="size-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-800">
+                          Instant Watch
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Allow viewers to watch your webinar immediately
+                          without waiting for the scheduled time.
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
 
-          {/* Session Dropdown */}
-          <div className="mt-4 flex items-center justify-between">
-            <Label>Session</Label>
-            <CustomSelect
-              value={selectedSession}
-              onChange={setSelectedSession}
-              options={options}
-              width="w-60"
-            />
-          </div>
+                  {/* Toggle Instant Watch Session */}
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-blue-100 p-2">
+                          <Play className="size-4 text-blue-600" />
+                        </div>
+                        <Label className="font-medium">
+                          Enable Instant Watch
+                        </Label>
+                      </div>
+                      <Switch
+                        checked={instantWatchEnabled}
+                        onCheckedChange={setInstantWatchEnabled}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          instantWatchEnabled ? 'bg-blue-500' : 'bg-gray-300'
+                        }`}
+                      >
+                        <motion.span
+                          className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
+                            instantWatchEnabled
+                              ? 'translate-x-5'
+                              : 'translate-x-0'
+                          }`}
+                        />
+                      </Switch>
+                    </div>
+                  </div>
 
-          {/* Action Buttons */}
-          <div className="mt-6 flex justify-end gap-2">
-            <Dialog.Close asChild>
-              <Button variant="outline">Cancel</Button>
-            </Dialog.Close>
-            <Button
-              className="bg-blue-500 text-white"
-              onClick={handleInstantWatchSubmit}
-            >
-              Save
-            </Button>
-          </div>
+                  {/* Session Selection */}
+                  <div className="mb-6">
+                    <Label className="mb-2 block text-sm font-medium text-gray-700">
+                      Select Session
+                    </Label>
+                    <Select
+                      value={selectedSession}
+                      onValueChange={setSelectedSession}
+                    >
+                      <SelectTrigger>
+                        <SelectValue value={selectedSession} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Select a session</SelectItem>
+                        {options.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-6 flex justify-end gap-3">
+                    <Dialog.Close asChild>
+                      <Button
+                        variant="outline"
+                        className="border-gray-300 hover:bg-gray-100"
+                      >
+                        Cancel
+                      </Button>
+                    </Dialog.Close>
+                    <motion.button
+                      className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white ${
+                        isSaving
+                          ? 'bg-blue-400'
+                          : 'bg-blue-600 hover:bg-blue-700'
+                      }`}
+                      onClick={handleInstantWatchSubmit}
+                      disabled={isSaving}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      {isSaving ? (
+                        <>
+                          <motion.div
+                            className="size-4 rounded-full border-2 border-white border-t-transparent"
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: 'linear',
+                            }}
+                          />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Save Changes</span>
+                          <ChevronRight className="size-4" />
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

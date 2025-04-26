@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EyeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons';
+import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSession, signIn } from 'next-auth/react';
@@ -22,6 +23,11 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsPageLoaded(true);
+  }, []);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,144 +132,459 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mx-auto mt-10 max-w-md rounded-lg bg-white p-6 shadow-md">
-      <h2 className="mb-4 text-center text-2xl font-semibold">Sign In</h2>
-
-      {error && <p className="mb-2 text-center text-red-500">{error}</p>}
-
-      {/* Toggle Between Email & Phone Login */}
-      <div className="mb-4 flex justify-center space-x-4">
-        <button
-          className={`rounded-md px-4 py-2 ${
-            loginMethod === 'email' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-          }`}
-          onClick={() => setLoginMethod('email')}
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4 py-12 sm:px-6 lg:px-8">
+      <motion.div
+        className="w-full max-w-md"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: isPageLoaded ? 1 : 0, y: isPageLoaded ? 0 : 20 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          className="overflow-hidden rounded-2xl bg-white shadow-xl"
+          initial={{ scale: 0.95 }}
+          animate={{ scale: isPageLoaded ? 1 : 0.95 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Email Login
-        </button>
-        <button
-          className={`rounded-md px-4 py-2 ${
-            loginMethod === 'phone' ? 'bg-blue-500 text-white' : 'bg-gray-200'
-          }`}
-          onClick={() => setLoginMethod('phone')}
-        >
-          Phone Login
-        </button>
-      </div>
-
-      {/* Email & Password Login Form */}
-      {loginMethod === 'email' && (
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="relative">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-[70%] -translate-y-1/2 text-gray-500 hover:text-gray-700"
-              tabIndex={-1}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">
+            <motion.h2
+              className="text-2xl font-bold"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isPageLoaded ? 1 : 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
             >
-              {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
-            </button>
-          </div>
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-blue-200 text-blue-700 hover:bg-blue-500 hover:text-white"
-          >
-            {isLoading ? 'Signing In...' : 'Sign In'}
-          </Button>
-        </form>
-      )}
-
-      {/* Phone Number + OTP Login */}
-      {loginMethod === 'phone' && (
-        <form onSubmit={handlePhoneLogin} className="space-y-4">
-          <div>
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              type="text"
-              placeholder="+1234567890"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              required
-            />
-          </div>
-
-          {!otpSent ? (
-            <Button
-              type="button"
-              onClick={handleRequestOTP}
-              disabled={isLoading}
-              className="w-full"
+              Welcome Back
+            </motion.h2>
+            <motion.p
+              className="mt-1 text-blue-100"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isPageLoaded ? 1 : 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
             >
-              {isLoading ? 'Sending OTP...' : 'Send OTP'}
-            </Button>
-          ) : (
-            <>
-              <div>
-                <Label htmlFor="otp">Enter OTP</Label>
-                <Input
-                  id="otp"
-                  type="text"
-                  placeholder="123456"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  required
-                />
-              </div>
+              Sign in to continue to your account
+            </motion.p>
+          </div>
 
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? 'Verifying OTP...' : 'Verify & Login'}
-              </Button>
-            </>
-          )}
-        </form>
-      )}
+          <div className="p-6">
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div
+                  className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-      <div className="my-4 text-center">
-        <span className="text-sm">Or sign in with</span>
-      </div>
+            {/* Toggle Between Email & Phone Login */}
+            <motion.div
+              className="mb-6 flex justify-center space-x-2 rounded-lg bg-gray-100 p-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isPageLoaded ? 1 : 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <motion.button
+                className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  loginMethod === 'email'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={() => setLoginMethod('email')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Email Login
+              </motion.button>
+              <motion.button
+                className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  loginMethod === 'phone'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                onClick={() => setLoginMethod('phone')}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Phone Login
+              </motion.button>
+            </motion.div>
 
-      <div className="flex justify-center space-x-3">
-        <Button variant="outline" onClick={() => signIn('github')}>
-          <Icons.github className="mr-2 size-4" /> GitHub
-        </Button>
-        <Button variant="outline" onClick={() => signIn('google')}>
-          <Icons.google className="mr-2 size-4" /> Google
-        </Button>
-        <Button variant="outline" onClick={() => signIn('twitter')}>
-          <Icons.twitter className="mr-2 size-4" /> Twitter
-        </Button>
-      </div>
+            {/* Email & Password Login Form */}
+            <AnimatePresence mode="wait">
+              {loginMethod === 'email' && (
+                <motion.form
+                  onSubmit={handleEmailLogin}
+                  className="space-y-5"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                  >
+                    <Label
+                      htmlFor="email"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Email
+                    </Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <motion.div
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: email ? '100%' : 0 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                  </motion.div>
 
-      <p className="mt-4 text-center text-sm">
-        Don&apos;t have an account?{' '}
-        <Link href="/auth/register" className="text-blue-500 hover:underline">
-          Sign up
-        </Link>
-      </p>
+                  <motion.div
+                    className="relative"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2 }}
+                  >
+                    <Label
+                      htmlFor="password"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Password
+                    </Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <motion.div
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: password ? '100%' : 0 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                      <motion.button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        tabIndex={-1}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
+                      </motion.button>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
+                  >
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center justify-center">
+                          <motion.div
+                            className="mr-2"
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: 'linear',
+                            }}
+                          >
+                            <svg
+                              className="size-5 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          </motion.div>
+                          <span>Signing In...</span>
+                        </div>
+                      ) : (
+                        'Sign In'
+                      )}
+                    </Button>
+                  </motion.div>
+                </motion.form>
+              )}
+
+              {/* Phone Number + OTP Login */}
+              {loginMethod === 'phone' && (
+                <motion.form
+                  onSubmit={handlePhoneLogin}
+                  className="space-y-5"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.1 }}
+                  >
+                    <Label
+                      htmlFor="phone"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      Phone Number
+                    </Label>
+                    <div className="relative mt-1">
+                      <Input
+                        id="phone"
+                        type="text"
+                        placeholder="+1234567890"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <motion.div
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: phoneNumber ? '100%' : 0 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                  </motion.div>
+
+                  {!otpSent ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                    >
+                      <Button
+                        type="button"
+                        onClick={handleRequestOTP}
+                        disabled={isLoading}
+                        className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center justify-center">
+                            <motion.div
+                              className="mr-2"
+                              animate={{ rotate: 360 }}
+                              transition={{
+                                duration: 1,
+                                repeat: Infinity,
+                                ease: 'linear',
+                              }}
+                            >
+                              <svg
+                                className="size-5 text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                ></circle>
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                ></path>
+                              </svg>
+                            </motion.div>
+                            <span>Sending OTP...</span>
+                          </div>
+                        ) : (
+                          'Send OTP'
+                        )}
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.2 }}
+                      >
+                        <Label
+                          htmlFor="otp"
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          Enter OTP
+                        </Label>
+                        <div className="relative mt-1">
+                          <Input
+                            id="otp"
+                            type="text"
+                            placeholder="123456"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            required
+                            className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                          />
+                          <motion.div
+                            className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                            initial={{ width: 0 }}
+                            animate={{ width: otp ? '100%' : 0 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </div>
+                      </motion.div>
+
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.3 }}
+                      >
+                        <Button
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                        >
+                          {isLoading ? (
+                            <div className="flex items-center justify-center">
+                              <motion.div
+                                className="mr-2"
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: 'linear',
+                                }}
+                              >
+                                <svg
+                                  className="size-5 text-white"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                  ></path>
+                                </svg>
+                              </motion.div>
+                              <span>Verifying OTP...</span>
+                            </div>
+                          ) : (
+                            'Verify & Login'
+                          )}
+                        </Button>
+                      </motion.div>
+                    </>
+                  )}
+                </motion.form>
+              )}
+            </AnimatePresence>
+
+            <motion.div
+              className="my-6 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isPageLoaded ? 1 : 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <span className="text-sm text-gray-500">Or sign in with</span>
+            </motion.div>
+
+            <motion.div
+              className="flex justify-center space-x-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{
+                opacity: isPageLoaded ? 1 : 0,
+                y: isPageLoaded ? 0 : 10,
+              }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <motion.button
+                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50"
+                whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => signIn('github')}
+              >
+                <Icons.github className="size-5" />
+              </motion.button>
+              <motion.button
+                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50"
+                whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => signIn('google')}
+              >
+                <Icons.google className="size-5" />
+              </motion.button>
+              <motion.button
+                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50"
+                whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => signIn('twitter')}
+              >
+                <Icons.twitter className="size-5" />
+              </motion.button>
+            </motion.div>
+
+            <motion.p
+              className="mt-6 text-center text-sm text-gray-600"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isPageLoaded ? 1 : 0 }}
+              transition={{ duration: 0.5, delay: 0.7 }}
+            >
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/auth/register"
+                className="font-medium text-blue-600 transition-colors hover:text-blue-800 hover:underline"
+              >
+                Sign up
+              </Link>
+            </motion.p>
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

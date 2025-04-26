@@ -51,20 +51,20 @@ model User {
   verificationTokens VerificationToken[]
   accounts           Account[]
   sessions           Session[]
+  payments           Payment[]   @relation("UserPayments")
+  subscriptions      Subscription[]
 }
 
-
 model VerificationToken {
-  id         String   @id @default(cuid()) // Add a primary key
-  identifier String   @unique // Can store email or phone
+  id         String   @id @default(cuid())
+  identifier String   @unique
   token      String   @unique
   expires    DateTime
-  userId     String? // Optional: Link to User model
+  userId     String?
   user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([identifier, token])
 }
-
 
 model Otp {
   id          String   @id @default(uuid())
@@ -77,7 +77,6 @@ model WebinarDetails {
   id                  String  @id @default(uuid())
   webinarSettingsId   String? @unique
   webinarSettings     WebinarSettings? @relation(fields: [webinarSettingsId], references: [id])
-
   webinarName         String
   webinarTitle        String
   durationHours       Int
@@ -95,12 +94,11 @@ model WebinarDetails {
   justInTimeSession   String?
   scheduledDates      Json?
   createdAt           DateTime @default(now())
-
   video               Video?  @relation(fields: [videoId], references: [id])
   videoId             String? @unique
   resources           Json?
+  payments            Payment[] @relation("WebinarPayments")
 }
-
 
 model WebinarSettings {
   id                 String   @id @default(uuid())
@@ -114,7 +112,7 @@ model WebinarSettings {
   createdAt          DateTime @default(now())
   registrants        Int      @default(0)
   attendees          Int      @default(0)
-  status             String?   @default("Active")
+  status             String?  @default("Active")
   webinarDetails     WebinarDetails?
 }
 
@@ -124,6 +122,54 @@ model Video {
   url             String?
   publicId        String?
   createdAt       DateTime @default(now())
-
   webinarDetails  WebinarDetails?
+}
+
+model Payment {
+  id                  String           @id @default(uuid())
+  razorpayOrderId     String           @unique
+  razorpayPaymentId   String?          @unique
+  razorpaySignature   String?
+  amount              Float
+  currency            String
+  status              String           @default("created")
+  planType            String
+  user                User             @relation(fields: [userId], references: [id], name: "UserPayments")
+  userId              String
+  webinar             WebinarDetails?  @relation(fields: [webinarId], references: [id], name: "WebinarPayments")
+  webinarId           String?
+  createdAt           DateTime         @default(now())
+  subscription        Subscription?    @relation(name: "PaymentSubscription")
+}
+
+enum SubscriptionType {
+  FOUR_DAY
+  SIX_MONTH
+}
+
+model Subscription {
+  id              String           @id @default(uuid())
+  user            User             @relation(fields: [userId], references: [id])
+  userId          String
+  type            SubscriptionType
+  startDate       DateTime         @default(now())
+  endDate         DateTime
+  payment         Payment          @relation(fields: [paymentId], references: [id], name: "PaymentSubscription")
+  paymentId       String           @unique
+  unlockedContent Json?
+  isActive        Boolean          @default(true)
+}
+
+model Content {
+  id              String      @id @default(uuid())
+  title           String
+  description     String
+  type            String      @default("FULL_ACCESS")
+  unlockDate      DateTime?
+  expiryDays      Int?
+  accessDuration  Int?
+  isPremium       Boolean     @default(false)
+  videoUrl        String
+  thumbnail       String
+  createdAt       DateTime    @default(now())
 }

@@ -1,88 +1,315 @@
-import React from 'react';
-import { FaQuestionCircle } from 'react-icons/fa';
+import React, { useState } from 'react';
+import {
+  FaChartLine,
+  FaChevronDown,
+  FaChevronUp,
+  FaCog,
+  FaGlobe,
+  FaMobileAlt,
+  FaRocket,
+  FaShieldAlt,
+  FaUsers,
+  FaVideo,
+} from 'react-icons/fa';
+import { AnimatePresence, motion } from 'framer-motion';
 
+// Project-specific FAQs
 const faqs = [
   {
-    question: 'Do you offer refunds?',
-    answer: `We have a 7 day, $1 trial during which you can cancel any time within the 7 days before being billed again. After the 7 days, you will be billed for the full price of the plan shown on the screen.`,
+    question: 'What is WebinarKit and how does it work?',
+    answer: `WebinarKit is a comprehensive webinar platform that allows you to create, host, and manage webinars with ease. It provides tools for registration, live streaming, recording, analytics, and audience engagement. The platform supports both live and automated webinars, making it perfect for businesses of all sizes.`,
+    icon: <FaVideo className="text-blue-500" />,
+    category: 'general',
   },
   {
-    question: 'Can I sell offers directly on my webinars?',
+    question: 'What types of webinars can I create with WebinarKit?',
     answer:
-      'Yes! WebinarKit includes built-in sales tools, CTA pop-ups, and visual offers to boost conversions.',
+      'WebinarKit supports multiple webinar formats including live webinars, automated webinars, webinar series, and hybrid events. You can create instant-watch webinars, just-in-time sessions, and scheduled events with customizable settings to match your specific needs.',
+    icon: <FaRocket className="text-purple-500" />,
+    category: 'features',
   },
   {
-    question: 'Can I cancel my subscription anytime?',
-    answer: 'Yes! You can cancel anytime inside your account settings.',
-  },
-  {
-    question: 'Can I follow up with leads after the webinar?',
+    question: 'How do I set up an automated webinar?',
     answer:
-      'Yes! Use AI-powered remarketing to target attendees based on their actions.',
+      "Setting up an automated webinar is simple with WebinarKit. You can upload your pre-recorded video, set the date and time for when it should go live, configure registration settings, and customize the watch room. The platform handles everything from registration to delivery, allowing you to reach your audience even when you're not available.",
+    icon: <FaCog className="text-green-500" />,
+    category: 'features',
   },
   {
-    question: 'Does WebinarKit work on my computer?',
+    question:
+      'What is the difference between Instant Watch and Just-In-Time webinars?',
     answer:
-      "Yes! It's cloud-based and works on any device with an internet connection—no downloads required.",
+      'Instant Watch webinars are immediately available to viewers without any waiting period, perfect for on-demand content. Just-In-Time webinars have a configurable waiting period (from 1 minute to 24 hours) before they become available, allowing you to create anticipation and manage viewer expectations.',
+    icon: <FaUsers className="text-orange-500" />,
+    category: 'features',
   },
   {
-    question: 'Can I embed my webinars on my website?',
+    question: 'Can I customize the appearance of my webinar pages?',
     answer:
-      'Yes! You can embed registration forms, watch rooms, and thank-you pages to drive more sign-ups.',
+      'Yes! WebinarKit offers extensive customization options for all your webinar pages. You can customize registration forms, watch rooms, thank-you pages, and resource sections to match your brand identity. The platform supports custom colors, fonts, logos, and layouts to create a cohesive experience for your audience.',
+    icon: <FaGlobe className="text-indigo-500" />,
+    category: 'customization',
   },
   {
-    question: 'Do I need tech skills to use WebinarKit?',
+    question: 'What engagement features are available during webinars?',
     answer:
-      'No! WebinarKit is beginner-friendly with a simple plug-and-play setup.',
+      'WebinarKit includes a variety of engagement tools such as live chat, polls, Q&A sessions, handouts, and resource downloads. You can also enable features like raise hand, reactions, and private messaging to enhance audience participation and create an interactive experience.',
+    icon: <FaUsers className="text-pink-500" />,
+    category: 'features',
   },
   {
-    question: 'Does WebinarKit integrate with my CRM & email tools?',
+    question: 'How do I track webinar performance and analytics?',
     answer:
-      'Yes! It integrates with all major CRMs, autoresponders, and marketing platforms via our native integrations or Zapier, Pabbly Connect, or our public API.',
+      'WebinarKit provides comprehensive analytics to track your webinar performance. You can monitor registration rates, attendance, engagement metrics, chat activity, and conversion rates. The platform also offers detailed reports on viewer behavior, allowing you to optimize your future webinars for better results.',
+    icon: <FaChartLine className="text-teal-500" />,
+    category: 'analytics',
   },
   {
-    question: 'Does WebinarKit host all my pages?',
+    question: 'Is my webinar content secure?',
     answer:
-      'Yes! We host all webinar pages, including registration, watch rooms, and thank-you pages. Pro plans even come with easy built-in video hosting!',
+      'Yes, WebinarKit prioritizes security for your content. The platform offers features like password protection, domain restrictions, and IP blocking to control access to your webinars. You can also enable features like watermarking and disable downloads to protect your intellectual property.',
+    icon: <FaShieldAlt className="text-red-500" />,
+    category: 'security',
   },
   {
-    question: 'Do you offer a white-label solution?',
-    answer: 'Yes! Click here to learn more about white-labeling WebinarKit.',
-    isLink: true,
-  },
-  {
-    question: 'Can I customize the registration and webinar pages?',
+    question: 'Can I access my webinars on mobile devices?',
     answer:
-      'Yes! You can customize the look and feel of all pages to match your brand.',
+      'Absolutely! WebinarKit is fully responsive and works seamlessly on all devices including smartphones, tablets, and desktop computers. Your audience can register, attend, and interact with your webinars from any device with an internet connection, ensuring maximum accessibility.',
+    icon: <FaMobileAlt className="text-blue-500" />,
+    category: 'accessibility',
+  },
+  {
+    question: 'What integrations are available with WebinarKit?',
+    answer:
+      'WebinarKit integrates with popular platforms including email marketing tools, CRM systems, payment gateways, and analytics services. You can connect with tools like Mailchimp, Salesforce, Stripe, and Google Analytics to streamline your workflow and enhance your marketing efforts.',
+    icon: <FaCog className="text-gray-500" />,
+    category: 'integrations',
+  },
+  {
+    question: 'How do I monetize my webinars?',
+    answer:
+      'WebinarKit offers multiple monetization options for your webinars. You can sell tickets, create membership sites, offer upsells and downsells, and implement one-time or subscription-based pricing models. The platform includes built-in payment processing and sales page templates to help you maximize revenue.',
+    icon: <FaChartLine className="text-yellow-500" />,
+    category: 'monetization',
+  },
+  {
+    question: 'What support options are available?',
+    answer:
+      'WebinarKit provides comprehensive support through multiple channels including email, live chat, knowledge base, and video tutorials. Premium plans include priority support with faster response times. The platform also offers regular webinars and training sessions to help you get the most out of your webinars.',
+    icon: <FaUsers className="text-green-500" />,
+    category: 'support',
   },
 ];
 
+// Categories for filtering
+const categories = [
+  { id: 'all', label: 'All Questions' },
+  { id: 'general', label: 'General' },
+  { id: 'features', label: 'Features' },
+  { id: 'customization', label: 'Customization' },
+  { id: 'analytics', label: 'Analytics' },
+  { id: 'security', label: 'Security' },
+  { id: 'accessibility', label: 'Accessibility' },
+  { id: 'integrations', label: 'Integrations' },
+  { id: 'monetization', label: 'Monetization' },
+  { id: 'support', label: 'Support' },
+];
+
 const FAQ = () => {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState('all');
+
+  // Filter FAQs based on selected category
+  const filteredFaqs =
+    activeCategory === 'all'
+      ? faqs
+      : faqs.filter((faq) => faq.category === activeCategory);
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 100,
+        damping: 10,
+      },
+    },
+  };
+
+  const contentVariants = {
+    hidden: { height: 0, opacity: 0 },
+    visible: {
+      height: 'auto',
+      opacity: 1,
+      transition: {
+        height: {
+          duration: 0.3,
+        },
+        opacity: {
+          duration: 0.25,
+          delay: 0.15,
+        },
+      },
+    },
+  };
+
   return (
-    <section className="mx-auto max-w-6xl bg-white px-6 py-20">
-      <h2 className="mb-12 text-center text-4xl font-semibold">
-        Frequently asked questions
-      </h2>
-      <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-        {faqs.map((faq, index) => (
-          <div key={index} className="flex items-start gap-4">
-            <div className="mt-1 text-teal-500">
-              <FaQuestionCircle size={20} />
-            </div>
-            <div>
-              <h4 className="mb-1 font-semibold">{faq.question}</h4>
-              <p className="text-gray-700">
-                {faq.isLink ? (
-                  <a href="/white-label" className="text-blue-600 underline">
-                    {faq.answer}
-                  </a>
-                ) : (
-                  faq.answer
+    <section className="w-full bg-gradient-to-b from-gray-50 to-white px-6 py-20">
+      <div className="mx-auto max-w-6xl">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="mb-12 text-center"
+        >
+          <motion.span
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            viewport={{ once: true }}
+            className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-600"
+          >
+            Got Questions?
+          </motion.span>
+          <motion.h2
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            viewport={{ once: true }}
+            className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl"
+          >
+            Frequently Asked Questions
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            viewport={{ once: true }}
+            className="mx-auto max-w-2xl text-lg text-gray-600"
+          >
+            Find answers to common questions about WebinarKit and how it can
+            help your business grow.
+          </motion.p>
+        </motion.div>
+
+        {/* Category Filter */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          viewport={{ once: true }}
+          className="mb-8 flex flex-wrap justify-center gap-2"
+        >
+          {categories.map((category) => (
+            <motion.button
+              key={category.id}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                activeCategory === category.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+              onClick={() => setActiveCategory(category.id)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {category.label}
+            </motion.button>
+          ))}
+        </motion.div>
+
+        {/* FAQ Accordion */}
+        <motion.div
+          className="mx-auto max-w-4xl"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
+          {filteredFaqs.map((faq, index) => (
+            <motion.div
+              key={index}
+              className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md"
+              variants={itemVariants}
+            >
+              <motion.button
+                className="flex w-full items-center justify-between p-5 text-left"
+                onClick={() =>
+                  setActiveIndex(activeIndex === index ? null : index)
+                }
+                whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-blue-50">
+                    {faq.icon}
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900">
+                    {faq.question}
+                  </h4>
+                </div>
+                <div className="ml-4 shrink-0">
+                  {activeIndex === index ? (
+                    <FaChevronUp className="size-5 text-blue-500" />
+                  ) : (
+                    <FaChevronDown className="size-5 text-gray-400" />
+                  )}
+                </div>
+              </motion.button>
+
+              <AnimatePresence>
+                {activeIndex === index && (
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    exit="hidden"
+                    variants={contentVariants}
+                    className="overflow-hidden"
+                  >
+                    <div className="border-t border-gray-100 p-5 text-gray-600">
+                      {faq.answer}
+                    </div>
+                  </motion.div>
                 )}
-              </p>
-            </div>
-          </div>
-        ))}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Contact Support CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          viewport={{ once: true }}
+          className="mx-auto mt-16 max-w-3xl rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center text-white shadow-xl"
+        >
+          <h3 className="mb-4 text-2xl font-bold">Still have questions?</h3>
+          <p className="mb-6 text-lg text-white/90">
+            Our support team is here to help you with any questions or concerns
+            you may have about WebinarKit.
+          </p>
+          <motion.button
+            className="rounded-full bg-white px-6 py-3 font-bold text-blue-600 shadow-lg transition-all duration-300 hover:bg-gray-100"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Contact Support
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );
