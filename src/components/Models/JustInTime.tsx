@@ -6,13 +6,7 @@ import { Check, ChevronRight, Clock, Play, X, Zap } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select } from '@/components/ui/select';
 
 const JustInTimeModal = ({
   open,
@@ -199,17 +193,13 @@ const JustInTimeModal = ({
                     <Select
                       value={selectedSession}
                       onValueChange={setSelectedSession}
+                      className="w-full"
                     >
-                      <SelectTrigger>
-                        <SelectValue value={selectedSession} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {options.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                      {options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
                     </Select>
                   </div>
 

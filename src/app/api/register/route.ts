@@ -93,16 +93,23 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     const users = await prisma.user.findMany({
-      // orderBy: {
-      //   createdAt: 'desc', // 👈 Now this should work
-      // },
       select: {
         id: true,
         name: true,
         email: true,
         phoneNumber: true,
         isActive: true,
-        // createdAt: true,
+        subscriptions: {
+          select: {
+            type: true,
+            startDate: true,
+            endDate: true,
+            isActive: true,
+          },
+          orderBy: {
+            startDate: 'desc',
+          },
+        },
       },
     });
 

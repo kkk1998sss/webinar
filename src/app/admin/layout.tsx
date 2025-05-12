@@ -16,14 +16,35 @@ import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  // const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  // const handleLogout = async () => {
+  //   try {
+  //     const response = await fetch('/api/auth/signout', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     });
+
+  //     if (response.ok) {
+  //       router.push('/login');
+  //     } else {
+  //       console.error('Logout failed');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error during logout:', error);
+  //   }
+  // };
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -102,6 +123,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 </NavigationMenu.Item>
                 <NavigationMenu.Item>
                   <Link
+                    href="/admin/videos"
+                    className={clsx(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
+                      pathname === '/admin/videos' &&
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                    )}
+                  >
+                    <FaVideo className="size-5" /> Videos
+                  </Link>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item>
+                  <Link
                     href="/admin/settings"
                     className={clsx(
                       'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
@@ -119,6 +152,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex w-full items-center gap-3 rounded-lg bg-red-500/20 px-4 py-3 text-red-300 transition-colors hover:bg-red-500/30"
               >
                 <FaSignOutAlt className="size-5" /> Logout

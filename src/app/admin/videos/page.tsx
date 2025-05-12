@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import {
   FaCalendarAlt,
-  FaClock,
   FaEdit,
   FaPlus,
   FaSearch,
   FaTimes,
   FaTrash,
+  FaVideo,
 } from 'react-icons/fa';
 import * as Popover from '@radix-ui/react-popover';
 import * as Separator from '@radix-ui/react-separator';
@@ -17,33 +17,26 @@ import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 
-type ScheduledDate = {
-  date: string;
-  time: string;
-  period: string;
-  timeZone: string;
-};
-
-type Webinar = {
+type Video = {
   id: string;
-  webinarName: string;
-  webinarTitle: string;
-  webinarDate: string;
-  selectedLanguage?: string;
-  scheduledDates?: ScheduledDate[];
+  title: string;
+  url: string;
+  publicId: string;
   createdAt: string;
+  webinarDetails?: {
+    webinarName: string;
+    webinarTitle: string;
+  };
 };
 
-export default function WebinarList() {
-  const [webinars, setWebinars] = useState<Webinar[]>([]);
+export default function VideoList() {
+  const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [filterType, setFilterType] = useState('all');
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Number of items to show per page
+  const itemsPerPage = 5;
 
   useEffect(() => {
     // Simulate page load animation
@@ -54,64 +47,59 @@ export default function WebinarList() {
   }, []);
 
   useEffect(() => {
-    async function fetchWebinars() {
+    async function fetchVideos() {
       try {
-        const res = await fetch('/api/webinar');
+        const res = await fetch('/api/videos');
         const data = await res.json();
 
-        if (data.success && Array.isArray(data.webinars)) {
-          setWebinars(data.webinars);
+        if (data.success && Array.isArray(data.videos)) {
+          setVideos(data.videos);
         } else {
           console.error('Unexpected API response', data);
         }
       } catch (err) {
-        console.error('Failed to fetch webinars', err);
+        console.error('Failed to fetch videos', err);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchWebinars();
+    fetchVideos();
   }, []);
 
-  const deleteWebinar = async (id: string) => {
+  const deleteVideo = async (id: string) => {
     try {
-      await fetch(`/api/webinar/${id}`, { method: 'DELETE' });
-      setWebinars(webinars.filter((w) => w.id !== id));
+      await fetch(`/api/videos/${id}`, { method: 'DELETE' });
+      setVideos(videos.filter((v) => v.id !== id));
     } catch (error) {
-      console.error('Failed to delete webinar', error);
+      console.error('Failed to delete video', error);
     }
   };
 
-  // Filter webinars based on search query and filters
-  const filteredWebinars = webinars.filter((webinar) => {
+  // Filter videos based on search query and filters
+  const filteredVideos = videos.filter((video) => {
     const matchesSearch =
-      webinar.webinarTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      webinar.webinarName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      webinar.webinarDate.toLowerCase().includes(searchQuery.toLowerCase());
+      video.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      video.webinarDetails?.webinarName
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      video.webinarDetails?.webinarTitle
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      filterStatus === 'all' ||
-      (filterStatus === 'upcoming' &&
-        new Date(webinar.webinarDate) > new Date()) ||
-      (filterStatus === 'past' && new Date(webinar.webinarDate) < new Date()) ||
-      (filterStatus === 'ongoing' &&
-        new Date(webinar.webinarDate) <= new Date() &&
-        new Date(webinar.webinarDate) >=
-          new Date(new Date().setDate(new Date().getDate() - 1)));
+    const matchesType =
+      filterType === 'all' ||
+      (filterType === 'withWebinar' && video.webinarDetails) ||
+      (filterType === 'withoutWebinar' && !video.webinarDetails);
 
-    const matchesDateRange =
-      (!startDate || new Date(webinar.webinarDate) >= new Date(startDate)) &&
-      (!endDate || new Date(webinar.webinarDate) <= new Date(endDate));
-
-    return matchesSearch && matchesStatus && matchesDateRange;
+    return matchesSearch && matchesType;
   });
 
   // Calculate pagination
-  const totalPages = Math.ceil(filteredWebinars.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredVideos.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentWebinars = filteredWebinars.slice(startIndex, endIndex);
+  const currentVideos = filteredVideos.slice(startIndex, endIndex);
 
   // Animation variants
   const containerVariants = {
@@ -160,7 +148,7 @@ export default function WebinarList() {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <FaCalendarAlt className="mr-2 inline" /> Webinars
+          <FaVideo className="mr-2 inline" /> Videos
         </motion.h1>
         <motion.div
           initial={{ x: 20, opacity: 0 }}
@@ -168,11 +156,11 @@ export default function WebinarList() {
           transition={{ duration: 0.5, delay: 0.3 }}
         >
           <Link
-            href="/users/live-webinar"
+            href="/admin/videos/create"
             className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg"
           >
             <FaPlus className="size-4" />
-            Create
+            Upload Video
           </Link>
         </motion.div>
       </div>
@@ -190,7 +178,7 @@ export default function WebinarList() {
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search webinars..."
+            placeholder="Search videos..."
             className="w-full rounded-lg border border-gray-200 py-1.5 pl-10 pr-4 text-sm outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -200,38 +188,18 @@ export default function WebinarList() {
           <div className="flex items-center gap-2">
             <select
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
             >
-              <option value="all">All Status</option>
-              <option value="upcoming">Upcoming</option>
-              <option value="ongoing">Ongoing</option>
-              <option value="past">Past</option>
+              <option value="all">All Videos</option>
+              <option value="withWebinar">With Webinar</option>
+              <option value="withoutWebinar">Without Webinar</option>
             </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              placeholder="Start Date"
-            />
-            <span className="text-sm text-gray-500">to</span>
-            <input
-              type="date"
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              placeholder="End Date"
-            />
           </div>
           <button
             onClick={() => {
               setSearchQuery('');
-              setFilterStatus('all');
-              setStartDate('');
-              setEndDate('');
+              setFilterType('all');
               setCurrentPage(1);
             }}
             className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 transition-all duration-300 hover:border-gray-300 hover:bg-gray-50"
@@ -250,7 +218,7 @@ export default function WebinarList() {
           transition={{ duration: 0.5 }}
         >
           <div className="size-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading webinars...</span>
+          <span className="ml-3 text-gray-600">Loading videos...</span>
         </motion.div>
       ) : (
         <div className="w-full rounded-xl border border-gray-200 shadow-sm">
@@ -270,10 +238,10 @@ export default function WebinarList() {
                     Title
                   </th>
                   <th className="p-2 text-left font-medium text-gray-500">
-                    Date
+                    Webinar
                   </th>
                   <th className="p-2 text-left font-medium text-gray-500">
-                    Time
+                    Upload Date
                   </th>
                   <th className="p-2 text-left font-medium text-gray-500">
                     Status
@@ -285,9 +253,9 @@ export default function WebinarList() {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {currentWebinars.map((webinar, index) => (
+                  {currentVideos.map((video, index) => (
                     <motion.tr
-                      key={webinar.id}
+                      key={video.id}
                       className="border-t transition hover:bg-gray-50"
                       variants={itemVariants}
                       initial="hidden"
@@ -300,8 +268,22 @@ export default function WebinarList() {
                       <td className="w-12 p-2 text-center">{index + 1}</td>
                       <td className="max-w-[200px] break-words p-2">
                         <span className="font-medium">
-                          {webinar.webinarTitle}
+                          {video.title || 'Untitled Video'}
                         </span>
+                      </td>
+                      <td className="max-w-[250px] break-words p-2">
+                        {video.webinarDetails ? (
+                          <div className="space-y-0.5">
+                            <div className="font-medium">
+                              {video.webinarDetails.webinarName}
+                            </div>
+                            <div className="text-[10px] text-gray-500">
+                              {video.webinarDetails.webinarTitle}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="p-2">
                         <div className="flex items-center">
@@ -310,40 +292,27 @@ export default function WebinarList() {
                             size={12}
                           />
                           <span className="text-gray-600">
-                            {new Date(webinar.webinarDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-2">
-                        <div className="flex items-center">
-                          <FaClock className="mr-1 text-blue-500" size={12} />
-                          <span className="text-gray-600">
-                            {new Date(
-                              `2000-01-01T${webinar.scheduledDates?.[0]?.time}`
-                            ).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {new Date(video.createdAt).toLocaleDateString()}
                           </span>
                         </div>
                       </td>
                       <td className="p-2">
                         <Badge
                           className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                            new Date(webinar.webinarDate) > new Date()
+                            video.webinarDetails
                               ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
                           }`}
                         >
-                          {new Date(webinar.webinarDate) > new Date()
-                            ? 'Upcoming'
-                            : 'Past'}
+                          {video.webinarDetails
+                            ? 'Linked to Webinar'
+                            : 'Standalone'}
                         </Badge>
                       </td>
                       <td className="p-2">
                         <div className="flex items-center space-x-2">
                           <Link
-                            href={`/admin/webinars/${webinar.id}/edit`}
+                            href={`/admin/videos/${video.id}/edit`}
                             className="rounded-full bg-blue-100 p-1.5 text-blue-600 transition-colors hover:bg-blue-200"
                           >
                             <FaEdit className="size-3" />
@@ -362,7 +331,7 @@ export default function WebinarList() {
                                 className="z-50 w-64 rounded-lg border bg-white p-4 text-sm shadow-lg"
                               >
                                 <p className="mb-3 text-gray-800">
-                                  Are you sure you want to delete this webinar?
+                                  Are you sure you want to delete this video?
                                 </p>
                                 <div className="flex justify-end gap-2">
                                   <Popover.Close asChild>
@@ -372,7 +341,7 @@ export default function WebinarList() {
                                   </Popover.Close>
                                   <button
                                     className="rounded-lg bg-red-600 px-3 py-1 text-white transition-colors hover:bg-red-700"
-                                    onClick={() => deleteWebinar(webinar.id)}
+                                    onClick={() => deleteVideo(video.id)}
                                   >
                                     Confirm
                                   </button>
@@ -385,7 +354,7 @@ export default function WebinarList() {
                     </motion.tr>
                   ))}
                 </AnimatePresence>
-                {filteredWebinars.length === 0 && (
+                {filteredVideos.length === 0 && (
                   <motion.tr
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -399,11 +368,11 @@ export default function WebinarList() {
                         <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100">
                           <FaSearch className="size-8 text-gray-400" />
                         </div>
-                        <p className="text-lg font-medium">No webinars found</p>
+                        <p className="text-lg font-medium">No videos found</p>
                         <p className="text-sm text-gray-500">
-                          {searchQuery || filterStatus !== 'all'
+                          {searchQuery || filterType !== 'all'
                             ? 'Try adjusting your search or filter criteria'
-                            : 'There are no webinars in the system yet'}
+                            : 'There are no videos in the system yet'}
                         </p>
                       </div>
                     </td>
@@ -414,13 +383,13 @@ export default function WebinarList() {
           </div>
 
           {/* Pagination Controls */}
-          {filteredWebinars.length > 0 && (
+          {filteredVideos.length > 0 && (
             <div className="flex items-center justify-between border-t bg-gray-50 px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-700">
                   Showing {startIndex + 1} to{' '}
-                  {Math.min(endIndex, filteredWebinars.length)} of{' '}
-                  {filteredWebinars.length} entries
+                  {Math.min(endIndex, filteredVideos.length)} of{' '}
+                  {filteredVideos.length} entries
                 </span>
               </div>
               <div className="flex items-center gap-2">

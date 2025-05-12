@@ -194,6 +194,10 @@ export default function WebinarViewPage() {
   const timeDifference = webinarStartTime.getTime() - currentTime.getTime();
   const isBeforeWebinar = timeDifference > 0;
 
+  // Add null checks for video
+  const videoUrl = webinars?.video?.url || '/fallback-video.mp4';
+  // const videoTitle = webinars?.video?.title || 'Untitled Video';
+
   // Animation variants
   // const containerVariants = {
   //   hidden: { opacity: 0 },
@@ -202,19 +206,6 @@ export default function WebinarViewPage() {
   //     transition: {
   //       staggerChildren: 0.1,
   //       delayChildren: 0.2,
-  //     },
-  //   },
-  // };
-
-  // const itemVariants = {
-  //   hidden: { y: 20, opacity: 0 },
-  //   visible: {
-  //     y: 0,
-  //     opacity: 1,
-  //     transition: {
-  //       type: 'spring',
-  //       stiffness: 100,
-  //       damping: 10,
   //     },
   //   },
   // };
@@ -483,7 +474,7 @@ export default function WebinarViewPage() {
                   <video
                     ref={videoRef}
                     className="size-full rounded-lg"
-                    src={webinars?.video.url || '/fallback-video.mp4'}
+                    src={videoUrl}
                     onTimeUpdate={handleVideoProgress}
                     onEnded={() => setIsPlaying(false)}
                     onClick={togglePlay}

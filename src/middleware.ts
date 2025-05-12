@@ -3,6 +3,21 @@ import { getToken } from 'next-auth/jwt';
 
 import { middleware as paraglide } from '@/lib/i18n';
 
+interface Subscription {
+  id: string;
+  type: 'FOUR_DAY' | 'SIX_MONTH';
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  subscriptions: Subscription[];
+}
+
 export async function middleware(request: NextRequest) {
   try {
     const response = paraglide(request);
@@ -10,10 +25,6 @@ export async function middleware(request: NextRequest) {
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      cookieName:
-        process.env.NODE_ENV === 'production'
-          ? '__Secure-authjs.session-token'
-          : 'next-auth.session-token',
     });
 
     const { pathname } = request.nextUrl;
@@ -21,6 +32,7 @@ export async function middleware(request: NextRequest) {
     const protectedRoutes = ['/users/live-webinar', '/dashboard'];
     const adminRoutes = ['/admin'];
     const authRoutes = ['/auth/login', '/auth/register'];
+    // const pricingRoute = '/pricing';
 
     const isProtectedRoute = protectedRoutes.some((route) =>
       pathname.startsWith(route)
@@ -29,9 +41,72 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith(route)
     );
     const isAuthRoute = authRoutes.includes(pathname);
+    // const isPricingRoute = pathname === pricingRoute;
+
+    // If user is admin, allow access to all routes
+    if (token?.isAdmin) {
+      return NextResponse.next();
+    }
 
     if (isProtectedRoute && !token) {
       return NextResponse.redirect(new URL('/auth/login', request.url));
+    }
+
+    // Check user's subscription status for protected routes
+    if (isProtectedRoute && token) {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/register`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const userData = await response.json();
+          const user = userData.find((u: User) => u.email === token.email);
+
+          if (
+            !user ||
+            !user.subscriptions ||
+            !user.subscriptions[0]?.isActive
+          ) {
+            return NextResponse.redirect(new URL('/#pricing', request.url));
+          }
+
+          // Check subscription plan type and validity
+          const subscription = user.subscriptions[0];
+          const currentDate = new Date();
+          const subscriptionEndDate = new Date(subscription.endDate);
+
+          // If subscription has expired, redirect to pricing
+          if (currentDate > subscriptionEndDate) {
+            return NextResponse.redirect(new URL('/#pricing', request.url));
+          }
+
+          // For FOUR_DAY plan users, show locked content but allow access to webinar
+          if (subscription.type === 'FOUR_DAY') {
+            // Allow access to webinar content
+            if (pathname.startsWith('/users/live-webinar')) {
+              return NextResponse.next();
+            }
+            // Redirect to webinar page for other protected routes
+            return NextResponse.redirect(
+              new URL('/users/live-webinar', request.url)
+            );
+          }
+
+          // For SIX_MONTH plan users, allow full access
+          if (subscription.type === 'SIX_MONTH') {
+            return NextResponse.next();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        return NextResponse.redirect(new URL('/#pricing', request.url));
+      }
     }
 
     if (isAdminRoute && (!token || !token.isAdmin)) {
@@ -42,7 +117,59 @@ export async function middleware(request: NextRequest) {
       if (token.isAdmin) {
         return NextResponse.redirect(new URL('/admin/users', request.url));
       }
-      return NextResponse.redirect(new URL('/users/live-webinar', request.url));
+
+      // After login, redirect to appropriate page based on subscription
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/register`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.ok) {
+          const userData = await response.json();
+          const user = userData.find((u: User) => u.email === token.email);
+
+          if (user?.subscriptions?.[0]) {
+            const subscription = user.subscriptions[0];
+            const currentDate = new Date();
+            const subscriptionEndDate = new Date(subscription.endDate);
+
+            // Check if subscription is active and not expired
+            if (subscription.isActive && currentDate <= subscriptionEndDate) {
+              if (subscription.type === 'FOUR_DAY') {
+                // For new FOUR_DAY subscribers, show welcome page
+                if (
+                  new Date(subscription.startDate).getTime() >
+                  Date.now() - 24 * 60 * 60 * 1000
+                ) {
+                  return NextResponse.redirect(
+                    new URL('/welcome', request.url)
+                  );
+                }
+                return NextResponse.redirect(
+                  new URL('/users/live-webinar', request.url)
+                );
+              } else if (subscription.type === 'SIX_MONTH') {
+                return NextResponse.redirect(
+                  new URL('/users/live-webinar', request.url)
+                );
+              }
+            } else {
+              // If subscription is expired or inactive, redirect to pricing
+              return NextResponse.redirect(new URL('/#pricing', request.url));
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking subscription after login:', error);
+      }
+
+      // If no valid subscription found, redirect to pricing
+      return NextResponse.redirect(new URL('/#pricing', request.url));
     }
 
     return response;

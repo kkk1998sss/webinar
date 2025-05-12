@@ -29,11 +29,15 @@ import { Button } from '@/components/ui/button';
 interface Video {
   id: string;
   title: string;
-  description: string;
-  unlockDay: number;
-  videoUrl: string;
-  thumbnailUrl: string;
-  duration: string;
+  url: string;
+  publicId: string;
+  createdAt: string;
+  duration?: string;
+  thumbnailUrl?: string;
+  webinarDetails?: {
+    webinarName: string;
+    webinarTitle: string;
+  };
 }
 
 interface Subscription {
@@ -42,12 +46,6 @@ interface Subscription {
   isActive: boolean;
   startDate: string;
   endDate: string;
-  unlockedContent?: {
-    unlockedVideos: number[];
-    expiryDates: {
-      [key: string]: string;
-    };
-  };
 }
 
 interface Webinar {
@@ -64,19 +62,6 @@ interface Webinar {
   imageUrl: string;
 }
 
-const videos: Video[] = [
-  {
-    id: '1',
-    title: 'Day 1: Introduction',
-    description: 'Get started with the basics',
-    unlockDay: 1,
-    videoUrl: 'https://example.com/video1',
-    thumbnailUrl: '/assets/video-thumbnail-1.jpg',
-    duration: '45:00',
-  },
-  // Add more video objects as needed
-];
-
 export default function VideoPlayerPage() {
   const { status } = useSession();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -91,10 +76,22 @@ export default function VideoPlayerPage() {
   const [activeTab, setActiveTab] = useState<'videos' | 'upgrade'>('videos');
   const [showProgress, setShowProgress] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [videoMetadata, setVideoMetadata] = useState<{ [key: string]: string }>(
+    {}
+  );
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch videos
+        const videoRes = await fetch('/api/videos');
+        const videoData = await videoRes.json();
+        if (videoData.success) {
+          // Take only the first 4 videos
+          setVideos(videoData.videos.slice(0, 4));
+        }
+
         // Fetch subscription
         const subRes = await fetch('/api/subscription');
         const subData = await subRes.json();
@@ -119,20 +116,10 @@ export default function VideoPlayerPage() {
 
           if (activeSub) {
             setSubscription(activeSub);
-            // Find the first unlocked video that hasn't expired
-            const firstValidVideo = videos.find(
-              (v) =>
-                activeSub.unlockedContent?.unlockedVideos.includes(
-                  v.unlockDay
-                ) &&
-                new Date() <
-                  new Date(
-                    activeSub.unlockedContent.expiryDates[
-                      `video${v.unlockDay}` as keyof typeof activeSub.unlockedContent.expiryDates
-                    ]
-                  )
-            );
-            setCurrentVideo(firstValidVideo || null);
+            // Set the first video as current if available
+            if (videoData.videos?.length > 0) {
+              setCurrentVideo(videoData.videos[0]);
+            }
           }
         }
 
@@ -156,8 +143,60 @@ export default function VideoPlayerPage() {
     }
   }, [status]);
 
+  const extractVideoMetadata = async (video: Video) => {
+    try {
+      // Create a video element to get metadata
+      const videoElement = document.createElement('video');
+      videoElement.src = video.url;
+
+      return new Promise((resolve) => {
+        videoElement.addEventListener('loadedmetadata', () => {
+          const duration = videoElement.duration;
+
+          // Check if duration is valid
+          if (isFinite(duration) && !isNaN(duration)) {
+            const minutes = Math.floor(duration / 60);
+            const seconds = Math.floor(duration % 60);
+            const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            setVideoMetadata((prev) => ({
+              ...prev,
+              [video.id]: formattedDuration,
+            }));
+
+            resolve(formattedDuration);
+          } else {
+            // Set "Not Available" for invalid duration
+            setVideoMetadata((prev) => ({
+              ...prev,
+              [video.id]: 'Not Available',
+            }));
+            resolve('Not Available');
+          }
+        });
+
+        videoElement.addEventListener('error', () => {
+          console.error('Error loading video metadata');
+          setVideoMetadata((prev) => ({
+            ...prev,
+            [video.id]: 'Not Available',
+          }));
+          resolve('Not Available');
+        });
+      });
+    } catch (error) {
+      console.error('Error extracting video metadata:', error);
+      setVideoMetadata((prev) => ({
+        ...prev,
+        [video.id]: 'Not Available',
+      }));
+      return 'Not Available';
+    }
+  };
+
   const handleVideoPlay = () => {
     setShowProgress(true);
+    setProgress(0); // Reset progress when starting a new video
 
     // Simulate video progress
     const interval = setInterval(() => {
@@ -169,6 +208,17 @@ export default function VideoPlayerPage() {
         return prev + 1;
       });
     }, 100);
+  };
+
+  const handleVideoSelect = async (video: Video) => {
+    setCurrentVideo(video);
+    setShowProgress(false);
+    setProgress(0);
+
+    // Extract metadata if not already available
+    if (!videoMetadata[video.id]) {
+      await extractVideoMetadata(video);
+    }
   };
 
   if (loading || status === 'loading') {
@@ -236,21 +286,6 @@ export default function VideoPlayerPage() {
       </div>
     );
   }
-
-  const isVideoAccessible = (video: Video) => {
-    if (!subscription.unlockedContent) return false;
-
-    const isUnlocked = subscription.unlockedContent.unlockedVideos.includes(
-      video.unlockDay
-    );
-    const expiryDate = new Date(
-      subscription.unlockedContent.expiryDates[
-        `video${video.unlockDay}` as keyof typeof subscription.unlockedContent.expiryDates
-      ]
-    );
-
-    return isUnlocked && new Date() < expiryDate;
-  };
 
   const upcomingWebinars = webinars
     .filter((w) => new Date(w.webinarDate) > new Date())
@@ -327,12 +362,26 @@ export default function VideoPlayerPage() {
                 {currentVideo ? (
                   <>
                     <video
+                      key={currentVideo.id}
                       controls
                       className="size-full rounded-xl"
-                      poster={currentVideo.thumbnailUrl}
+                      poster={
+                        currentVideo.webinarDetails?.webinarTitle
+                          ? `/assets/webinar-thumbnail.jpg`
+                          : undefined
+                      }
                       onPlay={handleVideoPlay}
+                      onEnded={() => {
+                        setShowProgress(false);
+                        setProgress(0);
+                      }}
+                      onPause={() => {
+                        setShowProgress(false);
+                      }}
+                      autoPlay
                     >
-                      <source src={currentVideo.videoUrl} type="video/mp4" />
+                      <source src={currentVideo.url} type="video/mp4" />
+                      Your browser does not support the video tag.
                     </video>
 
                     {showProgress && (
@@ -380,14 +429,16 @@ export default function VideoPlayerPage() {
                   >
                     {currentVideo?.title || 'Select a Video'}
                   </motion.h1>
-                  <motion.p
-                    className="mb-2 text-gray-600"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    {currentVideo?.description || 'Choose from the list below'}
-                  </motion.p>
+                  {currentVideo?.webinarDetails && (
+                    <motion.p
+                      className="mb-2 text-gray-600"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      {currentVideo.webinarDetails.webinarTitle}
+                    </motion.p>
+                  )}
                   <motion.div
                     className="flex flex-wrap items-center gap-4 text-sm text-gray-500"
                     initial={{ opacity: 0 }}
@@ -397,17 +448,19 @@ export default function VideoPlayerPage() {
                     <div className="flex items-center gap-1">
                       <CalendarIcon className="size-4 text-blue-500" />
                       <span>
-                        Day{' '}
-                        {subscription.unlockedContent?.unlockedVideos.length}/4
+                        {currentVideo
+                          ? new Date(
+                              currentVideo.createdAt
+                            ).toLocaleDateString()
+                          : 'No date'}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <ClockIcon className="size-4 text-indigo-500" />
-                      <span>
-                        Expires:{' '}
-                        {new Date(subscription.endDate).toLocaleDateString()}
-                      </span>
-                    </div>
+                    {currentVideo && videoMetadata[currentVideo.id] && (
+                      <div className="flex items-center gap-1">
+                        <ClockIcon className="size-4 text-indigo-500" />
+                        <span>Duration: {videoMetadata[currentVideo.id]}</span>
+                      </div>
+                    )}
                   </motion.div>
                 </div>
 
@@ -418,21 +471,14 @@ export default function VideoPlayerPage() {
                   </h3>
                   <div className="space-y-3">
                     {videos.map((video, index) => {
-                      const isAccessible = isVideoAccessible(video);
                       const isCurrent = video.id === currentVideo?.id;
-                      const expiryDate =
-                        subscription.unlockedContent?.expiryDates[
-                          `video${video.unlockDay}` as keyof typeof subscription.unlockedContent.expiryDates
-                        ];
 
                       return (
                         <motion.div
                           key={video.id}
-                          onClick={() => isAccessible && setCurrentVideo(video)}
+                          onClick={() => handleVideoSelect(video)}
                           className={`group relative cursor-pointer overflow-hidden rounded-lg border p-3 transition-all duration-300
-                            ${isCurrent ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'}
-                            ${isAccessible ? '' : 'cursor-not-allowed opacity-70'}
-                          `}
+                            ${isCurrent ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'}`}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 * index }}
@@ -440,13 +486,9 @@ export default function VideoPlayerPage() {
                         >
                           <div className="flex items-start gap-3">
                             <div
-                              className={`flex size-10 shrink-0 items-center justify-center rounded-full ${isAccessible ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}
+                              className={`flex size-10 shrink-0 items-center justify-center rounded-full ${isCurrent ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
                             >
-                              {isAccessible ? (
-                                <Play className="size-5" />
-                              ) : (
-                                <Lock className="size-4" />
-                              )}
+                              <Play className="size-5" />
                             </div>
                             <div className="flex-1">
                               <div className="mb-1 flex items-center gap-2">
@@ -469,38 +511,38 @@ export default function VideoPlayerPage() {
                                   </motion.span>
                                 )}
                               </div>
-                              <p className="mb-1 line-clamp-1 text-sm text-gray-600">
-                                {video.description}
-                              </p>
+                              {video.webinarDetails && (
+                                <p className="mb-1 line-clamp-1 text-sm text-gray-600">
+                                  {video.webinarDetails.webinarTitle}
+                                </p>
+                              )}
                               <div className="flex items-center gap-3 text-xs text-gray-500">
                                 <div className="flex items-center gap-1">
-                                  <Clock className="size-3" />
-                                  <span>{video.duration}</span>
+                                  <Calendar className="size-3" />
+                                  <span>
+                                    {new Date(
+                                      video.createdAt
+                                    ).toLocaleDateString()}
+                                  </span>
                                 </div>
-                                {!isAccessible && expiryDate && (
+                                {videoMetadata[video.id] && (
                                   <div className="flex items-center gap-1">
-                                    <Calendar className="size-3" />
-                                    <span>
-                                      {new Date() > new Date(expiryDate)
-                                        ? 'Expired'
-                                        : `Available until ${new Date(expiryDate).toLocaleDateString()}`}
-                                    </span>
+                                    <Clock className="size-3" />
+                                    <span>{videoMetadata[video.id]}</span>
                                   </div>
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          {isAccessible && (
-                            <motion.div
-                              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 transition-opacity group-hover:opacity-100"
-                              initial={{ x: 10, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ delay: 0.2 }}
-                            >
-                              <ChevronRight className="size-5" />
-                            </motion.div>
-                          )}
+                          <motion.div
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 transition-opacity group-hover:opacity-100"
+                            initial={{ x: 10, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                          >
+                            <ChevronRight className="size-5" />
+                          </motion.div>
                         </motion.div>
                       );
                     })}

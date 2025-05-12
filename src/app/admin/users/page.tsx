@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { FaEdit, FaFilter, FaPlus, FaSearch, FaTrash } from 'react-icons/fa';
+import {
+  FaCalendarAlt,
+  FaEdit,
+  FaFilter,
+  FaPlus,
+  FaSearch,
+  FaTrash,
+} from 'react-icons/fa';
 import * as Popover from '@radix-ui/react-popover';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import * as Separator from '@radix-ui/react-separator';
@@ -16,6 +23,12 @@ type User = {
   email: string;
   phoneNumber: string;
   isActive: boolean;
+  subscriptions: {
+    type: string;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+  }[];
 };
 
 export default function UsersPage() {
@@ -174,29 +187,38 @@ export default function UsersPage() {
           <ScrollArea.Root className="w-full">
             <ScrollArea.Viewport className="w-full">
               <motion.table
-                className="w-full min-w-[800px] text-sm text-gray-700"
+                className="w-full min-w-[800px] text-xs text-gray-700"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
               >
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="p-4 text-left font-medium text-gray-500">
+                    <th className="w-12 p-2 text-center font-medium text-gray-500">
                       S.No
                     </th>
-                    <th className="p-4 text-left font-medium text-gray-500">
+                    <th className="p-2 text-left font-medium text-gray-500">
                       Name
                     </th>
-                    <th className="p-4 text-left font-medium text-gray-500">
+                    <th className="p-2 text-left font-medium text-gray-500">
                       Email
                     </th>
-                    <th className="p-4 text-left font-medium text-gray-500">
+                    <th className="p-2 text-left font-medium text-gray-500">
                       Phone
                     </th>
-                    <th className="p-4 text-left font-medium text-gray-500">
+                    <th className="p-2 text-left font-medium text-gray-500">
+                      Plan
+                    </th>
+                    <th className="p-2 text-left font-medium text-gray-500">
+                      Purchase Date
+                    </th>
+                    <th className="p-2 text-left font-medium text-gray-500">
+                      Expiry Date
+                    </th>
+                    <th className="p-2 text-left font-medium text-gray-500">
                       Status
                     </th>
-                    <th className="p-4 text-left font-medium text-gray-500">
+                    <th className="p-2 text-left font-medium text-gray-500">
                       Actions
                     </th>
                   </tr>
@@ -215,13 +237,76 @@ export default function UsersPage() {
                           backgroundColor: 'rgba(243, 244, 246, 0.5)',
                         }}
                       >
-                        <td className="p-4">{index + 1}</td>
-                        <td className="p-4 font-medium">{user.name}</td>
-                        <td className="p-4">{user.email}</td>
-                        <td className="p-4">{user.phoneNumber}</td>
-                        <td className="p-4">
+                        <td className="w-12 p-2 text-center">{index + 1}</td>
+                        <td className="max-w-[120px] break-words p-2">
+                          <span className="font-medium">{user.name}</span>
+                        </td>
+                        <td className="max-w-[150px] break-words p-2">
+                          <span className="text-gray-600">{user.email}</span>
+                        </td>
+                        <td className="max-w-[100px] break-words p-2">
+                          <span className="text-gray-600">
+                            {user.phoneNumber}
+                          </span>
+                        </td>
+                        <td className="p-2">
+                          {user.subscriptions &&
+                          user.subscriptions.length > 0 ? (
+                            <div className="flex flex-col gap-0.5">
+                              <Badge className="bg-blue-100 text-[10px] text-blue-800">
+                                {user.subscriptions[0].type === 'FOUR_DAY'
+                                  ? '4 Days Plan'
+                                  : '6 Months Plan'}
+                              </Badge>
+                              <span className="text-[10px] text-gray-500">
+                                {user.subscriptions[0].isActive
+                                  ? 'Active'
+                                  : 'Expired'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="p-2">
+                          {user.subscriptions &&
+                          user.subscriptions.length > 0 ? (
+                            <div className="flex items-center">
+                              <FaCalendarAlt
+                                className="mr-1 text-green-500"
+                                size={12}
+                              />
+                              <span className="text-gray-600">
+                                {new Date(
+                                  user.subscriptions[0].startDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="p-2">
+                          {user.subscriptions &&
+                          user.subscriptions.length > 0 ? (
+                            <div className="flex items-center">
+                              <FaCalendarAlt
+                                className="mr-1 text-red-500"
+                                size={12}
+                              />
+                              <span className="text-gray-600">
+                                {new Date(
+                                  user.subscriptions[0].endDate
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="p-2">
                           <Badge
-                            className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                            className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
                               user.isActive
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
@@ -230,19 +315,19 @@ export default function UsersPage() {
                             {user.isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </td>
-                        <td className="p-4">
-                          <div className="flex items-center space-x-3">
+                        <td className="p-2">
+                          <div className="flex items-center space-x-2">
                             <Link
                               href={`/admin/users/${user.id}/edit`}
-                              className="rounded-full bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200"
+                              className="rounded-full bg-blue-100 p-1.5 text-blue-600 transition-colors hover:bg-blue-200"
                             >
-                              <FaEdit className="size-4" />
+                              <FaEdit className="size-3" />
                             </Link>
 
                             <Popover.Root>
                               <Popover.Trigger asChild>
-                                <button className="rounded-full bg-red-100 p-2 text-red-600 transition-colors hover:bg-red-200">
-                                  <FaTrash className="size-4" />
+                                <button className="rounded-full bg-red-100 p-1.5 text-red-600 transition-colors hover:bg-red-200">
+                                  <FaTrash className="size-3" />
                                 </button>
                               </Popover.Trigger>
                               <Popover.Portal>
@@ -282,7 +367,7 @@ export default function UsersPage() {
                       transition={{ duration: 0.3 }}
                     >
                       <td
-                        colSpan={6}
+                        colSpan={9}
                         className="px-4 py-12 text-center text-gray-500"
                       >
                         <div className="flex flex-col items-center justify-center">
