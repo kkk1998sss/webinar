@@ -47,11 +47,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar toggle */}
       <button
         onClick={toggleSidebar}
-        className="fixed left-4 top-4 z-50 rounded-full bg-blue-600 p-2 text-white shadow-lg md:hidden"
+        className="fixed left-4 top-4 z-50 rounded-full bg-blue-600 p-2 text-white shadow-lg md:hidden dark:bg-blue-500"
       >
         {isSidebarOpen ? <FaTimes /> : <FaBars />}
       </button>
@@ -91,7 +91,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     className={clsx(
                       'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
                       pathname === '/admin' &&
-                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
                     )}
                   >
                     <FaChartLine className="size-5" /> Dashboard
@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     className={clsx(
                       'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
                       pathname === '/admin/users' &&
-                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
                     )}
                   >
                     <FaUsers className="size-5" /> Users
@@ -115,7 +115,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     className={clsx(
                       'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
                       pathname === '/admin/webinars' &&
-                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
                     )}
                   >
                     <FaVideo className="size-5" /> Webinars
@@ -127,7 +127,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     className={clsx(
                       'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
                       pathname === '/admin/videos' &&
-                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
                     )}
                   >
                     <FaVideo className="size-5" /> Videos
@@ -139,7 +139,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     className={clsx(
                       'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
                       pathname === '/admin/settings' &&
-                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
                     )}
                   >
                     <FaCog className="size-5" /> Settings
@@ -153,7 +153,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex w-full items-center gap-3 rounded-lg bg-red-500/20 px-4 py-3 text-red-300 transition-colors hover:bg-red-500/30"
+                className="flex w-full items-center gap-3 rounded-lg bg-red-500/20 px-4 py-3 text-red-300 transition-colors hover:bg-red-500/30 dark:bg-red-700/30 dark:text-red-400 dark:hover:bg-red-600/40"
               >
                 <FaSignOutAlt className="size-5" /> Logout
               </motion.button>
@@ -173,7 +173,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="w-full overflow-x-auto rounded-xl bg-white p-4 shadow-lg md:p-6"
+          className="w-full overflow-x-auto rounded-xl bg-white p-4 shadow-lg md:p-6 dark:bg-slate-800 dark:shadow-slate-700/50"
         >
           {children}
         </motion.div>

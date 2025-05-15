@@ -3,6 +3,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { DropdownMenuPortal } from '@radix-ui/react-dropdown-menu';
 import { DashboardIcon, ExitIcon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 
@@ -41,54 +42,17 @@ export const Navbar = () => {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="sticky top-0 z-40 w-full border-b bg-white/90 shadow-md backdrop-blur-sm"
+      className="bg-background/90 sticky top-0 z-40 w-full border-b shadow-md backdrop-blur-sm"
     >
       <div className="container flex h-16 items-center justify-between">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="relative"
-        >
-          <motion.div
-            className="absolute -inset-1 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 opacity-20 blur"
-            animate={{
-              opacity: [0.2, 0.3, 0.2],
-              scale: [1, 1.05, 1],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              repeatType: 'reverse',
-            }}
-          />
-          <Link
-            href="/"
-            className="relative flex items-center font-mono text-xl font-bold"
-          >
-            <motion.span
-              className="bg-size-200 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
-              animate={{
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
-            >
-              {m.app_name()}
-            </motion.span>
-            <motion.div
-              className="ml-1 size-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.8, 1, 0.8],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: 'reverse',
-              }}
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Link href="/" className="relative flex items-center">
+            <Image
+              src="/assets/shree-maaha.png"
+              alt="Shree Maaha"
+              width={150}
+              height={50}
+              className="object-contain"
             />
           </Link>
         </motion.div>
@@ -105,11 +69,11 @@ export const Navbar = () => {
               <Link
                 href={item.href}
                 onClick={handleNavClick(item.href)}
-                className="group relative text-sm font-medium"
+                className="group relative text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-slate-300 dark:hover:text-slate-50"
               >
                 {item.label}
                 <motion.span
-                  className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300 group-hover:w-full"
+                  className="absolute -bottom-1 left-0 h-0.5 w-0 bg-gradient-to-r from-red-600 to-yellow-500 transition-all duration-300 group-hover:w-full dark:from-red-500 dark:to-yellow-400"
                   whileHover={{ width: '100%' }}
                 />
               </Link>
@@ -129,9 +93,9 @@ export const Navbar = () => {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="flex size-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-sm font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                      className="text-primary-foreground flex size-10 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-medium shadow-md transition-all duration-300 hover:shadow-lg"
                     >
-                      <span className="font-medium text-white">
+                      <span className="text-primary-foreground font-medium">
                         {session.user.name
                           ? session.user.name
                               .split(' ')
@@ -150,16 +114,16 @@ export const Navbar = () => {
                       className="z-50"
                     >
                       <DropdownMenu.DropdownMenuContent
-                        className="z-50 min-w-[220px] rounded-md border bg-white/95 p-2 shadow-lg backdrop-blur-sm"
+                        className="bg-popover/95 dark:border-border z-50 min-w-[220px] rounded-md border p-2 shadow-lg backdrop-blur-sm"
                         sideOffset={5}
                         style={{ zIndex: 9999 }}
                       >
                         {/* Profile Preview */}
-                        <div className="mb-1 border-b px-2 py-1.5">
-                          <p className="truncate text-sm font-semibold text-blue-800">
+                        <div className="dark:border-border/50 mb-1 border-b px-2 py-1.5">
+                          <p className="text-primary dark:text-primary-dark truncate text-sm font-semibold">
                             {session.user.name}
                           </p>
-                          <p className="truncate text-xs text-gray-500">
+                          <p className="text-muted-foreground dark:text-muted-foreground-dark truncate text-xs">
                             {session.user.email}
                           </p>
                         </div>
@@ -173,17 +137,17 @@ export const Navbar = () => {
                               router.push('/users/live-webinar');
                             }
                           }}
-                          className="group flex cursor-pointer items-center gap-2 rounded p-2 text-sm text-gray-700 transition-colors duration-200 hover:bg-blue-50"
+                          className="text-foreground hover:bg-secondary dark:hover:bg-secondary-dark hover:text-secondary-foreground dark:hover:text-secondary-foreground-dark group flex cursor-pointer items-center gap-2 rounded p-2 text-sm transition-colors duration-200"
                         >
-                          <DashboardIcon className="size-4 text-blue-500 group-hover:text-blue-600" />
+                          <DashboardIcon className="text-primary dark:text-primary-dark group-hover:text-primary-hover dark:group-hover:text-primary-dark-hover size-4" />
                           Dashboard
                         </DropdownMenu.DropdownMenuItem>
 
                         <DropdownMenu.DropdownMenuItem
                           onClick={() => signOut({ callbackUrl: '/' })}
-                          className="group flex cursor-pointer items-center gap-2 rounded p-2 text-sm text-red-600 transition-colors duration-200 hover:bg-red-50"
+                          className="text-destructive dark:text-destructive-dark hover:bg-destructive/10 dark:hover:bg-destructive-dark/20 hover:text-destructive-hover dark:hover:text-destructive-dark-hover group flex cursor-pointer items-center gap-2 rounded p-2 text-sm transition-colors duration-200"
                         >
-                          <ExitIcon className="size-4 text-red-500 group-hover:text-red-600" />
+                          <ExitIcon className="text-destructive dark:text-destructive-dark group-hover:text-destructive-hover dark:group-hover:text-destructive-dark-hover size-4" />
                           Logout
                         </DropdownMenu.DropdownMenuItem>
                       </DropdownMenu.DropdownMenuContent>

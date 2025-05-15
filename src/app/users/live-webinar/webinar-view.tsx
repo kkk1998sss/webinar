@@ -15,6 +15,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import { Play, Plus, Search, Video, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 
 import WebinarSetupPage from './webinarsetup1';
 
@@ -53,6 +54,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     null
   );
   const router = useRouter();
+  const { theme } = useTheme();
 
   useEffect(() => {
     // Simulate page load animation
@@ -257,7 +259,10 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     },
     hover: {
       scale: 1.03,
-      boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+      boxShadow:
+        theme === 'dark'
+          ? '0 10px 25px rgba(0,0,0,0.3)'
+          : '0 10px 25px rgba(0,0,0,0.1)',
       transition: {
         duration: 0.2,
       },
@@ -266,15 +271,17 @@ export default function WebinarDashboard({ session }: { session: Session }) {
 
   if (!isPageLoaded) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-lg font-semibold text-gray-600">Loading...</div>
+      <div className="flex h-screen items-center justify-center dark:bg-slate-900">
+        <div className="text-lg font-semibold text-gray-600 dark:text-slate-400">
+          Loading...
+        </div>
       </div>
     );
   }
 
   return (
     <motion.div
-      className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50"
+      className="min-h-screen bg-gradient-to-b from-gray-50 to-blue-50 dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-800"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -287,7 +294,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <motion.h2
-            className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent dark:from-blue-400 dark:to-purple-400"
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -302,11 +309,11 @@ export default function WebinarDashboard({ session }: { session: Session }) {
             transition={{ duration: 0.5, delay: 0.4 }}
           >
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400 dark:text-slate-400" />
               <input
                 type="text"
                 placeholder="Search webinars..."
-                className="w-full rounded-full border border-gray-200 py-2 pl-10 pr-4 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 sm:w-64"
+                className="w-full rounded-full border border-gray-200 py-2 pl-10 pr-4 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 sm:w-64 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder:text-slate-400 dark:focus:border-blue-500 dark:focus:ring-blue-500/30"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -315,7 +322,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200"
                   onClick={() => setSearchQuery('')}
                 >
                   <svg
@@ -335,7 +342,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
             </div>
 
             <select
-              className="rounded-full border border-gray-200 px-4 py-2 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+              className="rounded-full border border-gray-200 px-4 py-2 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:focus:border-blue-500 dark:focus:ring-blue-500/30"
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
             >
@@ -351,7 +358,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     whileTap={{ scale: 0.95 }}
                   >
                     <Button
-                      className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700"
+                      className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-5 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-500 dark:text-white dark:hover:from-blue-600 dark:hover:to-purple-600"
                       disabled={openWebinars.length > 0}
                     >
                       <Plus className="mr-2 size-4" />
@@ -359,21 +366,21 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     </Button>
                   </motion.div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="rounded-xl border border-gray-200 bg-white/90 shadow-lg backdrop-blur-sm">
+                <DropdownMenuContent className="rounded-xl border border-gray-200 bg-white/90 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/90">
                   <DropdownMenuItem
                     onClick={() => handleNewWebinar('Automated Webinar')}
-                    className="cursor-pointer px-4 py-3 transition-colors duration-200 hover:bg-blue-50"
+                    className="cursor-pointer px-4 py-3 transition-colors duration-200 hover:bg-blue-50 dark:text-slate-300 dark:hover:bg-slate-700"
                     disabled={openWebinars.length > 0}
                   >
-                    <Play className="mr-2 size-4 text-blue-500" />
+                    <Play className="mr-2 size-4 text-blue-500 dark:text-blue-400" />
                     New Automated Webinar
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleNewWebinar('Webinar Series')}
-                    className="cursor-pointer px-4 py-3 transition-colors duration-200 hover:bg-blue-50"
+                    className="cursor-pointer px-4 py-3 transition-colors duration-200 hover:bg-blue-50 dark:text-slate-300 dark:hover:bg-slate-700"
                     disabled={openWebinars.length > 0}
                   >
-                    <Video className="mr-2 size-4 text-purple-500" />
+                    <Video className="mr-2 size-4 text-purple-500 dark:text-purple-400" />
                     New Webinar Series
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -389,7 +396,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm dark:bg-black/70"
               onClick={() => setShowNewWebinarDialog(false)}
             >
               <motion.div
@@ -397,29 +404,29 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: 'spring', damping: 20 }}
-                className="mx-4 w-full overflow-hidden rounded-xl border border-gray-200 bg-white/95 shadow-xl backdrop-blur-sm sm:max-w-md"
+                className="mx-4 w-full overflow-hidden rounded-xl border border-gray-200 bg-white/95 shadow-xl backdrop-blur-sm sm:max-w-md dark:border-slate-700 dark:bg-slate-800/95"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex flex-col space-y-4 p-6">
                   <div className="flex items-center gap-2">
                     {selectedWebinarType === 'Automated Webinar' ? (
-                      <Play className="size-5 text-blue-500" />
+                      <Play className="size-5 text-blue-500 dark:text-blue-400" />
                     ) : (
-                      <Video className="size-5 text-purple-500" />
+                      <Video className="size-5 text-purple-500 dark:text-purple-400" />
                     )}
-                    <h2 className="text-xl font-bold">
+                    <h2 className="text-xl font-bold dark:text-slate-100">
                       Create {selectedWebinarType}
                     </h2>
                   </div>
 
-                  <p className="text-gray-500">
+                  <p className="text-gray-500 dark:text-slate-400">
                     You&apos;re about to create a new{' '}
                     {selectedWebinarType?.toLowerCase()}. This will open a setup
                     wizard where you can configure all the details for your
                     webinar.
                   </p>
 
-                  <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+                  <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-700 dark:bg-slate-700 dark:text-blue-300">
                     <p className="font-medium">
                       What you&apos;ll be able to do:
                     </p>
@@ -435,13 +442,13 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     <Button
                       variant="outline"
                       onClick={() => setShowNewWebinarDialog(false)}
-                      className="rounded-full border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      className="rounded-full border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={confirmNewWebinar}
-                      className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700"
+                      className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-500 dark:text-white dark:hover:from-blue-600 dark:hover:to-purple-600"
                     >
                       Create Now
                     </Button>
@@ -456,7 +463,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         <AnimatePresence>
           {openWebinars.length > 0 && (
             <motion.div
-              className="mb-8 rounded-xl border border-gray-100 bg-white p-6 shadow-lg"
+              className="mb-8 rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -471,11 +478,11 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                 {openWebinars.map((webinar, index) => (
                   <motion.li
                     key={index}
-                    className="rounded-xl border border-gray-100 bg-gray-50 p-4 shadow-sm transition-all duration-300 hover:shadow-md"
+                    className="rounded-xl border border-gray-100 bg-gray-50 p-4 shadow-sm transition-all duration-300 hover:shadow-md dark:border-slate-600 dark:bg-slate-700"
                     variants={itemVariants}
                   >
                     <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-slate-100">
                         {webinar} Setup
                       </h3>
                       <Button
@@ -486,7 +493,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                             openWebinars.filter((_, i) => i !== index)
                           );
                         }}
-                        className="size-8 rounded-full p-0 hover:bg-gray-200"
+                        className="size-8 rounded-full p-0 hover:bg-gray-200 dark:text-slate-300 dark:hover:bg-slate-600"
                       >
                         <X className="size-4" />
                       </Button>
@@ -503,7 +510,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         {openWebinars.length === 0 &&
           (!loading && webinars.length === 0 ? (
             <motion.div
-              className="rounded-xl border border-gray-100 bg-white py-20 text-center shadow-lg"
+              className="rounded-xl border border-gray-100 bg-white py-20 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
@@ -517,12 +524,12 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                   damping: 20,
                   delay: 0.2,
                 }}
-                className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-blue-100"
+                className="mx-auto mb-6 flex size-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20"
               >
-                <Video className="size-10 text-blue-500" />
+                <Video className="size-10 text-blue-500 dark:text-blue-400" />
               </motion.div>
               <motion.p
-                className="text-xl font-medium text-gray-700"
+                className="text-xl font-medium text-gray-700 dark:text-slate-300"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -530,7 +537,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                 You haven&apos;t created any awesome webinars yet 😞
               </motion.p>
               <motion.p
-                className="mx-auto mt-3 max-w-md text-gray-500"
+                className="mx-auto mt-3 max-w-md text-gray-500 dark:text-slate-400"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
@@ -552,7 +559,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                   >
                     <Button
                       onClick={() => handleNewWebinar('General Webinar')}
-                      className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700"
+                      className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-500 dark:text-white dark:hover:from-blue-600 dark:hover:to-purple-600"
                       disabled={openWebinars.length > 0}
                     >
                       <Plus className="mr-2 size-4" />
@@ -570,7 +577,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
               transition={{ duration: 0.5, delay: 0.3 }}
             >
               <motion.div
-                className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg"
+                className="rounded-xl border border-gray-100 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
@@ -578,14 +585,14 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                 {/* Calendar-style date header */}
                 <div className="flex w-full flex-col gap-6 md:flex-row">
                   <motion.div
-                    className="w-full rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-6 text-white shadow-md md:w-1/3"
+                    className="w-full rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-6 text-white shadow-md md:w-1/3 dark:from-blue-600 dark:to-purple-700 dark:text-slate-100"
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.5, delay: 0.5 }}
                   >
                     <div className="mb-2 text-center">
                       <motion.h2
-                        className="text-4xl font-bold"
+                        className="text-4xl font-bold dark:text-slate-100"
                         initial={{ y: -10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.6 }}
@@ -593,7 +600,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                         {format(new Date(), 'eeee')}
                       </motion.h2>
                       <motion.h3
-                        className="text-6xl font-bold"
+                        className="text-6xl font-bold dark:text-slate-100"
                         initial={{ y: -10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.7 }}
@@ -601,7 +608,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                         {format(new Date(), 'do')}
                       </motion.h3>
                       <motion.p
-                        className="text-xl"
+                        className="text-xl dark:text-slate-300"
                         initial={{ y: -10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.8 }}
@@ -625,7 +632,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                         transition={{ duration: 0.5, delay: 0.7 }}
                       >
                         <motion.h3
-                          className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-2xl font-semibold text-transparent"
+                          className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-2xl font-semibold text-transparent dark:from-blue-400 dark:to-purple-400"
                           initial={{ x: -10, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ duration: 0.5, delay: 0.8 }}
@@ -641,38 +648,48 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                           {todaysWebinars.map((webinar) => (
                             <motion.div
                               key={webinar.id}
-                              className="rounded-xl border border-gray-200 bg-white p-5 shadow-md transition-all duration-300 hover:shadow-lg"
+                              className="rounded-xl border border-gray-200 bg-white p-5 shadow-md transition-all duration-300 hover:shadow-lg dark:border-slate-600 dark:bg-slate-700"
                               variants={cardVariants}
                               whileHover="hover"
                             >
                               <motion.div
-                                className="absolute right-0 top-0 rounded-bl-lg rounded-tr-xl bg-green-500 px-2 py-1 text-xs font-bold text-white"
+                                className="absolute right-0 top-0 rounded-bl-lg rounded-tr-xl bg-green-500 px-2 py-1 text-xs font-bold text-white dark:bg-green-600"
                                 initial={{ opacity: 0, scale: 0 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.2 }}
                               >
                                 LIVE
                               </motion.div>
-                              <h3 className="mb-3 text-xl font-semibold text-gray-800">
+                              <h3 className="mb-3 text-xl font-semibold text-gray-800 dark:text-slate-100">
                                 {webinar.webinarTitle}
                               </h3>
                               <div className="mb-4 space-y-2">
                                 <p className="flex items-center justify-between">
-                                  <span className="font-medium text-gray-600">
+                                  <span className="font-medium text-gray-600 dark:text-slate-400">
                                     Time:
                                   </span>
-                                  <span className="font-semibold text-blue-600">
+                                  <span className="font-semibold text-blue-600 dark:text-blue-400">
                                     {webinar.webinarTime}
                                   </span>
                                 </p>
                                 <p className="flex items-center justify-between">
-                                  <span className="font-medium text-gray-600">
+                                  <span className="font-medium text-gray-600 dark:text-slate-400">
                                     Starts in:
                                   </span>
                                   <motion.span
-                                    className="font-mono font-bold text-blue-500"
+                                    className="font-mono font-bold text-blue-500 dark:text-blue-400"
                                     animate={{
-                                      color: ['#3b82f6', '#8b5cf6', '#3b82f6'],
+                                      color: [
+                                        theme === 'dark'
+                                          ? '#60a5fa'
+                                          : '#3b82f6',
+                                        theme === 'dark'
+                                          ? '#a78bfa'
+                                          : '#8b5cf6',
+                                        theme === 'dark'
+                                          ? '#60a5fa'
+                                          : '#3b82f6',
+                                      ],
                                     }}
                                     transition={{
                                       duration: 2,
@@ -695,7 +712,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                               />
                               {/* Join Now Button */}
                               <motion.button
-                                className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 font-semibold text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600"
+                                className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 font-semibold text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-emerald-600 dark:from-green-600 dark:to-emerald-600 dark:hover:from-green-700 dark:hover:to-emerald-700"
                                 onClick={() => handleJoinWebinar(webinar.id)}
                                 whileHover={{ scale: 1.03 }}
                                 whileTap={{ scale: 0.97 }}
@@ -722,9 +739,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.9 }}
-                      className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg"
+                      className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
                     >
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 dark:from-blue-600 dark:to-purple-700">
                         <h3 className="text-xl font-semibold text-white">
                           📅 Today&apos;s Webinars
                         </h3>
@@ -732,20 +749,20 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="border-b border-gray-100 bg-gray-50">
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                            <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Title
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Date
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Time
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Status
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Action
                               </th>
                             </tr>
@@ -757,7 +774,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 * index }}
-                                className="border-b border-gray-100 transition-colors duration-200 hover:bg-blue-50"
+                                className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-blue-50 dark:border-slate-700"
                                 whileHover={{
                                   scale: 1.01,
                                   boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
@@ -765,22 +782,22 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                               >
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-blue-100">
-                                      <Video className="size-4 text-blue-600" />
+                                    <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
+                                      <Video className="size-4 text-blue-600 dark:text-blue-400" />
                                     </div>
-                                    <span className="font-medium text-gray-800">
+                                    <span className="font-medium text-gray-800 dark:text-slate-200">
                                       {webinar.webinarTitle}
                                     </span>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-gray-600">
+                                <td className="px-4 py-3 text-gray-600 dark:text-slate-400">
                                   {webinar.webinarDate}
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-1">
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
-                                      className="size-4 text-blue-500"
+                                      className="size-4 text-blue-500 dark:text-blue-400"
                                       viewBox="0 0 20 20"
                                       fill="currentColor"
                                     >
@@ -790,14 +807,14 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                         clipRule="evenodd"
                                       />
                                     </svg>
-                                    <span className="text-gray-600">
+                                    <span className="text-gray-600 dark:text-slate-400">
                                       {webinar.webinarTime}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-                                    <span className="mr-1 flex size-2 rounded-full bg-green-500"></span>
+                                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-500/20 dark:text-green-300">
+                                    <span className="mr-1 flex size-2 rounded-full bg-green-500 dark:bg-green-400"></span>
                                     Live
                                   </span>
                                 </td>
@@ -808,7 +825,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                     onClick={() =>
                                       handleJoinWebinar(webinar.id)
                                     }
-                                    className="rounded-md bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-blue-600 hover:to-purple-700"
+                                    className="rounded-md bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-blue-600 hover:to-purple-700 dark:from-blue-600 dark:to-purple-700 dark:hover:from-blue-700 dark:hover:to-purple-800"
                                   >
                                     Join Now
                                   </motion.button>
@@ -821,12 +838,12 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     </motion.div>
                   ) : searchQuery ? (
                     <motion.div
-                      className="rounded-xl border border-gray-100 bg-white p-6 text-center shadow-lg"
+                      className="rounded-xl border border-gray-100 bg-white p-6 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <p className="text-gray-500">
+                      <p className="text-gray-500 dark:text-slate-400">
                         No webinars found matching your search for today.
                       </p>
                     </motion.div>
@@ -837,9 +854,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 1.0 }}
-                      className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg"
+                      className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
                     >
-                      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-4">
+                      <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-4 dark:from-purple-600 dark:to-indigo-700">
                         <h3 className="text-xl font-semibold text-white">
                           🔮 Upcoming Webinars
                         </h3>
@@ -847,20 +864,20 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="border-b border-gray-100 bg-gray-50">
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                            <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Title
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Date
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Time
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Status
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Action
                               </th>
                             </tr>
@@ -872,7 +889,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 * index }}
-                                className="border-b border-gray-100 transition-colors duration-200 hover:bg-purple-50"
+                                className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-purple-50 dark:border-slate-700"
                                 whileHover={{
                                   scale: 1.01,
                                   boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
@@ -880,22 +897,22 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                               >
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-purple-100">
-                                      <Video className="size-4 text-purple-600" />
+                                    <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-500/20">
+                                      <Video className="size-4 text-purple-600 dark:text-purple-400" />
                                     </div>
-                                    <span className="font-medium text-gray-800">
+                                    <span className="font-medium text-gray-800 dark:text-slate-200">
                                       {webinar.webinarTitle}
                                     </span>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-gray-600">
+                                <td className="px-4 py-3 text-gray-600 dark:text-slate-400">
                                   {webinar.webinarDate}
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-1">
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
-                                      className="size-4 text-purple-500"
+                                      className="size-4 text-purple-500 dark:text-purple-400"
                                       viewBox="0 0 20 20"
                                       fill="currentColor"
                                     >
@@ -905,14 +922,14 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                         clipRule="evenodd"
                                       />
                                     </svg>
-                                    <span className="text-gray-600">
+                                    <span className="text-gray-600 dark:text-slate-400">
                                       {webinar.webinarTime}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                    <span className="mr-1 flex size-2 rounded-full bg-blue-500"></span>
+                                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
+                                    <span className="mr-1 flex size-2 rounded-full bg-blue-500 dark:bg-blue-400"></span>
                                     Upcoming
                                   </span>
                                 </td>
@@ -923,7 +940,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                     onClick={() =>
                                       handleJoinWebinar(webinar.id)
                                     }
-                                    className="rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-purple-600 hover:to-indigo-700"
+                                    className="rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-purple-600 hover:to-indigo-700 dark:from-purple-600 dark:to-indigo-700 dark:hover:from-purple-700 dark:hover:to-indigo-800"
                                   >
                                     Join Now
                                   </motion.button>
@@ -936,12 +953,12 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     </motion.div>
                   ) : searchQuery ? (
                     <motion.div
-                      className="rounded-xl border border-gray-100 bg-white p-6 text-center shadow-lg"
+                      className="rounded-xl border border-gray-100 bg-white p-6 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <p className="text-gray-500">
+                      <p className="text-gray-500 dark:text-slate-400">
                         No upcoming webinars found matching your search.
                       </p>
                     </motion.div>
@@ -952,9 +969,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 1.1 }}
-                      className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg"
+                      className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
                     >
-                      <div className="bg-gradient-to-r from-gray-600 to-gray-700 p-4">
+                      <div className="bg-gradient-to-r from-gray-600 to-gray-700 p-4 dark:from-slate-700 dark:to-slate-800">
                         <h3 className="text-xl font-semibold text-white">
                           🕰 Past Webinars
                         </h3>
@@ -962,20 +979,20 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       <div className="overflow-x-auto">
                         <table className="w-full">
                           <thead>
-                            <tr className="border-b border-gray-100 bg-gray-50">
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                            <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Title
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Date
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Time
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Status
                               </th>
-                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                                 Action
                               </th>
                             </tr>
@@ -987,7 +1004,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.1 * index }}
-                                className="border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50"
+                                className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 dark:border-slate-700"
                                 whileHover={{
                                   scale: 1.01,
                                   boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
@@ -995,22 +1012,22 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                               >
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-gray-100">
-                                      <Video className="size-4 text-gray-600" />
+                                    <div className="flex size-8 items-center justify-center rounded-full bg-gray-100 dark:bg-slate-600/30">
+                                      <Video className="size-4 text-gray-600 dark:text-slate-400" />
                                     </div>
-                                    <span className="font-medium text-gray-800">
+                                    <span className="font-medium text-gray-800 dark:text-slate-200">
                                       {webinar.webinarTitle}
                                     </span>
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 text-gray-600">
+                                <td className="px-4 py-3 text-gray-600 dark:text-slate-400">
                                   {webinar.webinarDate}
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-1">
                                     <svg
                                       xmlns="http://www.w3.org/2000/svg"
-                                      className="size-4 text-gray-500"
+                                      className="size-4 text-gray-500 dark:text-slate-500"
                                       viewBox="0 0 20 20"
                                       fill="currentColor"
                                     >
@@ -1020,14 +1037,14 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                         clipRule="evenodd"
                                       />
                                     </svg>
-                                    <span className="text-gray-600">
+                                    <span className="text-gray-600 dark:text-slate-400">
                                       {webinar.webinarTime}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-                                    <span className="mr-1 flex size-2 rounded-full bg-gray-500"></span>
+                                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-slate-600/30 dark:text-slate-400">
+                                    <span className="mr-1 flex size-2 rounded-full bg-gray-500 dark:bg-slate-500"></span>
                                     Completed
                                   </span>
                                 </td>
@@ -1038,7 +1055,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                     onClick={() =>
                                       handleJoinWebinar(webinar.id)
                                     }
-                                    className="rounded-md bg-gradient-to-r from-gray-600 to-gray-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-gray-700 hover:to-gray-800"
+                                    className="rounded-md bg-gradient-to-r from-gray-600 to-gray-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-gray-700 hover:to-gray-800 dark:from-slate-600 dark:to-slate-700 dark:hover:from-slate-700 dark:hover:to-slate-800"
                                   >
                                     View Recording
                                   </motion.button>
@@ -1051,12 +1068,12 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     </motion.div>
                   ) : searchQuery ? (
                     <motion.div
-                      className="rounded-xl border border-gray-100 bg-white p-6 text-center shadow-lg"
+                      className="rounded-xl border border-gray-100 bg-white p-6 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <p className="text-gray-500">
+                      <p className="text-gray-500 dark:text-slate-400">
                         No past webinars found matching your search.
                       </p>
                     </motion.div>
@@ -1067,14 +1084,14 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     upcomingWebinars.length === 0 &&
                     pastWebinars.length === 0 && (
                       <motion.div
-                        className="rounded-xl border border-gray-100 bg-white p-8 text-center shadow-lg"
+                        className="rounded-xl border border-gray-100 bg-white p-8 text-center shadow-lg dark:border-slate-700 dark:bg-slate-800"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
                       >
                         <div className="mb-4">
                           <svg
-                            className="mx-auto size-12 text-gray-400"
+                            className="mx-auto size-12 text-gray-400 dark:text-slate-500"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1087,17 +1104,17 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                             />
                           </svg>
                         </div>
-                        <h3 className="mb-2 text-lg font-medium text-gray-900">
+                        <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-slate-100">
                           No results found
                         </h3>
-                        <p className="mb-4 text-gray-500">
+                        <p className="mb-4 text-gray-500 dark:text-slate-400">
                           We couldn&apos;t find any webinars matching &quot;
                           {searchQuery}&quot;
                         </p>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="rounded-full bg-blue-100 px-4 py-2 text-blue-600 transition-colors duration-300 hover:bg-blue-200"
+                          className="rounded-full bg-blue-100 px-4 py-2 text-blue-600 transition-colors duration-300 hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30"
                           onClick={() => setSearchQuery('')}
                         >
                           Clear search
@@ -1111,7 +1128,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       </main>
 
       <motion.footer
-        className="mt-8 border-t border-gray-100 py-6 text-center text-sm text-gray-500"
+        className="mt-8 border-t border-gray-100 py-6 text-center text-sm text-gray-500 dark:border-slate-700 dark:text-slate-400"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, delay: 1 }}
@@ -1119,7 +1136,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         <div className="mb-2 flex justify-center space-x-4">
           <motion.a
             href="/Terms&services"
-            className="transition-colors duration-300 hover:text-blue-600"
+            className="transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -1128,7 +1145,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           <span>|</span>
           <motion.a
             href="/Privacy"
-            className="transition-colors duration-300 hover:text-blue-600"
+            className="transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -1137,7 +1154,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           <span>|</span>
           <motion.a
             href="/copyright"
-            className="transition-colors duration-300 hover:text-blue-600"
+            className="transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -1145,12 +1162,12 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           </motion.a>
         </div>
         <motion.p
-          className="mt-2"
+          className="mt-2 dark:text-slate-500"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2 }}
         >
-          &copy; 2024 WebinarKit. All rights reserved.
+          &copy; 2025 RSA Tech Software. All rights reserved.
         </motion.p>
       </motion.footer>
     </motion.div>

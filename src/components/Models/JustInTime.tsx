@@ -66,18 +66,18 @@ const JustInTimeModal = ({
   return (
     <Dialog.Root open={open} onOpenChange={onClose}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[450px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-white shadow-2xl">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm dark:bg-black/60" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[450px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-slate-800">
           <AnimatePresence>
             {showSuccess ? (
               <motion.div
-                className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 p-8 text-center"
+                className="flex size-full flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 p-8 text-center dark:from-green-700/30 dark:to-green-800/30"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
                 <motion.div
-                  className="mb-4 flex size-16 items-center justify-center rounded-full bg-green-500"
+                  className="mb-4 flex size-16 items-center justify-center rounded-full bg-green-500 dark:bg-green-600"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 15 }}
@@ -85,7 +85,7 @@ const JustInTimeModal = ({
                   <Check className="size-8 text-white" />
                 </motion.div>
                 <motion.h3
-                  className="mb-2 text-xl font-bold text-green-800"
+                  className="mb-2 text-xl font-bold text-green-800 dark:text-green-300"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.1 }}
@@ -93,7 +93,7 @@ const JustInTimeModal = ({
                   Settings Saved!
                 </motion.h3>
                 <motion.p
-                  className="text-green-700"
+                  className="text-green-700 dark:text-green-400"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
@@ -109,12 +109,12 @@ const JustInTimeModal = ({
                 transition={{ duration: 0.3 }}
               >
                 {/* Header */}
-                <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white">
-                  <div className="absolute -right-4 -top-4 size-24 rounded-full bg-white/10" />
-                  <div className="absolute -bottom-4 -left-4 size-16 rounded-full bg-white/10" />
+                <div className="relative bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white dark:from-blue-700 dark:to-indigo-800">
+                  <div className="absolute -right-4 -top-4 size-24 rounded-full bg-white/10 dark:bg-white/5" />
+                  <div className="absolute -bottom-4 -left-4 size-16 rounded-full bg-white/10 dark:bg-white/5" />
                   <div className="relative flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="rounded-lg bg-white/20 p-2">
+                      <div className="rounded-lg bg-white/20 p-2 dark:bg-white/10">
                         <Clock className="size-5" />
                       </div>
                       <Dialog.Title className="text-lg font-semibold">
@@ -123,7 +123,7 @@ const JustInTimeModal = ({
                     </div>
                     <Dialog.Close asChild>
                       <motion.button
-                        className="rounded-full bg-white/20 p-1 text-white hover:bg-white/30"
+                        className="rounded-full bg-white/20 p-1 text-white hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20"
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                       >
@@ -136,19 +136,19 @@ const JustInTimeModal = ({
                 <div className="p-6">
                   {/* Feature Card */}
                   <motion.div
-                    className="mb-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-4 shadow-sm"
+                    className="mb-6 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-4 shadow-sm dark:from-slate-700 dark:to-slate-600"
                     whileHover={{ scale: 1.01 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 10 }}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="rounded-lg bg-blue-100 p-2">
-                        <Zap className="size-5 text-blue-600" />
+                      <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-500/20">
+                        <Zap className="size-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-gray-800">
+                        <h3 className="font-medium text-gray-800 dark:text-slate-200">
                           Just In Time
                         </h3>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-slate-400">
                           Make your webinar available to viewers just before the
                           scheduled time.
                         </p>
@@ -158,28 +158,22 @@ const JustInTimeModal = ({
 
                   {/* Toggle Just In Time Session */}
                   <div className="mb-6">
-                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-700/50">
                       <div className="flex items-center gap-3">
-                        <div className="rounded-full bg-blue-100 p-2">
-                          <Play className="size-4 text-blue-600" />
+                        <div className="rounded-full bg-blue-100 p-2 dark:bg-blue-500/20">
+                          <Play className="size-4 text-blue-600 dark:text-blue-400" />
                         </div>
-                        <Label className="font-medium">
+                        <Label className="font-medium dark:text-slate-200">
                           Enable Just In Time
                         </Label>
                       </div>
                       <Switch
                         checked={justInTimeEnabled}
                         onCheckedChange={setJustInTimeEnabled}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          justInTimeEnabled ? 'bg-blue-500' : 'bg-gray-300'
-                        }`}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${justInTimeEnabled ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
                       >
                         <motion.span
-                          className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
-                            justInTimeEnabled
-                              ? 'translate-x-5'
-                              : 'translate-x-0'
-                          }`}
+                          className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${justInTimeEnabled ? 'translate-x-5' : 'translate-x-0'}`}
                         />
                       </Switch>
                     </div>
@@ -187,16 +181,20 @@ const JustInTimeModal = ({
 
                   {/* Session Selection */}
                   <div className="mb-6">
-                    <Label className="mb-2 block text-sm font-medium text-gray-700">
+                    <Label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-300">
                       First session available within
                     </Label>
                     <Select
                       value={selectedSession}
                       onValueChange={setSelectedSession}
-                      className="w-full"
+                      className="w-full dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:focus:border-blue-500 dark:focus:ring-blue-500"
                     >
                       {options.map((option) => (
-                        <option key={option.value} value={option.value}>
+                        <option
+                          key={option.value}
+                          value={option.value}
+                          className="dark:bg-slate-700 dark:text-slate-200"
+                        >
                           {option.label}
                         </option>
                       ))}
@@ -208,17 +206,13 @@ const JustInTimeModal = ({
                     <Dialog.Close asChild>
                       <Button
                         variant="outline"
-                        className="border-gray-300 hover:bg-gray-100"
+                        className="border-gray-300 hover:bg-gray-100 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-700"
                       >
                         Cancel
                       </Button>
                     </Dialog.Close>
                     <motion.button
-                      className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white ${
-                        isSaving
-                          ? 'bg-blue-400'
-                          : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
+                      className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium text-white ${isSaving ? 'bg-blue-400 dark:bg-blue-500/80' : 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700'}`}
                       onClick={handleJustInTimeSubmit}
                       disabled={isSaving}
                       whileHover={{ scale: 1.03 }}
@@ -227,7 +221,7 @@ const JustInTimeModal = ({
                       {isSaving ? (
                         <>
                           <motion.div
-                            className="size-4 rounded-full border-2 border-white border-t-transparent"
+                            className="size-4 rounded-full border-2 border-white border-t-transparent dark:border-slate-300 dark:border-t-transparent"
                             animate={{ rotate: 360 }}
                             transition={{
                               duration: 1,
@@ -235,11 +229,13 @@ const JustInTimeModal = ({
                               ease: 'linear',
                             }}
                           />
-                          <span>Saving...</span>
+                          <span className="dark:text-slate-200">Saving...</span>
                         </>
                       ) : (
                         <>
-                          <span>Save Changes</span>
+                          <span className="dark:text-slate-100">
+                            Save Changes
+                          </span>
                           <ChevronRight className="size-4" />
                         </>
                       )}

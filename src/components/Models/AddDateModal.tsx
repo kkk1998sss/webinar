@@ -211,16 +211,16 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
   return (
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex w-[450px] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl bg-white p-3 shadow-xl">
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm dark:bg-black/60" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 flex w-[450px] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl bg-white p-3 shadow-xl dark:bg-slate-800">
           {/* Header */}
-          <div className="flex items-center justify-between border-b pb-1">
+          <div className="flex items-center justify-between border-b pb-1 dark:border-slate-700">
             <Dialog.Title className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-base font-semibold text-transparent">
               Schedule Webinar Date
             </Dialog.Title>
             <Dialog.Close asChild>
               <motion.button
-                className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -233,8 +233,8 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
           <div className="mt-2 grid grid-cols-2 gap-3">
             {/* Date Selection */}
             <div className="space-y-1">
-              <Label className="flex items-center text-xs font-medium">
-                <Calendar className="mr-1 size-3 text-blue-500" />
+              <Label className="flex items-center text-xs font-medium dark:text-slate-300">
+                <Calendar className="mr-1 size-3 text-blue-500 dark:text-blue-400" />
                 Select Date
               </Label>
 
@@ -252,9 +252,9 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                       key={index}
                       className={`
                         rounded-lg border p-1 text-center text-[10px]
-                        ${isSelected ? 'border-blue-600 bg-blue-500 text-white' : 'border-gray-200 hover:border-blue-300'}
-                        ${isTodayDate && !isSelected ? 'border-green-500 text-green-600' : ''}
-                        ${isTomorrowDate && !isSelected ? 'border-purple-500 text-purple-600' : ''}
+                        ${isSelected ? 'border-blue-600 bg-blue-500 text-white dark:border-blue-400 dark:bg-blue-500' : 'border-gray-200 hover:border-blue-300 dark:border-slate-600 dark:text-slate-300 dark:hover:border-blue-400'}
+                        ${isTodayDate && !isSelected ? 'border-green-500 text-green-600 dark:border-green-400 dark:text-green-400' : ''}
+                        ${isTomorrowDate && !isSelected ? 'border-purple-500 text-purple-600 dark:border-purple-400 dark:text-purple-400' : ''}
                       `}
                       onClick={() => handleDateSelect(day)}
                       whileHover={{ scale: 1.05 }}
@@ -276,7 +276,7 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
               <div className="mt-1">
                 <div className="relative" ref={datePickerRef}>
                   <button
-                    className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-300 p-1.5 transition-colors hover:border-blue-400"
+                    className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-gray-300 p-1.5 transition-colors hover:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:hover:border-blue-500"
                     onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
@@ -287,22 +287,22 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                   >
                     <div className="flex items-center">
                       {date ? (
-                        <span className="text-xs text-gray-800">
+                        <span className="text-xs text-gray-800 dark:text-slate-200">
                           {format(new Date(date), 'MMM d, yyyy')}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-gray-400 dark:text-slate-500">
                           Select a date
                         </span>
                       )}
                     </div>
-                    <Calendar className="size-3 text-gray-400" />
+                    <Calendar className="size-3 text-gray-400 dark:text-slate-500" />
                   </button>
 
                   <AnimatePresence>
                     {isDatePickerOpen && (
                       <motion.div
-                        className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg"
+                        className="absolute z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white p-1.5 shadow-lg dark:border-slate-600 dark:bg-slate-700"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -310,27 +310,27 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                       >
                         <div className="mb-1 flex items-center justify-between">
                           <motion.button
-                            className="rounded-full p-0.5 hover:bg-gray-100"
+                            className="rounded-full p-0.5 hover:bg-gray-100 dark:hover:bg-slate-600"
                             onClick={() =>
                               setCurrentMonth(subMonths(currentMonth, 1))
                             }
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                           >
-                            <ChevronLeft className="size-3 text-gray-500" />
+                            <ChevronLeft className="size-3 text-gray-500 dark:text-slate-400" />
                           </motion.button>
-                          <h3 className="text-xs font-medium text-gray-700">
+                          <h3 className="text-xs font-medium text-gray-700 dark:text-slate-300">
                             {format(currentMonth, 'MMMM yyyy')}
                           </h3>
                           <motion.button
-                            className="rounded-full p-0.5 hover:bg-gray-100"
+                            className="rounded-full p-0.5 hover:bg-gray-100 dark:hover:bg-slate-600"
                             onClick={() =>
                               setCurrentMonth(addMonths(currentMonth, 1))
                             }
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                           >
-                            <ChevronRight className="size-3 text-gray-500" />
+                            <ChevronRight className="size-3 text-gray-500 dark:text-slate-400" />
                           </motion.button>
                         </div>
 
@@ -339,7 +339,7 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                             (day, index) => (
                               <div
                                 key={`day-${index}`}
-                                className="py-0.5 text-center text-[8px] font-medium text-gray-500"
+                                className="py-0.5 text-center text-[8px] font-medium text-gray-500 dark:text-slate-400"
                               >
                                 {day}
                               </div>
@@ -362,10 +362,10 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                                 key={index}
                                 className={`
                                   flex size-5 items-center justify-center rounded-full text-[10px]
-                                  ${isSelected ? 'bg-blue-500 text-white' : ''}
-                                  ${!isCurrentMonth ? 'text-gray-300' : ''}
-                                  ${isCurrentDay && !isSelected ? 'border-2 border-blue-500 text-blue-500' : ''}
-                                  ${isCurrentMonth && !isSelected ? 'hover:bg-gray-100' : ''}
+                                  ${isSelected ? 'bg-blue-500 text-white dark:bg-blue-600 dark:text-white' : ''}
+                                  ${!isCurrentMonth ? 'text-gray-300 dark:text-slate-600' : 'dark:text-slate-300'}
+                                  ${isCurrentDay && !isSelected ? 'border-2 border-blue-500 text-blue-500 dark:border-blue-400 dark:text-blue-400' : ''}
+                                  ${isCurrentMonth && !isSelected ? 'hover:bg-gray-100 dark:hover:bg-slate-600' : ''}
                                 `}
                                 onClick={() => handleDateSelect(day)}
                                 whileHover={{ scale: isCurrentMonth ? 1.1 : 1 }}
@@ -386,18 +386,18 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
 
             {/* Time Selection */}
             <div className="space-y-1">
-              <Label className="flex items-center text-xs font-medium">
-                <Clock className="mr-1 size-3 text-purple-500" />
+              <Label className="flex items-center text-xs font-medium dark:text-slate-300">
+                <Clock className="mr-1 size-3 text-purple-500 dark:text-purple-400" />
                 Select Time
               </Label>
 
-              <div className="grid max-h-[100px] grid-cols-3 gap-1 overflow-y-auto rounded-lg border border-gray-200 p-1">
+              <div className="grid max-h-[100px] grid-cols-3 gap-1 overflow-y-auto rounded-lg border border-gray-200 p-1 dark:border-slate-600">
                 {timeSlots.map((slot, index) => (
                   <motion.button
                     key={index}
                     className={`
                       rounded-md p-0.5 text-center text-[10px]
-                      ${selectedTime === slot.time ? 'bg-purple-500 text-white' : 'hover:bg-gray-100'}
+                      ${selectedTime === slot.time ? 'bg-purple-500 text-white dark:bg-purple-600 dark:text-white' : 'hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-600'}
                     `}
                     onClick={() => handleTimeSelect(slot.time, slot.period)}
                     whileHover={{ scale: 1.05 }}
@@ -411,14 +411,14 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
 
             {/* Timezone Selection */}
             <div className="col-span-2 space-y-1">
-              <Label className="flex items-center text-xs font-medium">
-                <Globe className="mr-1 size-3 text-green-500" />
+              <Label className="flex items-center text-xs font-medium dark:text-slate-300">
+                <Globe className="mr-1 size-3 text-green-500 dark:text-green-400" />
                 Select Time Zone
               </Label>
 
               <div className="relative">
                 <button
-                  className="flex w-full items-center justify-between rounded-lg border border-gray-300 p-1.5 transition-colors hover:border-green-400"
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-300 p-1.5 transition-colors hover:border-green-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:border-green-500"
                   onClick={() =>
                     setIsTimeZoneDropdownOpen(!isTimeZoneDropdownOpen)
                   }
@@ -429,11 +429,11 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                   }}
                   tabIndex={0}
                 >
-                  <span className="text-xs text-gray-700">
+                  <span className="text-xs text-gray-700 dark:text-slate-200">
                     {getTimeZoneDisplayName()}
                   </span>
                   <ChevronDown
-                    className={`size-3 text-gray-500 transition-transform ${isTimeZoneDropdownOpen ? 'rotate-180' : ''}`}
+                    className={`size-3 text-gray-500 transition-transform dark:text-slate-400 ${isTimeZoneDropdownOpen ? 'rotate-180' : ''}`}
                   />
                 </button>
 
@@ -444,24 +444,24 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute z-10 mt-1 max-h-[150px] w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+                      className="absolute z-10 mt-1 max-h-[150px] w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-slate-600 dark:bg-slate-700"
                     >
                       <ScrollArea className="h-[150px]">
                         {timeZoneOptions.map((region, regionIndex) => (
                           <div
                             key={regionIndex}
-                            className="border-b last:border-b-0"
+                            className="border-b last:border-b-0 dark:border-slate-600"
                           >
-                            <div className="bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500">
+                            <div className="bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-slate-600 dark:text-slate-400">
                               {region.region}
                             </div>
                             {region.zones.map((zone, zoneIndex) => (
                               <button
                                 key={zoneIndex}
-                                className={`flex w-full items-center justify-between px-2 py-0.5 text-left text-[10px] hover:bg-gray-50 ${
+                                className={`flex w-full items-center justify-between px-2 py-0.5 text-left text-[10px] hover:bg-gray-50 dark:hover:bg-slate-600 ${
                                   timeZone === zone.value
-                                    ? 'bg-blue-50 text-blue-600'
-                                    : 'text-gray-700'
+                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/30 dark:text-blue-300'
+                                    : 'text-gray-700 dark:text-slate-300'
                                 }`}
                                 onClick={() => {
                                   setTimeZone(zone.value);
@@ -470,7 +470,7 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
                               >
                                 <span>{zone.label}</span>
                                 {timeZone === zone.value && (
-                                  <Check className="size-2.5 text-blue-500" />
+                                  <Check className="size-2.5 text-blue-500 dark:text-blue-400" />
                                 )}
                               </button>
                             ))}
@@ -485,20 +485,18 @@ const AddDateModal: React.FC<AddDateModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className="mt-3 flex justify-end space-x-2 border-t pt-2">
+          <div className="mt-3 flex justify-end space-x-2 border-t pt-2 dark:border-slate-700">
             <Button
               variant="outline"
               onClick={onClose}
-              className="h-7 border-gray-300 px-2 py-0.5 text-xs hover:bg-gray-100"
+              className="h-7 border-gray-300 px-2 py-0.5 text-xs hover:bg-gray-100 dark:border-slate-600 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-700"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
               disabled={!date || !selectedTime}
-              className={`h-7 bg-gradient-to-r from-blue-600 to-purple-600 px-2 py-0.5 text-xs text-white hover:from-blue-700 hover:to-purple-700 ${
-                !date || !selectedTime ? 'cursor-not-allowed opacity-50' : ''
-              }`}
+              className={`h-7 bg-gradient-to-r from-blue-600 to-purple-600 px-2 py-0.5 text-xs text-white hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-600 dark:hover:from-blue-600 dark:hover:to-purple-700 ${!date || !selectedTime ? 'cursor-not-allowed opacity-50' : ''}`}
             >
               Add Date
             </Button>

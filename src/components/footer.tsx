@@ -12,6 +12,7 @@ import {
   FaYoutube,
 } from 'react-icons/fa';
 import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
 import Link from 'next/link';
 
 // Enhanced footer links with descriptions and icons
@@ -343,6 +344,15 @@ export const Footer = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.5, duration: 0.5 }}
           >
+            <div className="mb-4 flex justify-center">
+              <Image
+                src="/assets/shree-maaha.png"
+                alt="Shree Maaha Logo"
+                width={260}
+                height={53}
+                className="object-contain mix-blend-screen"
+              />
+            </div>
             <div className="mb-4 flex justify-center gap-4 text-sm text-gray-400">
               <Link href="/terms" className="hover:text-blue-400">
                 Terms
@@ -356,10 +366,29 @@ export const Footer = () => {
                 Cookies
               </Link>
             </div>
-            <p className="flex items-center justify-center gap-1 text-sm text-gray-500">
-              Made with <FaHeart className="text-red-500" /> by WebinarKit Team
-              © {new Date().getFullYear()}
-            </p>
+            <div className="flex flex-col items-center justify-center gap-1 text-sm text-gray-500">
+              <span>
+                Made with <FaHeart className="inline text-red-500" /> by{' '}
+                <Link
+                  href="https://rsatechsoftware.in/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-colors duration-300 hover:text-blue-400"
+                >
+                  RSA Tech Software
+                </Link>{' '}
+                © {new Date().getFullYear()}
+              </span>
+              <span>
+                Contact:{' '}
+                <a
+                  href="tel:8009448518"
+                  className="transition-colors duration-300 hover:text-blue-400"
+                >
+                  8009448518
+                </a>
+              </span>
+            </div>
           </motion.div>
         </div>
       </div>

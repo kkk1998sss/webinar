@@ -168,7 +168,7 @@ const FAQ = () => {
   };
 
   return (
-    <section className="w-full bg-gradient-to-b from-gray-50 to-white px-6 py-20">
+    <section className="w-full bg-gradient-to-b from-gray-50 to-white px-6 py-20 dark:from-slate-800 dark:to-gray-900">
       <div className="mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -182,7 +182,7 @@ const FAQ = () => {
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             viewport={{ once: true }}
-            className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-600"
+            className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-600 dark:bg-blue-900 dark:text-blue-400"
           >
             Got Questions?
           </motion.span>
@@ -191,7 +191,7 @@ const FAQ = () => {
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
             viewport={{ once: true }}
-            className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl"
+            className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl dark:text-white"
           >
             Frequently Asked Questions
           </motion.h2>
@@ -200,7 +200,7 @@ const FAQ = () => {
             whileInView={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.5 }}
             viewport={{ once: true }}
-            className="mx-auto max-w-2xl text-lg text-gray-600"
+            className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-300"
           >
             Find answers to common questions about WebinarKit and how it can
             help your business grow.
@@ -220,8 +220,8 @@ const FAQ = () => {
               key={category.id}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
                 activeCategory === category.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-blue-600 text-white shadow-md dark:bg-blue-500'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-slate-700 dark:text-gray-300 dark:hover:bg-slate-600'
               }`}
               onClick={() => setActiveCategory(category.id)}
               whileHover={{ scale: 1.05 }}
@@ -243,7 +243,7 @@ const FAQ = () => {
           {filteredFaqs.map((faq, index) => (
             <motion.div
               key={index}
-              className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md"
+              className="mb-4 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800"
               variants={itemVariants}
             >
               <motion.button
@@ -254,10 +254,10 @@ const FAQ = () => {
                 whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-blue-50">
+                  <div className="flex size-10 items-center justify-center rounded-full bg-blue-50 dark:bg-slate-700">
                     {faq.icon}
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {faq.question}
                   </h4>
                 </div>
@@ -265,7 +265,7 @@ const FAQ = () => {
                   {activeIndex === index ? (
                     <FaChevronUp className="size-5 text-blue-500" />
                   ) : (
-                    <FaChevronDown className="size-5 text-gray-400" />
+                    <FaChevronDown className="size-5 text-gray-400 dark:text-gray-500" />
                   )}
                 </div>
               </motion.button>
@@ -279,7 +279,7 @@ const FAQ = () => {
                     variants={contentVariants}
                     className="overflow-hidden"
                   >
-                    <div className="border-t border-gray-100 p-5 text-gray-600">
+                    <div className="border-t border-gray-100 p-5 text-gray-600 dark:border-slate-700 dark:text-gray-300">
                       {faq.answer}
                     </div>
                   </motion.div>
@@ -295,7 +295,7 @@ const FAQ = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
           viewport={{ once: true }}
-          className="mx-auto mt-16 max-w-3xl rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center text-white shadow-xl"
+          className="mx-auto mt-16 max-w-3xl rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-center text-white shadow-xl dark:from-blue-500 dark:to-indigo-500"
         >
           <h3 className="mb-4 text-2xl font-bold">Still have questions?</h3>
           <p className="mb-6 text-lg text-white/90">
@@ -303,7 +303,7 @@ const FAQ = () => {
             you may have about WebinarKit.
           </p>
           <motion.button
-            className="rounded-full bg-white px-6 py-3 font-bold text-blue-600 shadow-lg transition-all duration-300 hover:bg-gray-100"
+            className="rounded-full bg-white px-6 py-3 font-bold text-blue-600 shadow-lg transition-all duration-300 hover:bg-gray-100 dark:bg-slate-200 dark:text-blue-600 dark:hover:bg-slate-300"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >

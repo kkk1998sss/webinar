@@ -132,7 +132,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4 py-12 sm:px-6 lg:px-8 dark:from-gray-800 dark:to-gray-900">
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 20 }}
@@ -140,12 +140,12 @@ export default function LoginPage() {
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          className="overflow-hidden rounded-2xl bg-white shadow-xl"
+          className="overflow-hidden rounded-2xl bg-white shadow-xl dark:bg-slate-800 dark:shadow-slate-700/50"
           initial={{ scale: 0.95 }}
           animate={{ scale: isPageLoaded ? 1 : 0.95 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white dark:from-blue-500 dark:to-purple-500">
             <motion.h2
               className="text-2xl font-bold"
               initial={{ opacity: 0 }}
@@ -168,7 +168,7 @@ export default function LoginPage() {
             <AnimatePresence mode="wait">
               {error && (
                 <motion.div
-                  className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600"
+                  className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-700/50 dark:bg-red-900/30 dark:text-red-400"
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
@@ -181,7 +181,7 @@ export default function LoginPage() {
 
             {/* Toggle Between Email & Phone Login */}
             <motion.div
-              className="mb-6 flex justify-center space-x-2 rounded-lg bg-gray-100 p-1"
+              className="mb-6 flex justify-center space-x-2 rounded-lg bg-gray-100 p-1 dark:bg-slate-700"
               initial={{ opacity: 0 }}
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
@@ -189,8 +189,8 @@ export default function LoginPage() {
               <motion.button
                 className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200 ${
                   loginMethod === 'email'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-blue-600 shadow-sm dark:bg-slate-600 dark:text-blue-300 dark:shadow-none'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
                 onClick={() => setLoginMethod('email')}
                 whileHover={{ scale: 1.02 }}
@@ -201,8 +201,8 @@ export default function LoginPage() {
               <motion.button
                 className={`flex-1 rounded-md px-4 py-2 text-sm font-medium transition-all duration-200 ${
                   loginMethod === 'phone'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-white text-blue-600 shadow-sm dark:bg-slate-600 dark:text-blue-300 dark:shadow-none'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
                 onClick={() => setLoginMethod('phone')}
                 whileHover={{ scale: 1.02 }}
@@ -230,7 +230,7 @@ export default function LoginPage() {
                   >
                     <Label
                       htmlFor="email"
-                      className="text-sm font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Email
                     </Label>
@@ -242,10 +242,10 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
                       />
                       <motion.div
-                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
                         initial={{ width: 0 }}
                         animate={{ width: email ? '100%' : 0 }}
                         transition={{ duration: 0.3 }}
@@ -261,7 +261,7 @@ export default function LoginPage() {
                   >
                     <Label
                       htmlFor="password"
-                      className="text-sm font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Password
                     </Label>
@@ -273,10 +273,10 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
                       />
                       <motion.div
-                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
                         initial={{ width: 0 }}
                         animate={{ width: password ? '100%' : 0 }}
                         transition={{ duration: 0.3 }}
@@ -284,7 +284,7 @@ export default function LoginPage() {
                       <motion.button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                         tabIndex={-1}
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
@@ -302,7 +302,7 @@ export default function LoginPage() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                      className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg dark:from-blue-500 dark:to-purple-500 dark:hover:shadow-blue-700/50"
                     >
                       {isLoading ? (
                         <div className="flex items-center justify-center">
@@ -363,7 +363,7 @@ export default function LoginPage() {
                   >
                     <Label
                       htmlFor="phone"
-                      className="text-sm font-medium text-gray-700"
+                      className="text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                       Phone Number
                     </Label>
@@ -375,10 +375,10 @@ export default function LoginPage() {
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         required
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
                       />
                       <motion.div
-                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                        className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
                         initial={{ width: 0 }}
                         animate={{ width: phoneNumber ? '100%' : 0 }}
                         transition={{ duration: 0.3 }}
@@ -396,7 +396,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={handleRequestOTP}
                         disabled={isLoading}
-                        className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                        className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg dark:from-blue-500 dark:to-purple-500 dark:hover:shadow-blue-700/50"
                       >
                         {isLoading ? (
                           <div className="flex items-center justify-center">
@@ -446,7 +446,7 @@ export default function LoginPage() {
                       >
                         <Label
                           htmlFor="otp"
-                          className="text-sm font-medium text-gray-700"
+                          className="text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                           Enter OTP
                         </Label>
@@ -458,10 +458,10 @@ export default function LoginPage() {
                             value={otp}
                             onChange={(e) => setOtp(e.target.value)}
                             required
-                            className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
                           />
                           <motion.div
-                            className="absolute bottom-0 left-0 h-0.5 bg-blue-500"
+                            className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
                             initial={{ width: 0 }}
                             animate={{ width: otp ? '100%' : 0 }}
                             transition={{ duration: 0.3 }}
@@ -477,7 +477,7 @@ export default function LoginPage() {
                         <Button
                           type="submit"
                           disabled={isLoading}
-                          className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                          className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg dark:from-blue-500 dark:to-purple-500 dark:hover:shadow-blue-700/50"
                         >
                           {isLoading ? (
                             <div className="flex items-center justify-center">
@@ -530,7 +530,9 @@ export default function LoginPage() {
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
             >
-              <span className="text-sm text-gray-500">Or sign in with</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Or sign in with
+              </span>
             </motion.div>
 
             <motion.div
@@ -543,7 +545,7 @@ export default function LoginPage() {
               transition={{ duration: 0.5, delay: 0.6 }}
             >
               <motion.button
-                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50"
+                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-slate-700"
                 whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => signIn('github')}
@@ -551,7 +553,7 @@ export default function LoginPage() {
                 <Icons.github className="size-5" />
               </motion.button>
               <motion.button
-                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50"
+                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-slate-700"
                 whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => signIn('google')}
@@ -559,7 +561,7 @@ export default function LoginPage() {
                 <Icons.google className="size-5" />
               </motion.button>
               <motion.button
-                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50"
+                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-slate-700"
                 whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => signIn('twitter')}
@@ -569,7 +571,7 @@ export default function LoginPage() {
             </motion.div>
 
             <motion.p
-              className="mt-6 text-center text-sm text-gray-600"
+              className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400"
               initial={{ opacity: 0 }}
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.7 }}
@@ -577,7 +579,7 @@ export default function LoginPage() {
               Don&apos;t have an account?{' '}
               <Link
                 href="/auth/register"
-                className="font-medium text-blue-600 transition-colors hover:text-blue-800 hover:underline"
+                className="font-medium text-blue-600 transition-colors hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
               >
                 Sign up
               </Link>

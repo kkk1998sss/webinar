@@ -50,8 +50,8 @@ export default function LiveWebinarPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
+        <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     );
   }

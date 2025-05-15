@@ -28,16 +28,18 @@ export const SignInButton = () => {
         <Button
           variant="outline"
           disabled
-          className="border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 transition-all duration-300 hover:border-blue-300"
+          className="border-secondary dark:border-secondary-dark from-secondary/50 to-accent/30 hover:border-secondary/70 dark:from-secondary-dark/50 dark:to-accent-dark/30 dark:hover:border-secondary-dark/70 bg-gradient-to-r transition-all duration-300"
         >
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
             className="mr-2"
           >
-            <Icons.loader className="size-4 text-blue-500" />
+            <Icons.loader className="text-primary dark:text-primary-dark size-4" />
           </motion.div>
-          <span className="text-blue-600">{m.loading()}</span>
+          <span className="text-primary dark:text-primary-foreground/80">
+            {m.loading()}
+          </span>
         </Button>
       </motion.div>
     );
@@ -54,7 +56,7 @@ export const SignInButton = () => {
           >
             <Button
               variant="outline"
-              className="group border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 transition-all duration-300 hover:border-blue-300"
+              className="border-secondary dark:border-secondary-dark from-secondary/50 to-accent/30 hover:border-secondary/70 dark:from-secondary-dark/50 dark:to-accent-dark/30 dark:hover:border-secondary-dark/70 group bg-gradient-to-r transition-all duration-300"
             >
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
@@ -63,13 +65,13 @@ export const SignInButton = () => {
                 className="flex items-center"
               >
                 <motion.div
-                  className="mr-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-1"
+                  className="from-primary to-accent mr-2 rounded-full bg-gradient-to-r p-1"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Icons.user className="size-4 text-white" />
+                  <Icons.user className="text-primary-foreground size-4" />
                 </motion.div>
-                <span className="font-medium text-blue-600">
+                <span className="text-primary dark:text-primary-foreground/90 font-medium">
                   {session.user.name || 'User'}
                 </span>
                 <motion.div
@@ -77,7 +79,7 @@ export const SignInButton = () => {
                   animate={{ rotate: 180 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Icons.moon className="size-4 text-blue-500" />
+                  <Icons.moon className="text-accent dark:text-accent-dark size-4" />
                 </motion.div>
               </motion.div>
             </Button>
@@ -91,7 +93,7 @@ export const SignInButton = () => {
             <Button
               variant="outline"
               onClick={() => signIn()}
-              className="group border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 transition-all duration-300 hover:border-blue-300"
+              className="border-secondary dark:border-secondary-dark from-secondary/50 to-accent/30 hover:border-secondary/70 dark:from-secondary-dark/50 dark:to-accent-dark/30 dark:hover:border-secondary-dark/70 group bg-gradient-to-r transition-all duration-300"
             >
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
@@ -100,19 +102,21 @@ export const SignInButton = () => {
                 className="flex items-center"
               >
                 <motion.div
-                  className="mr-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 p-1"
+                  className="from-primary to-accent mr-2 rounded-full bg-gradient-to-r p-1"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Icons.user className="size-4 text-white" />
+                  <Icons.user className="text-primary-foreground size-4" />
                 </motion.div>
-                <span className="font-medium text-blue-600">{m.sign_in()}</span>
+                <span className="text-primary dark:text-primary-foreground/90 font-medium">
+                  {m.sign_in()}
+                </span>
                 <motion.div
                   className="ml-2"
                   animate={{ rotate: 180 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Icons.moon className="size-4 text-blue-500" />
+                  <Icons.moon className="text-accent dark:text-accent-dark size-4" />
                 </motion.div>
               </motion.div>
             </Button>
@@ -121,7 +125,7 @@ export const SignInButton = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="overflow-hidden rounded-xl border border-blue-100 bg-white/80 shadow-lg backdrop-blur-md"
+        className="border-border bg-popover/80 dark:border-border-dark overflow-hidden rounded-xl shadow-lg backdrop-blur-md"
       >
         <AnimatePresence>
           {session?.user ? (
@@ -133,16 +137,16 @@ export const SignInButton = () => {
             >
               <DropdownMenuItem
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex cursor-pointer items-center px-4 py-3 transition-colors duration-200 hover:bg-blue-50"
+                className="hover:bg-secondary dark:hover:bg-secondary-dark flex cursor-pointer items-center px-4 py-3 transition-colors duration-200"
               >
                 <motion.div
                   whileHover={{ rotate: 180 }}
                   transition={{ duration: 0.3 }}
-                  className="mr-2 rounded-full bg-red-100 p-1"
+                  className="bg-destructive/20 dark:bg-destructive-dark/30 mr-2 rounded-full p-1"
                 >
-                  <Icons.logOut className="size-4 text-red-500" />
+                  <Icons.logOut className="text-destructive dark:text-destructive-dark size-4" />
                 </motion.div>
-                <span className="font-medium text-gray-700">
+                <span className="text-foreground dark:text-foreground-dark font-medium">
                   {m.sign_out()}
                 </span>
               </DropdownMenuItem>
@@ -156,16 +160,16 @@ export const SignInButton = () => {
               >
                 <DropdownMenuItem
                   onClick={() => signIn('github')}
-                  className="flex cursor-pointer items-center px-4 py-3 transition-colors duration-200 hover:bg-blue-50"
+                  className="hover:bg-secondary dark:hover:bg-secondary-dark flex cursor-pointer items-center px-4 py-3 transition-colors duration-200"
                 >
                   <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
-                    className="mr-2 rounded-full bg-gray-100 p-1"
+                    className="bg-muted dark:bg-muted-dark mr-2 rounded-full p-1"
                   >
-                    <Icons.github className="size-4 text-gray-700" />
+                    <Icons.github className="text-muted-foreground dark:text-muted-foreground-dark size-4" />
                   </motion.div>
-                  <span className="font-medium text-gray-700">
+                  <span className="text-foreground dark:text-foreground-dark font-medium">
                     {m.sign_in()} (GitHub)
                   </span>
                 </DropdownMenuItem>
@@ -177,16 +181,16 @@ export const SignInButton = () => {
               >
                 <DropdownMenuItem
                   onClick={() => signIn('google')}
-                  className="flex cursor-pointer items-center px-4 py-3 transition-colors duration-200 hover:bg-blue-50"
+                  className="hover:bg-secondary dark:hover:bg-secondary-dark flex cursor-pointer items-center px-4 py-3 transition-colors duration-200"
                 >
                   <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
-                    className="mr-2 rounded-full bg-red-100 p-1"
+                    className="mr-2 rounded-full bg-red-600/20 p-1 dark:bg-red-500/30"
                   >
-                    <Icons.google className="size-4 text-red-500" />
+                    <Icons.google className="size-4 text-red-600 dark:text-red-500" />
                   </motion.div>
-                  <span className="font-medium text-gray-700">
+                  <span className="text-foreground dark:text-foreground-dark font-medium">
                     {m.sign_in()} (Google)
                   </span>
                 </DropdownMenuItem>
@@ -198,16 +202,16 @@ export const SignInButton = () => {
               >
                 <DropdownMenuItem
                   onClick={() => signIn('twitter')}
-                  className="flex cursor-pointer items-center px-4 py-3 transition-colors duration-200 hover:bg-blue-50"
+                  className="hover:bg-secondary dark:hover:bg-secondary-dark flex cursor-pointer items-center px-4 py-3 transition-colors duration-200"
                 >
                   <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
-                    className="mr-2 rounded-full bg-blue-100 p-1"
+                    className="mr-2 rounded-full bg-yellow-400/30 p-1 dark:bg-yellow-500/40"
                   >
-                    <Icons.twitter className="size-4 text-blue-500" />
+                    <Icons.twitter className="size-4 text-yellow-600 dark:text-yellow-300" />
                   </motion.div>
-                  <span className="font-medium text-gray-700">
+                  <span className="text-foreground dark:text-foreground-dark font-medium">
                     {m.sign_in()} (Twitter)
                   </span>
                 </DropdownMenuItem>
@@ -219,16 +223,16 @@ export const SignInButton = () => {
               >
                 <DropdownMenuItem
                   onClick={() => router.push('/auth/login')}
-                  className="flex cursor-pointer items-center px-4 py-3 transition-colors duration-200 hover:bg-blue-50"
+                  className="hover:bg-secondary dark:hover:bg-secondary-dark flex cursor-pointer items-center px-4 py-3 transition-colors duration-200"
                 >
                   <motion.div
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
-                    className="mr-2 rounded-full bg-green-100 p-1"
+                    className="bg-primary/20 dark:bg-primary-dark/30 mr-2 rounded-full p-1"
                   >
-                    <Icons.user className="size-4 text-green-500" />
+                    <Icons.user className="text-primary dark:text-primary-dark size-4" />
                   </motion.div>
-                  <span className="font-medium text-gray-700">
+                  <span className="text-foreground dark:text-foreground-dark font-medium">
                     {m.sign_up()} (Email)
                   </span>
                 </DropdownMenuItem>

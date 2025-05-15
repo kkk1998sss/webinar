@@ -95,7 +95,7 @@ const Pricing = () => {
   return (
     <section
       id="pricing"
-      className="scroll-mt-24 bg-gradient-to-b from-white to-blue-50 py-16 dark:from-gray-900 dark:to-gray-800"
+      className="from-background to-secondary/30 dark:from-background dark:to-secondary-dark/20 scroll-mt-24 bg-gradient-to-b py-16"
     >
       <div className="mx-auto max-w-screen-xl px-4 lg:px-6">
         <div className="mx-auto mb-12 max-w-screen-md text-center">
@@ -113,7 +113,7 @@ const Pricing = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
             viewport={{ once: true }}
-            className="mb-5 font-light text-gray-600 sm:text-xl dark:text-gray-300"
+            className="mb-5 font-light text-gray-600 sm:text-xl dark:text-gray-400"
           >
             Start your mindfulness journey with flexible subscription options
           </motion.p>
@@ -129,22 +129,24 @@ const Pricing = () => {
               viewport={{ once: true }}
             >
               <Card
-                className={`relative overflow-hidden p-6 text-center transition-all duration-300 hover:shadow-xl ${plan.highlight ? 'border-2 border-blue-500 dark:border-blue-400' : ''}`}
+                className={`dark:hover:shadow-primary/20 relative overflow-hidden p-6 text-center transition-all duration-300 hover:shadow-xl ${plan.highlight ? 'border-primary dark:border-primary-dark border-2' : 'dark:border-border'}`}
               >
                 {plan.popular && (
-                  <div className="absolute right-0 top-0 rounded-bl-lg bg-blue-500 px-3 py-1 text-xs font-bold text-white">
+                  <div className="bg-primary text-primary-foreground dark:bg-primary-dark absolute right-0 top-0 rounded-bl-lg px-3 py-1 text-xs font-bold">
                     POPULAR
                   </div>
                 )}
 
-                <h3 className="mb-4 text-2xl font-semibold">{plan.title}</h3>
+                <h3 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">
+                  {plan.title}
+                </h3>
                 <p className="mb-4 text-gray-600 dark:text-gray-300">
                   {plan.description}
                 </p>
 
                 <div className="my-6 flex items-baseline justify-center">
                   <motion.span
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-bold text-transparent"
+                    className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-5xl font-bold text-transparent dark:from-red-500 dark:to-yellow-400"
                     initial={{ scale: 0.8 }}
                     whileInView={{ scale: 1 }}
                     transition={{
@@ -157,10 +159,12 @@ const Pricing = () => {
                   >
                     {plan.price}
                   </motion.span>
-                  <span className="ml-2 text-gray-500">{plan.duration}</span>
+                  <span className="ml-2 text-gray-500 dark:text-gray-400">
+                    {plan.duration}
+                  </span>
                 </div>
 
-                <ul className="mb-8 space-y-3 text-left">
+                <ul className="mb-8 space-y-3 text-left text-gray-700 dark:text-slate-300">
                   {plan.features.map((feature, idx) => (
                     <motion.li
                       key={idx}
@@ -171,7 +175,7 @@ const Pricing = () => {
                       viewport={{ once: true }}
                     >
                       <svg
-                        className="size-5 text-green-500"
+                        className="size-5 text-yellow-500 dark:text-yellow-400"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -188,14 +192,14 @@ const Pricing = () => {
 
                 {loading ? (
                   <div className="flex h-10 items-center justify-center">
-                    <div className="size-6 animate-spin rounded-full border-b-2 border-blue-600"></div>
+                    <div className="border-primary dark:border-primary-dark size-6 animate-spin rounded-full border-b-2"></div>
                   </div>
                 ) : plan.planType === 'FOUR_DAY' && hasActiveFourDayPlan ? (
-                  <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+                  <div className="rounded-md bg-yellow-100 p-3 text-sm text-yellow-800 dark:bg-yellow-700/30 dark:text-yellow-300">
                     You already have an active 4-Day plan
                   </div>
                 ) : plan.planType === 'SIX_MONTH' && hasActiveSixMonthPlan ? (
-                  <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
+                  <div className="rounded-md bg-yellow-100 p-3 text-sm text-yellow-800 dark:bg-yellow-700/30 dark:text-yellow-300">
                     You already have an active 6-Month plan
                   </div>
                 ) : (

@@ -47,16 +47,16 @@ const Home = () => {
 
   if (status === 'loading' || loadingSub) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-blue-50">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-blue-50 dark:from-gray-900 dark:to-gray-800">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
           className="flex flex-col items-center"
         >
-          <Loader2 className="size-12 animate-spin text-blue-600" />
+          <Loader2 className="size-12 animate-spin text-blue-600 dark:text-blue-400" />
           <motion.p
-            className="mt-4 font-medium text-blue-600"
+            className="mt-4 font-medium text-blue-600 dark:text-slate-300"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -69,7 +69,7 @@ const Home = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-blue-50">
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-white to-blue-50 dark:from-gray-900 dark:to-slate-800">
       <main className="w-full flex-1">
         <motion.div
           className="mx-auto flex flex-col items-center py-16 text-center"
@@ -78,16 +78,16 @@ const Home = () => {
           transition={{ duration: 0.6 }}
         >
           <motion.h1
-            className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent"
+            className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-4xl font-bold text-transparent dark:from-red-500 dark:to-yellow-400"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {userName ? `Welcome ${userName}!` : 'Welcome to WebinarKit'}
+            {userName ? `Welcome ${userName}!` : 'Welcome to SMVSP Webinar'}
           </motion.h1>
 
           <motion.div
-            className="mt-4 max-w-2xl text-gray-600"
+            className="mt-4 max-w-2xl text-gray-600 dark:text-gray-400"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.4 }}
@@ -101,7 +101,7 @@ const Home = () => {
           {/* Subscription upsell for authenticated users without subscription */}
           {status === 'authenticated' && !hasSubscription && (
             <motion.div
-              className="mt-8 w-full max-w-2xl rounded-xl border border-blue-100 bg-white p-6 shadow-lg"
+              className="mt-8 w-full max-w-2xl rounded-xl border border-blue-100 bg-white p-6 shadow-lg dark:border-slate-700 dark:bg-slate-800"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
@@ -112,17 +112,17 @@ const Home = () => {
               }}
             >
               <motion.div
-                className="absolute -right-3 -top-3 rounded-full bg-blue-500 px-3 py-1 text-xs font-bold text-white"
+                className="absolute -right-3 -top-3 rounded-full bg-blue-500 px-3 py-1 text-xs font-bold text-white dark:bg-blue-600"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200, delay: 0.8 }}
               >
                 NEW
               </motion.div>
-              <h2 className="mb-2 text-xl font-semibold text-blue-800">
+              <h2 className="mb-2 text-xl font-semibold text-blue-800 dark:text-blue-300">
                 Start Your Journey Today
               </h2>
-              <p className="text-blue-700">
+              <p className="text-blue-700 dark:text-blue-400">
                 Unlock premium features and take your webinars to the next level
               </p>
               <motion.div
@@ -130,7 +130,7 @@ const Home = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Button
-                  className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md hover:from-blue-700 hover:to-purple-700"
+                  className="mt-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md hover:from-blue-700 hover:to-purple-700 dark:from-blue-500 dark:to-purple-500 dark:hover:from-blue-600 dark:hover:to-purple-600"
                   onClick={() =>
                     document.getElementById('pricing')?.scrollIntoView({
                       behavior: 'smooth',
