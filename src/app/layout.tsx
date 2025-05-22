@@ -53,7 +53,11 @@ const RootLayout = ({ children }: PropsWithChildren) => {
     <LanguageProvider>
       <html lang={languageTag()} suppressHydrationWarning>
         <body className={cn('min-h-screen font-sans', fonts)}>
-          <SessionProvider>
+          <SessionProvider
+            refetchInterval={0}
+            refetchOnWindowFocus={false}
+            refetchWhenOffline={false}
+          >
             <ThemeProvider attribute="class">
               <Navbar />
               {children}

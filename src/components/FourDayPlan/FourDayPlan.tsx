@@ -38,6 +38,7 @@ interface Video {
     webinarName: string;
     webinarTitle: string;
   };
+  day?: number;
 }
 
 interface Subscription {
@@ -74,12 +75,11 @@ export default function VideoPlayerPage() {
   );
   const [hasActiveSixMonthPlan, setHasActiveSixMonthPlan] = useState(false);
   const [activeTab, setActiveTab] = useState<'videos' | 'upgrade'>('videos');
-  const [showProgress, setShowProgress] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [videos, setVideos] = useState<Video[]>([]);
   const [videoMetadata, setVideoMetadata] = useState<{ [key: string]: string }>(
     {}
   );
+  const [currentDay, setCurrentDay] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,8 +88,56 @@ export default function VideoPlayerPage() {
         const videoRes = await fetch('/api/videos');
         const videoData = await videoRes.json();
         if (videoData.success) {
-          // Take only the first 4 videos
-          setVideos(videoData.videos.slice(0, 4));
+          // Define the desired order of video titles
+          const desiredOrder = [
+            'Basics of Shree Suktam Sadhana',
+            'Shree Yantra Pooja',
+            'Learn Shree Suktam Sadhana',
+          ];
+
+          // First, find the Basics of Shree Suktam Sadhana video
+          const basicsSuktamVideo = videoData.videos.find(
+            (v: Video) => v.title === 'Basics of Shree Suktam Sadhana'
+          );
+
+          // Get remaining videos
+          const remainingVideos = videoData.videos.filter(
+            (v: Video) => v.title !== 'Basics of Shree Suktam Sadhana'
+          );
+
+          // Sort remaining videos according to the desired title order
+          const sortedRemainingVideos = remainingVideos.sort(
+            (a: Video, b: Video) => {
+              const aIndex = desiredOrder.indexOf(a.title);
+              const bIndex = desiredOrder.indexOf(b.title);
+              // If video title not in desired order, put it at the end
+              if (aIndex === -1) return 1;
+              if (bIndex === -1) return -1;
+              return aIndex - bIndex;
+            }
+          );
+
+          // Combine videos with Basics of Shree Suktam Sadhana first
+          const finalVideos = basicsSuktamVideo
+            ? [basicsSuktamVideo, ...sortedRemainingVideos]
+            : sortedRemainingVideos;
+
+          // Assign days based on sorted order
+          const videosWithDays = finalVideos
+            .slice(0, 3)
+            .map((video: Video, index: number) => ({
+              ...video,
+              day: index + 1,
+            }));
+
+          setVideos(videosWithDays);
+
+          // Set the Basics of Shree Suktam Sadhana video as current if available
+          if (basicsSuktamVideo) {
+            setCurrentVideo({ ...basicsSuktamVideo, day: 1 });
+          } else if (videosWithDays.length > 0) {
+            setCurrentVideo(videosWithDays[0]);
+          }
         }
 
         // Fetch subscription
@@ -104,6 +152,16 @@ export default function VideoPlayerPage() {
               new Date(sub.endDate) > new Date()
           );
 
+          // Calculate current day based on subscription start date
+          if (activeSub) {
+            const startDate = new Date(activeSub.startDate);
+            const today = new Date();
+            const diffTime = Math.abs(today.getTime() - startDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const currentDay = Math.min(diffDays, 4); // Cap at 4 days
+            setCurrentDay(currentDay);
+          }
+
           // Check if user has an active 6-Month plan
           const hasSixMonthPlan = subData.subscriptions.some(
             (sub: Subscription) =>
@@ -116,10 +174,6 @@ export default function VideoPlayerPage() {
 
           if (activeSub) {
             setSubscription(activeSub);
-            // Set the first video as current if available
-            if (videoData.videos?.length > 0) {
-              setCurrentVideo(videoData.videos[0]);
-            }
           }
         }
 
@@ -194,26 +248,8 @@ export default function VideoPlayerPage() {
     }
   };
 
-  const handleVideoPlay = () => {
-    setShowProgress(true);
-    setProgress(0); // Reset progress when starting a new video
-
-    // Simulate video progress
-    const interval = setInterval(() => {
-      setProgress((prev: number) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 100);
-  };
-
   const handleVideoSelect = async (video: Video) => {
     setCurrentVideo(video);
-    setShowProgress(false);
-    setProgress(0);
 
     // Extract metadata if not already available
     if (!videoMetadata[video.id]) {
@@ -335,8 +371,81 @@ export default function VideoPlayerPage() {
               whileTap={{ scale: 0.95 }}
             >
               <Sparkles className="size-4" />
-              <span>Upgrade</span>
+              <span>Upgrade to 599</span>
             </motion.button>
+          </div>
+        </div>
+
+        {/* Day Progress Indicator */}
+        <div className="mx-auto max-w-7xl px-4 pb-4">
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((day) => {
+              const video = videos.find((v) => v.day === day);
+              const isUnlocked = day <= currentDay;
+
+              return (
+                <motion.div
+                  key={day}
+                  className={`rounded-lg border p-3 ${
+                    isUnlocked
+                      ? 'border-blue-200 bg-blue-50'
+                      : 'border-gray-200 bg-white'
+                  }`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * day }}
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`flex size-6 items-center justify-center rounded-full ${
+                          isUnlocked
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'bg-gray-100 text-gray-400'
+                        }`}
+                      >
+                        {isUnlocked ? (
+                          <CheckCircle className="size-4" />
+                        ) : (
+                          <Lock className="size-4" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium">Day {day}</span>
+                    </div>
+                    {isUnlocked ? (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                        Unlocked
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        Locked
+                      </span>
+                    )}
+                  </div>
+                  {video && (
+                    <>
+                      <p className="mb-2 line-clamp-2 text-xs text-gray-600">
+                        {day === 1
+                          ? 'Basics of Shree Suktam Sadhana'
+                          : day === 2
+                            ? 'Shree Yantra Pooja'
+                            : 'Learn Shree Suktam Sadhana'}
+                      </p>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Clock className="size-3" />
+                        <span>
+                          {isUnlocked
+                            ? 'Available Now'
+                            : day === currentDay + 1
+                              ? 'Unlocks at 9:00 PM'
+                              : 'Coming Soon'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -363,42 +472,38 @@ export default function VideoPlayerPage() {
                   <>
                     <video
                       key={currentVideo.id}
-                      controls
-                      className="size-full rounded-xl"
+                      controlsList="nodownload noremoteplayback"
+                      disablePictureInPicture
+                      className="size-full rounded-xl [&::-webkit-media-controls-current-time-display]:hidden [&::-webkit-media-controls-panel]:!bg-black/70 [&::-webkit-media-controls-play-button]:hidden [&::-webkit-media-controls-time-remaining-display]:hidden [&::-webkit-media-controls-timeline]:hidden"
                       poster={
                         currentVideo.webinarDetails?.webinarTitle
                           ? `/assets/webinar-thumbnail.jpg`
                           : undefined
                       }
-                      onPlay={handleVideoPlay}
-                      onEnded={() => {
-                        setShowProgress(false);
-                        setProgress(0);
-                      }}
-                      onPause={() => {
-                        setShowProgress(false);
-                      }}
                       autoPlay
+                      loop
+                      controls
+                      playsInline
+                      style={
+                        {
+                          '--webkit-media-controls-play-button': 'none',
+                          '--webkit-media-controls-timeline': 'none',
+                          '--webkit-media-controls-current-time-display':
+                            'none',
+                          '--webkit-media-controls-time-remaining-display':
+                            'none',
+                        } as React.CSSProperties
+                      }
                     >
                       <source src={currentVideo.url} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
 
-                    {showProgress && (
-                      <motion.div
-                        className="absolute inset-x-0 bottom-0 h-1 bg-gray-200"
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: 1 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-600"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress}%` }}
-                          transition={{ duration: 0.1 }}
-                        />
-                      </motion.div>
-                    )}
+                    {/* Live Indicator */}
+                    <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-sm font-medium text-white">
+                      <div className="size-2 animate-pulse rounded-full bg-white"></div>
+                      LIVE
+                    </div>
                   </>
                 ) : (
                   <div className="flex h-full items-center justify-center text-gray-300">
@@ -455,10 +560,13 @@ export default function VideoPlayerPage() {
                           : 'No date'}
                       </span>
                     </div>
-                    {currentVideo && videoMetadata[currentVideo.id] && (
+                    {currentVideo && (
                       <div className="flex items-center gap-1">
-                        <ClockIcon className="size-4 text-indigo-500" />
-                        <span>Duration: {videoMetadata[currentVideo.id]}</span>
+                        <ClockIcon className="size-4 text-red-500" />
+                        <span className="flex items-center gap-2">
+                          <span className="size-2 animate-pulse rounded-full bg-red-500"></span>
+                          LIVE
+                        </span>
                       </div>
                     )}
                   </motion.div>
@@ -472,28 +580,51 @@ export default function VideoPlayerPage() {
                   <div className="space-y-3">
                     {videos.map((video, index) => {
                       const isCurrent = video.id === currentVideo?.id;
+                      const isLocked = (video.day || 0) > currentDay;
 
                       return (
                         <motion.div
                           key={video.id}
-                          onClick={() => handleVideoSelect(video)}
+                          onClick={() => !isLocked && handleVideoSelect(video)}
                           className={`group relative cursor-pointer overflow-hidden rounded-lg border p-3 transition-all duration-300
-                            ${isCurrent ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'}`}
+                            ${
+                              isCurrent
+                                ? 'border-blue-500 bg-blue-50 shadow-md'
+                                : isLocked
+                                  ? 'border-gray-200 bg-gray-50 opacity-60'
+                                  : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                            }`}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.1 * index }}
-                          whileHover={{ y: -2 }}
+                          whileHover={!isLocked ? { y: -2 } : {}}
                         >
                           <div className="flex items-start gap-3">
                             <div
-                              className={`flex size-10 shrink-0 items-center justify-center rounded-full ${isCurrent ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}
+                              className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
+                                isCurrent
+                                  ? 'bg-blue-100 text-blue-600'
+                                  : isLocked
+                                    ? 'bg-gray-100 text-gray-400'
+                                    : 'bg-gray-100 text-gray-600'
+                              }`}
                             >
-                              <Play className="size-5" />
+                              {isLocked ? (
+                                <Lock className="size-5" />
+                              ) : (
+                                <Play className="size-5" />
+                              )}
                             </div>
                             <div className="flex-1">
                               <div className="mb-1 flex items-center gap-2">
                                 <span
-                                  className={`font-medium ${isCurrent ? 'text-blue-700' : 'text-gray-800'}`}
+                                  className={`font-medium ${
+                                    isCurrent
+                                      ? 'text-blue-700'
+                                      : isLocked
+                                        ? 'text-gray-400'
+                                        : 'text-gray-800'
+                                  }`}
                                 >
                                   {video.title}
                                 </span>
@@ -510,6 +641,11 @@ export default function VideoPlayerPage() {
                                     Playing
                                   </motion.span>
                                 )}
+                                {isLocked && (
+                                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                                    Day {video.day}
+                                  </span>
+                                )}
                               </div>
                               {video.webinarDetails && (
                                 <p className="mb-1 line-clamp-1 text-sm text-gray-600">
@@ -517,32 +653,29 @@ export default function VideoPlayerPage() {
                                 </p>
                               )}
                               <div className="flex items-center gap-3 text-xs text-gray-500">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="size-3" />
-                                  <span>
-                                    {new Date(
-                                      video.createdAt
-                                    ).toLocaleDateString()}
-                                  </span>
-                                </div>
                                 {videoMetadata[video.id] && (
                                   <div className="flex items-center gap-1">
-                                    <Clock className="size-3" />
-                                    <span>{videoMetadata[video.id]}</span>
+                                    <Clock className="size-3 text-red-500" />
+                                    <span className="flex items-center gap-1">
+                                      <span className="size-1.5 animate-pulse rounded-full bg-red-500"></span>
+                                      LIVE
+                                    </span>
                                   </div>
                                 )}
                               </div>
                             </div>
                           </div>
 
-                          <motion.div
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 transition-opacity group-hover:opacity-100"
-                            initial={{ x: 10, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.2 }}
-                          >
-                            <ChevronRight className="size-5" />
-                          </motion.div>
+                          {!isLocked && (
+                            <motion.div
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 transition-opacity group-hover:opacity-100"
+                              initial={{ x: 10, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: 0.2 }}
+                            >
+                              <ChevronRight className="size-5" />
+                            </motion.div>
+                          )}
                         </motion.div>
                       );
                     })}

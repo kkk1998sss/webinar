@@ -5,6 +5,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
 import { Layout, Trash, Upload, Video } from 'lucide-react';
 
+import UploadProgress from '@/components/ui/UploadProgress';
 import { VideoUploadData, WebinarFormData } from '@/types/user';
 
 interface VideoUploadDataProps {
@@ -21,12 +22,21 @@ const WebinarRegistrationPage = ({
   const [titles, setTitles] = React.useState<string[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [deletingIndex, setDeletingIndex] = React.useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = React.useState<{
+    [key: string]: number;
+  }>({});
+  const [uploadErrors, setUploadErrors] = React.useState<{
+    [key: string]: string;
+  }>({});
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileList = Array.from(e.target.files);
       setTempFiles(fileList);
       setTitles(fileList.map((file) => file.name));
+      // Reset progress and errors for new files
+      setUploadProgress({});
+      setUploadErrors({});
     }
   };
 
@@ -36,37 +46,73 @@ const WebinarRegistrationPage = ({
     setTitles(updatedTitles);
   };
 
+  const uploadFile = async (file: File, title: string, index: number) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', title);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        const progress = (event.loaded / event.total) * 100;
+        setUploadProgress((prev) => ({
+          ...prev,
+          [index]: progress,
+        }));
+      }
+    });
+
+    return new Promise<VideoUploadData>((resolve, reject) => {
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const data = JSON.parse(xhr.responseText);
+          if (data.video) {
+            resolve({
+              title: data.video.title,
+              url: data.video.url,
+              publicId: data.video.publicId,
+              id: data.video.id,
+            });
+          } else {
+            reject(new Error('Invalid response format'));
+          }
+        } else {
+          reject(new Error(xhr.responseText));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.open('POST', '/api/upload');
+      xhr.send(formData);
+    });
+  };
+
   const handleAddVideos = async () => {
     setLoading(true);
+    setUploadProgress({});
+    setUploadErrors({});
 
     const uploadedVideos: VideoUploadData[] = [];
 
     for (let i = 0; i < tempFiles.length; i++) {
-      const formData = new FormData();
-      formData.append('file', tempFiles[i]);
-      formData.append('title', titles[i]);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await res.json();
-      console.log('data', data);
-      if (res.ok && data.video) {
-        uploadedVideos.push({
-          title: data.video.title,
-          url: data.video.url,
-          publicId: data.video.publicId,
-          id: data.video.id,
-        });
+      try {
+        const video = await uploadFile(tempFiles[i], titles[i], i);
+        uploadedVideos.push(video);
+      } catch (error) {
+        console.error(`Error uploading file ${i}:`, error);
+        setUploadErrors((prev) => ({
+          ...prev,
+          [i]: error instanceof Error ? error.message : 'Upload failed',
+        }));
       }
     }
 
-    setFormData((prev) => ({
-      ...prev,
-      videoUploads: [...(prev.videoUploads || []), ...uploadedVideos],
-    }));
+    if (uploadedVideos.length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        videoUploads: [...(prev.videoUploads || []), ...uploadedVideos],
+      }));
+    }
 
     setLoading(false);
     setDialogOpen(false);
@@ -268,86 +314,79 @@ const WebinarRegistrationPage = ({
                   </label>
                 </motion.div>
 
-                {tempFiles.length > 0 && (
-                  <motion.div
-                    className="mt-6 max-h-60 space-y-4 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 }}
-                  >
-                    {tempFiles.map((file, index) => (
-                      <motion.div
-                        key={index}
-                        className="flex flex-col gap-2 rounded-lg bg-white p-4 shadow-sm"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
-                            <Video className="size-5 text-blue-600" />
-                          </div>
-                          <div className="flex-1 truncate">
-                            <p className="truncate text-sm font-medium text-gray-700">
-                              {file.name}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {(file.size / (1024 * 1024)).toFixed(2)} MB
-                            </p>
-                          </div>
+                <motion.div
+                  className="mt-6 max-h-60 space-y-4 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                >
+                  {tempFiles.map((file, index) => (
+                    <motion.div
+                      key={index}
+                      className="flex flex-col gap-2 rounded-lg bg-white p-4 shadow-sm"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-10 items-center justify-center rounded-full bg-blue-100">
+                          <Video className="size-5 text-blue-600" />
                         </div>
-                        <input
-                          type="text"
-                          value={titles[index] || ''}
-                          onChange={(e) =>
-                            handleTitleChange(index, e.target.value)
-                          }
-                          placeholder="Enter video title"
-                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm transition-colors duration-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
+                        <div className="flex-1 truncate">
+                          <input
+                            type="text"
+                            value={titles[index]}
+                            onChange={(e) =>
+                              handleTitleChange(index, e.target.value)
+                            }
+                            className="w-full truncate rounded border border-gray-200 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+                            placeholder="Enter video title"
+                          />
+                          <p className="text-xs text-gray-500">
+                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                          </p>
+                        </div>
+                      </div>
+                      <UploadProgress
+                        progress={uploadProgress[index] || 0}
+                        fileName={file.name}
+                        fileSize={file.size}
+                        status={
+                          uploadErrors[index]
+                            ? 'error'
+                            : loading
+                              ? 'uploading'
+                              : 'success'
+                        }
+                        error={uploadErrors[index]}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                <div className="mt-6 flex justify-end">
+                  <motion.button
+                    onClick={handleAddVideos}
+                    disabled={tempFiles.length === 0 || loading}
+                    className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {loading ? (
+                      <>
+                        <ClipLoader size={16} color="#fff" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="size-4" />
+                        <span>Upload Videos</span>
+                      </>
+                    )}
+                  </motion.button>
+                </div>
               </>
             )}
-
-            {/* Actions */}
-            <div className="mt-6 flex justify-end gap-3">
-              <Dialog.Close asChild>
-                <motion.button
-                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors duration-300 hover:bg-gray-50"
-                  onClick={() => {
-                    setTempFiles([]);
-                    setTitles([]);
-                  }}
-                  disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Cancel
-                </motion.button>
-              </Dialog.Close>
-              <motion.button
-                onClick={handleAddVideos}
-                disabled={tempFiles.length === 0 || loading}
-                className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {loading ? (
-                  <>
-                    <ClipLoader size={16} color="#fff" />
-                    <span>Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Upload className="size-4" />
-                    <span>Upload Videos</span>
-                  </>
-                )}
-              </motion.button>
-            </div>
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
