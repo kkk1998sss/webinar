@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import {
+  FaDownload,
   FaEdit,
   FaFilter,
   FaPlus,
@@ -14,6 +15,8 @@ import * as Popover from '@radix-ui/react-popover';
 import * as ScrollArea from '@radix-ui/react-scroll-area';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
+
+import { convertToCSV, downloadCSV } from '@/utils/exportData';
 
 type FourDayPlanVideo = {
   id: string;
@@ -162,11 +165,24 @@ export default function FourDayPlanVideosPage() {
     },
   };
 
+  const handleExport = () => {
+    const headers = {
+      title: 'Title',
+      description: 'Description',
+      videoUrl: 'Video URL',
+      day: 'Day',
+      createdAt: 'Created At',
+    };
+
+    const csvContent = convertToCSV(filteredVideos, headers);
+    downloadCSV(csvContent, 'four-day-plan-videos.csv');
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <motion.h1
-          className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent"
+          className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-bold text-transparent dark:from-red-500 dark:to-yellow-400"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -177,11 +193,18 @@ export default function FourDayPlanVideosPage() {
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex gap-4"
+          className="flex gap-2"
         >
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:bg-green-700"
+          >
+            <FaDownload className="size-4" />
+            Export
+          </button>
           <motion.button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-4 py-2 text-white shadow-md transition-all duration-300 hover:from-red-700 hover:to-yellow-600 dark:from-red-500 dark:to-yellow-400"
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
           >

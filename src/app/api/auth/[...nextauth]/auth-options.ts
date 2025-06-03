@@ -1,4 +1,5 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
+import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
 import type { Adapter } from 'next-auth/adapters';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -40,20 +41,44 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           throw new Error('Invalid email or password');
         }
 
-        const decryptedPassword = decryptPassword(user.password);
-
-        if (password !== decryptedPassword) {
-          throw new Error('Invalid email or password');
+        // Try decryption first
+        try {
+          const decryptedPassword = decryptPassword(user.password);
+          if (
+            decryptedPassword !== 'DECRYPTION_FAILED' &&
+            password === decryptedPassword
+          ) {
+            return {
+              id: user.id ?? undefined,
+              email: user.email ?? undefined,
+              name: user.name ?? undefined,
+              image: user.image || null,
+              isActive: user.isActive,
+              stripeCustomerId: user.stripeCustomerId ?? '',
+            };
+          }
+        } catch (error) {
+          console.error('Decryption attempt failed:', error);
         }
 
-        return {
-          id: user.id ?? undefined,
-          email: user.email ?? undefined,
-          name: user.name ?? undefined,
-          image: user.image || null,
-          isActive: user.isActive,
-          stripeCustomerId: user.stripeCustomerId ?? '',
-        };
+        // If decryption fails or password doesn't match, try bcrypt
+        try {
+          const isValidBcrypt = await bcrypt.compare(password, user.password);
+          if (isValidBcrypt) {
+            return {
+              id: user.id ?? undefined,
+              email: user.email ?? undefined,
+              name: user.name ?? undefined,
+              image: user.image || null,
+              isActive: user.isActive,
+              stripeCustomerId: user.stripeCustomerId ?? '',
+            };
+          }
+        } catch (error) {
+          console.error('Bcrypt comparison failed:', error);
+        }
+
+        throw new Error('Invalid email or password');
       },
     }),
   ],

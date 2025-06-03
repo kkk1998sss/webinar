@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { encryptPassword } from '@/lib/encryption';
 import prisma from '@/lib/prisma';
+
+type UserUpdateData = {
+  name?: string;
+  email?: string;
+  password?: string;
+  phoneNumber?: string;
+};
 
 // GET /api/users/[id]
 export async function GET(
@@ -12,6 +20,12 @@ export async function GET(
 
     const user = await prisma.user.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+      },
     });
 
     if (!user) {
@@ -40,9 +54,20 @@ export async function PUT(
     const { id } = await params;
     const body = await req.json();
 
+    const updateData: UserUpdateData = {
+      ...body,
+      ...(body.password && { password: encryptPassword(body.password) }),
+    };
+
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: body,
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+      },
     });
 
     return NextResponse.json({ success: true, updatedUser }, { status: 200 });
@@ -65,6 +90,12 @@ export async function DELETE(
 
     const deletedUser = await prisma.user.delete({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phoneNumber: true,
+      },
     });
 
     return NextResponse.json({ success: true, deletedUser }, { status: 200 });

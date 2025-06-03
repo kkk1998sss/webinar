@@ -73,7 +73,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-blue-50 to-white px-4 py-12 sm:px-6 lg:px-8 dark:from-gray-800 dark:to-gray-900">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-red-50 to-white px-4 py-12 sm:px-6 lg:px-8 dark:from-gray-800 dark:to-gray-900">
       <motion.div
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 20 }}
@@ -86,7 +86,7 @@ export default function RegisterPage() {
           animate={{ scale: isPageLoaded ? 1 : 0.95 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-center text-white dark:from-blue-500 dark:to-purple-500">
+          <div className="bg-gradient-to-r from-red-600 to-yellow-500 p-6 text-center text-white dark:from-red-500 dark:to-yellow-400">
             <motion.h2
               className="text-2xl font-bold"
               initial={{ opacity: 0 }}
@@ -96,7 +96,7 @@ export default function RegisterPage() {
               Create Your Account
             </motion.h2>
             <motion.p
-              className="mt-1 text-blue-100"
+              className="mt-1 text-red-100"
               initial={{ opacity: 0 }}
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
@@ -146,10 +146,10 @@ export default function RegisterPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   />
                   <motion.div
-                    className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
+                    className="absolute bottom-0 left-0 h-0.5 bg-red-500 dark:bg-red-400"
                     initial={{ width: 0 }}
                     animate={{ width: name ? '100%' : 0 }}
                     transition={{ duration: 0.3 }}
@@ -176,10 +176,10 @@ export default function RegisterPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   />
                   <motion.div
-                    className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
+                    className="absolute bottom-0 left-0 h-0.5 bg-red-500 dark:bg-red-400"
                     initial={{ width: 0 }}
                     animate={{ width: email ? '100%' : 0 }}
                     transition={{ duration: 0.3 }}
@@ -206,10 +206,10 @@ export default function RegisterPage() {
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   />
                   <motion.div
-                    className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
+                    className="absolute bottom-0 left-0 h-0.5 bg-red-500 dark:bg-red-400"
                     initial={{ width: 0 }}
                     animate={{ width: phoneNumber ? '100%' : 0 }}
                     transition={{ duration: 0.3 }}
@@ -237,24 +237,25 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                    className="w-full rounded-lg border border-gray-300 px-4 py-2 pr-10 transition-all duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   />
                   <motion.div
-                    className="absolute bottom-0 left-0 h-0.5 bg-blue-500 dark:bg-blue-400"
+                    className="absolute bottom-0 left-0 h-0.5 bg-red-500 dark:bg-red-400"
                     initial={{ width: 0 }}
                     animate={{ width: password ? '100%' : 0 }}
                     transition={{ duration: 0.3 }}
                   />
-                  <motion.button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    tabIndex={-1}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    {showPassword ? <EyeClosedIcon /> : <EyeOpenIcon />}
-                  </motion.button>
+                  <div className="absolute right-3 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center">
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      tabIndex={-1}
+                      whileTap={{ scale: 0.9 }}
+                    >
+                      {showPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
 
@@ -266,7 +267,7 @@ export default function RegisterPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg dark:from-blue-500 dark:to-purple-500 dark:hover:shadow-blue-700/50"
+                  className="w-full rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg dark:from-red-500 dark:to-yellow-400 dark:hover:shadow-red-700/50"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center">
@@ -364,7 +365,7 @@ export default function RegisterPage() {
               Already have an account?{' '}
               <Link
                 href="/auth/login"
-                className="font-medium text-blue-600 transition-colors hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
+                className="font-medium text-red-600 transition-colors hover:text-red-800 hover:underline dark:text-red-400 dark:hover:text-red-300"
               >
                 Sign in
               </Link>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { FaArrowLeft, FaSave } from 'react-icons/fa';
+import { EyeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -21,6 +22,8 @@ export default function EditUser() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -55,6 +58,7 @@ export default function EditUser() {
       name: formData.get('name'),
       email: formData.get('email'),
       phoneNumber: formData.get('phoneNumber'),
+      ...(password && { password }),
     };
 
     try {
@@ -139,19 +143,19 @@ export default function EditUser() {
       transition={{ duration: 0.5 }}
     >
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-2xl font-bold text-transparent">
+        <h1 className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-2xl font-bold text-transparent dark:from-red-500 dark:to-yellow-400">
           Edit User
         </h1>
         <Link
           href="/admin/users"
-          className="inline-flex items-center rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200"
+          className="inline-flex items-center rounded-lg bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
         >
           <FaArrowLeft className="mr-2" /> Back
         </Link>
       </div>
 
       <motion.div
-        className="rounded-xl border border-gray-200 bg-white p-6 shadow-md"
+        className="rounded-xl border border-gray-200 bg-white p-6 shadow-md dark:border-gray-700 dark:bg-gray-800"
         initial={{ scale: 0.95 }}
         animate={{ scale: 1 }}
         transition={{ duration: 0.3 }}
@@ -173,7 +177,7 @@ export default function EditUser() {
                   id="name"
                   name="name"
                   defaultValue={user?.name}
-                  className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   placeholder="Enter user name"
                   required
                 />
@@ -196,7 +200,7 @@ export default function EditUser() {
                   name="email"
                   type="email"
                   defaultValue={user?.email}
-                  className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   placeholder="Enter email address"
                   required
                 />
@@ -218,10 +222,48 @@ export default function EditUser() {
                   id="phoneNumber"
                   name="phoneNumber"
                   defaultValue={user?.phoneNumber || ''}
-                  className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   placeholder="Enter phone number"
                 />
               </motion.div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="password"
+                className="mb-1 block text-sm font-medium text-gray-700"
+              >
+                Password
+              </label>
+              <motion.div
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="relative"
+              >
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 p-3 pr-10 outline-none transition-all duration-300 focus:border-red-500 focus:ring-2 focus:ring-red-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
+                  placeholder="Enter new password (leave empty to keep current)"
+                />
+                <div className="absolute right-3 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center">
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    tabIndex={-1}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    {showPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
+                  </motion.button>
+                </div>
+              </motion.div>
+              <p className="mt-1 text-sm text-gray-500">
+                Leave empty if you don&apos;t want to change the password
+              </p>
             </div>
           </div>
 
@@ -253,7 +295,7 @@ export default function EditUser() {
 
           <motion.button
             type="submit"
-            className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-white shadow-md hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="w-full rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-4 py-3 text-white shadow-md hover:from-red-700 hover:to-yellow-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:from-red-500 dark:to-yellow-400 dark:hover:from-red-600 dark:hover:to-yellow-500"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             disabled={saving}

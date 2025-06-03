@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   FaCalendarAlt,
   FaClock,
+  FaDownload,
   FaEdit,
   FaPlus,
   FaSearch,
@@ -16,6 +17,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
+import { convertToCSV, downloadCSV } from '@/utils/exportData';
 
 type ScheduledDate = {
   date: string;
@@ -138,6 +140,20 @@ export default function WebinarList() {
     },
   };
 
+  const handleExport = () => {
+    const headers = {
+      webinarName: 'Webinar Name',
+      webinarTitle: 'Title',
+      webinarDate: 'Date',
+      selectedLanguage: 'Language',
+      scheduledDates: 'Scheduled Dates',
+      createdAt: 'Created At',
+    };
+
+    const csvContent = convertToCSV(filteredWebinars, headers);
+    downloadCSV(csvContent, 'webinars-data.csv');
+  };
+
   if (!isPageLoaded) {
     return (
       <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
@@ -157,7 +173,7 @@ export default function WebinarList() {
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <motion.h1
-          className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-2xl font-semibold text-transparent"
+          className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-bold text-transparent dark:from-red-500 dark:to-yellow-400"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -168,10 +184,18 @@ export default function WebinarList() {
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
+          className="flex gap-2"
         >
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:bg-green-700"
+          >
+            <FaDownload className="size-4" />
+            Export
+          </button>
           <Link
             href="/users/live-webinar"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-lg"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-4 py-2 text-white shadow-md transition-all duration-300 hover:from-red-700 hover:to-yellow-600 dark:from-red-500 dark:to-yellow-400"
           >
             <FaPlus className="size-4" />
             Create

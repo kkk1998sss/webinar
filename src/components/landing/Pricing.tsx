@@ -1,6 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import { useSession } from 'next-auth/react';
 
 import { SubscriptionButton } from '../Subscription/SubscriptionButton';
 
@@ -15,27 +17,35 @@ interface Subscription {
 }
 
 const Pricing = () => {
+  const { data: session, status } = useSession();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
-      try {
-        const response = await fetch('/api/subscription');
-        const data = await response.json();
+      if (status === 'authenticated') {
+        try {
+          const response = await fetch('/api/subscription');
+          const data = await response.json();
 
-        if (data.subscriptions) {
-          setSubscriptions(data.subscriptions);
+          if (data.subscriptions) {
+            setSubscriptions(data.subscriptions);
+          }
+        } catch (error) {
+          console.error('Error fetching subscriptions:', error);
+          toast.error('Failed to fetch subscription status');
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error fetching subscriptions:', error);
-      } finally {
+      } else {
         setLoading(false);
       }
     };
 
-    fetchSubscriptions();
-  }, []);
+    if (status !== 'loading') {
+      fetchSubscriptions();
+    }
+  }, [status]);
 
   const hasActiveFourDayPlan = subscriptions.some(
     (sub) =>
@@ -50,6 +60,13 @@ const Pricing = () => {
       sub.isActive &&
       new Date(sub.endDate) > new Date()
   );
+
+  const handleSubscribe = () => {
+    if (!session) {
+      window.location.href = '/auth/login';
+      return;
+    }
+  };
 
   const plans = [
     {
@@ -188,6 +205,18 @@ const Pricing = () => {
                   <div className="flex h-10 items-center justify-center">
                     <div className="border-primary dark:border-primary-dark size-6 animate-spin rounded-full border-b-2"></div>
                   </div>
+                ) : !session ? (
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <button
+                      onClick={handleSubscribe}
+                      className="w-full rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gradient-to-br focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800"
+                    >
+                      Login to Subscribe
+                    </button>
+                  </motion.div>
                 ) : plan.planType === 'FOUR_DAY' && hasActiveFourDayPlan ? (
                   <div className="rounded-md bg-yellow-100 p-3 text-sm text-yellow-800 dark:bg-yellow-700/30 dark:text-yellow-300">
                     You already have an active 4-Day plan

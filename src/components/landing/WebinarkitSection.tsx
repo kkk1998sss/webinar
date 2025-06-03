@@ -20,7 +20,7 @@ export default function WebinarKitSection() {
             <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-white to-yellow-50 opacity-20 blur-lg dark:from-gray-900 dark:to-slate-800 dark:opacity-30"></div>
             <div className="relative overflow-hidden rounded-xl shadow-2xl">
               <Image
-                src="/assets/webinar 1 (4).jpg"
+                src="/assets/spritual.png"
                 alt="WebinarKit Illustration"
                 width={600}
                 height={400}

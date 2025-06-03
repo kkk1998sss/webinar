@@ -5,7 +5,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import { ClipLoader } from 'react-spinners';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as Dialog from '@radix-ui/react-dialog';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   BookOpen,
   CheckCircle2,
@@ -247,131 +247,219 @@ export default function EBooksPage() {
       </div>
 
       {/* E-Books Grid */}
-      {ebooks.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {ebooks.map((ebook) => (
-            <motion.div
-              key={ebook.id}
-              className="group relative overflow-hidden rounded-lg bg-white p-2 shadow-md transition-all duration-300 hover:shadow-lg"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ y: -3 }}
-            >
-              <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-gray-100">
-                {ebook.fileUrl ? (
-                  <iframe
-                    src={`${ebook.fileUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
-                    className="size-full"
-                    title={`${ebook.title} preview`}
-                    style={{ border: 'none' }}
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center bg-gray-50">
-                    <FileText className="size-6 text-gray-400" />
-                  </div>
-                )}
-              </div>
-              <div className="mt-2">
-                <h3 className="line-clamp-2 text-sm font-medium text-gray-800">
-                  {ebook.title}
-                </h3>
-                {ebook.description && (
-                  <p className="mt-0.5 line-clamp-2 text-xs text-gray-600">
-                    {ebook.description}
-                  </p>
-                )}
-                <div className="mt-1.5 flex items-center justify-between text-xs text-gray-500">
-                  <span>{Math.round(ebook.fileSize / 1024 / 1024)} MB</span>
-                  <span>{ebook.downloads} downloads</span>
-                </div>
-                <div className="mt-2 flex items-center gap-1.5">
-                  <motion.button
-                    onClick={() => handlePreview(ebook)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-blue-50 px-2 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Eye className="size-3.5" />
-                    <span>Preview</span>
-                  </motion.button>
-                  <motion.button
-                    onClick={() => handleDownload(ebook)}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-green-50 px-2 py-1.5 text-xs font-medium text-green-600 hover:bg-green-100"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Download className="size-3.5" />
-                    <span>Download</span>
-                  </motion.button>
-                  {isAdmin && (
-                    <motion.button
-                      onClick={() => handleDelete(ebook)}
-                      disabled={isDeleting}
-                      className="flex items-center justify-center gap-1.5 rounded-md bg-red-50 px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {isDeleting && ebookToDelete?.id === ebook.id ? (
-                        <ClipLoader size={14} color="#dc2626" />
-                      ) : (
-                        <Trash2 className="size-3.5" />
-                      )}
-                    </motion.button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <motion.div
-          className="mt-12 flex flex-col items-center justify-center rounded-xl bg-white p-8 text-center shadow-lg"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+      <AnimatePresence>
+        {ebooks.length > 0 ? (
           <motion.div
-            className="mb-6 flex size-24 items-center justify-center rounded-full bg-blue-50"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
           >
-            <BookOpen className="size-12 text-blue-500" />
+            {ebooks.map((ebook, index) => (
+              <motion.div
+                key={ebook.id}
+                className="group relative overflow-hidden rounded-lg bg-white p-2 shadow-md transition-all duration-300 hover:shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{
+                  y: -5,
+                  scale: 1.02,
+                  transition: { duration: 0.2 },
+                }}
+                layout
+              >
+                <motion.div
+                  className="relative aspect-[3/4] overflow-hidden rounded-md bg-gray-100"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {ebook.fileUrl ? (
+                    <iframe
+                      src={`${ebook.fileUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
+                      className="size-full"
+                      title={`${ebook.title} preview`}
+                      style={{ border: 'none' }}
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-gray-50">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 20,
+                          repeat: Infinity,
+                          ease: 'linear',
+                        }}
+                      >
+                        <FileText className="size-6 text-gray-400" />
+                      </motion.div>
+                    </div>
+                  )}
+                </motion.div>
+                <div className="mt-2">
+                  <motion.h3
+                    className="line-clamp-2 text-sm font-medium text-gray-800"
+                    whileHover={{ color: '#2563eb' }}
+                  >
+                    {ebook.title}
+                  </motion.h3>
+                  {ebook.description && (
+                    <motion.p
+                      className="mt-0.5 line-clamp-2 text-xs text-gray-600"
+                      initial={{ opacity: 0.8 }}
+                      whileHover={{ opacity: 1 }}
+                    >
+                      {ebook.description}
+                    </motion.p>
+                  )}
+                  <div className="mt-1.5 flex items-center justify-between text-xs text-gray-500">
+                    <span>{Math.round(ebook.fileSize / 1024 / 1024)} MB</span>
+                    <motion.span
+                      whileHover={{ scale: 1.1 }}
+                      className="flex items-center gap-1"
+                    >
+                      <Download className="size-3" />
+                      {ebook.downloads}
+                    </motion.span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <motion.button
+                      onClick={() => handlePreview(ebook)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-blue-50 px-2 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-100"
+                      whileHover={{
+                        scale: 1.05,
+                        backgroundColor: '#93c5fd',
+                        color: '#1e40af',
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <motion.div
+                        whileHover={{ rotate: 360 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Eye className="size-3.5" />
+                      </motion.div>
+                      <span>Preview</span>
+                    </motion.button>
+                    <motion.button
+                      onClick={() => handleDownload(ebook)}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-green-50 px-2 py-1.5 text-xs font-medium text-green-600 hover:bg-green-100"
+                      whileHover={{
+                        scale: 1.05,
+                        backgroundColor: '#86efac',
+                        color: '#166534',
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <motion.div
+                        animate={{ y: [0, -2, 0] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      >
+                        <Download className="size-3.5" />
+                      </motion.div>
+                      <span>Download</span>
+                    </motion.button>
+                    {isAdmin && (
+                      <motion.button
+                        onClick={() => handleDelete(ebook)}
+                        disabled={isDeleting}
+                        className="flex items-center justify-center gap-1.5 rounded-md bg-red-50 px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100"
+                        whileHover={{
+                          scale: 1.05,
+                          backgroundColor: '#fca5a5',
+                          color: '#991b1b',
+                        }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {isDeleting && ebookToDelete?.id === ebook.id ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: 'linear',
+                            }}
+                            className="flex items-center gap-2"
+                          >
+                            <ClipLoader size={14} color="#dc2626" />
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            whileHover={{ rotate: 20 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
-          <motion.h3
-            className="mb-2 text-2xl font-semibold text-gray-800"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+        ) : (
+          <motion.div
+            className="mt-12 flex flex-col items-center justify-center rounded-xl bg-white p-8 text-center shadow-lg"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            No E-Books Available
-          </motion.h3>
-          <motion.p
-            className="max-w-md text-gray-600"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            {isAdmin
-              ? 'Start by adding your first e-book using the &quot;Add E-Book&quot; button above.'
-              : "Check back later for new e-books. We're constantly adding new content!"}
-          </motion.p>
-          {isAdmin && (
-            <motion.button
-              onClick={() => setIsUploadModalOpen(true)}
-              className="mt-6 flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <motion.div
+              className="mb-6 flex size-24 items-center justify-center rounded-full bg-blue-50"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+              whileHover={{ scale: 1.1, rotate: 360 }}
             >
-              <Upload className="size-5" />
-              <span>Add Your First E-Book</span>
-            </motion.button>
-          )}
-        </motion.div>
-      )}
+              <BookOpen className="size-12 text-blue-500" />
+            </motion.div>
+            <motion.h3
+              className="mb-2 text-2xl font-semibold text-gray-800"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              No E-Books Available
+            </motion.h3>
+            <motion.p
+              className="max-w-md text-gray-600"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {isAdmin
+                ? 'Start by adding your first e-book using the "Add E-Book" button above.'
+                : "Check back later for new e-books. We're constantly adding new content!"}
+            </motion.p>
+            {isAdmin && (
+              <motion.button
+                onClick={() => setIsUploadModalOpen(true)}
+                className="mt-6 flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-white hover:bg-blue-700"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: '#2563eb',
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <motion.div
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  <Upload className="size-5" />
+                </motion.div>
+                <span>Add Your First E-Book</span>
+              </motion.button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Upload Modal - Only show if admin */}
       {isAdmin && (
@@ -527,81 +615,184 @@ export default function EBooksPage() {
       )}
 
       {/* Preview Modal */}
-      <Dialog.Root open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-          <Dialog.Content className="fixed left-1/2 top-[60%] h-[60vh] w-[80vw] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl">
-            <div className="mb-4 flex items-center justify-between">
-              <Dialog.Title className="text-xl font-bold text-gray-800">
-                {selectedEbook?.title}
-              </Dialog.Title>
-              <Dialog.Close className="rounded-lg p-1 hover:bg-gray-100">
-                <X className="size-5 text-gray-500" />
-              </Dialog.Close>
-            </div>
-            <div className="h-[calc(60vh-8rem)] w-full overflow-hidden rounded-lg border border-gray-200">
-              {selectedEbook && (
-                <iframe
-                  src={`${selectedEbook.fileUrl}#view=FitH&toolbar=0`}
-                  className="size-full"
-                  title={selectedEbook.title}
-                  style={{ border: 'none' }}
+      <AnimatePresence>
+        {previewModalOpen && (
+          <Dialog.Root
+            open={previewModalOpen}
+            onOpenChange={setPreviewModalOpen}
+          >
+            <Dialog.Portal>
+              <Dialog.Overlay className="fixed inset-0">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                 />
-              )}
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+              </Dialog.Overlay>
+              <Dialog.Content className="fixed left-1/2 top-[60%] h-[60vh] w-[80vw] max-w-4xl -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex h-full flex-col"
+                >
+                  <div className="mb-4 flex items-center justify-between">
+                    <Dialog.Title className="text-xl font-bold text-gray-800">
+                      {selectedEbook?.title}
+                    </Dialog.Title>
+                    <Dialog.Close>
+                      <motion.button
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        className="rounded-lg p-1 hover:bg-gray-100"
+                      >
+                        <X className="size-5 text-gray-500" />
+                      </motion.button>
+                    </Dialog.Close>
+                  </div>
+                  <motion.div
+                    className="flex-1 overflow-hidden rounded-lg border border-gray-200"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    {selectedEbook && (
+                      <iframe
+                        src={`${selectedEbook.fileUrl}#view=FitH&toolbar=0`}
+                        className="size-full"
+                        title={selectedEbook.title}
+                        style={{ border: 'none' }}
+                      />
+                    )}
+                  </motion.div>
+                  <div className="mt-4 flex justify-end space-x-2">
+                    <motion.button
+                      onClick={() => setPreviewModalOpen(false)}
+                      className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Close
+                    </motion.button>
+                    <motion.button
+                      onClick={() =>
+                        selectedEbook && handleDownload(selectedEbook)
+                      }
+                      className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                      whileHover={{ scale: 1.05, backgroundColor: '#2563eb' }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Download className="size-4" />
+                      Download
+                    </motion.button>
+                  </div>
+                </motion.div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog.Root
-        open={!!ebookToDelete}
-        onOpenChange={(open) => !open && setEbookToDelete(null)}
-      >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 w-[400px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl">
-            <AlertDialog.Title className="text-xl font-bold text-gray-800">
-              Delete E-Book
-            </AlertDialog.Title>
-            <AlertDialog.Description className="mt-2 text-gray-600">
-              {`Are you sure you want to delete "${ebookToDelete?.title}"? This action cannot be undone.`}
-            </AlertDialog.Description>
-            <div className="mt-6 flex justify-end gap-3">
-              <AlertDialog.Cancel asChild>
-                <motion.button
-                  className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+      <AnimatePresence>
+        {ebookToDelete && (
+          <AlertDialog.Root
+            open={!!ebookToDelete}
+            onOpenChange={(open) => !open && setEbookToDelete(null)}
+          >
+            <AlertDialog.Portal>
+              <AlertDialog.Overlay className="fixed inset-0">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+                />
+              </AlertDialog.Overlay>
+              <AlertDialog.Content className="fixed left-1/2 top-1/2 w-[400px] max-w-full -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex h-full flex-col"
                 >
-                  Cancel
-                </motion.button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <motion.button
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                  className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-red-400"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {isDeleting ? (
-                    <>
-                      <ClipLoader size={16} color="#fff" />
-                      <span>Deleting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="size-4" />
-                      <span>Delete</span>
-                    </>
-                  )}
-                </motion.button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <AlertDialog.Title className="text-xl font-bold text-gray-800">
+                      Delete E-Book
+                    </AlertDialog.Title>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex-1"
+                  >
+                    <AlertDialog.Description className="mt-2 text-gray-600">
+                      {`Are you sure you want to delete "${ebookToDelete?.title}"? This action cannot be undone.`}
+                    </AlertDialog.Description>
+                  </motion.div>
+                  <motion.div
+                    className="mt-6 flex justify-end gap-3"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <AlertDialog.Cancel>
+                      <motion.button
+                        className="rounded-lg px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Cancel
+                      </motion.button>
+                    </AlertDialog.Cancel>
+                    <AlertDialog.Action>
+                      <motion.button
+                        onClick={confirmDelete}
+                        disabled={isDeleting}
+                        className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:bg-red-400"
+                        whileHover={{ scale: 1.05, backgroundColor: '#dc2626' }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {isDeleting ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: 'linear',
+                            }}
+                            className="flex items-center gap-2"
+                          >
+                            <ClipLoader size={16} color="#fff" />
+                            <span>Deleting...</span>
+                          </motion.div>
+                        ) : (
+                          <>
+                            <motion.div
+                              whileHover={{ rotate: 20 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <Trash2 className="size-4" />
+                            </motion.div>
+                            <span>Delete</span>
+                          </>
+                        )}
+                      </motion.button>
+                    </AlertDialog.Action>
+                  </motion.div>
+                </motion.div>
+              </AlertDialog.Content>
+            </AlertDialog.Portal>
+          </AlertDialog.Root>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

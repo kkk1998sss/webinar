@@ -6,7 +6,6 @@ import {
   FaBars,
   FaBook,
   FaChartLine,
-  FaCog,
   FaSignOutAlt,
   FaTimes,
   FaUsers,
@@ -158,7 +157,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <FaVideo className="size-5" /> Four-Day
                   </Link>
                 </NavigationMenu.Item>
-                <NavigationMenu.Item>
+                {/* <NavigationMenu.Item>
                   <Link
                     href="/admin/settings"
                     className={clsx(
@@ -169,7 +168,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   >
                     <FaCog className="size-5" /> Settings
                   </Link>
-                </NavigationMenu.Item>
+                </NavigationMenu.Item> */}
               </NavigationMenu.List>
             </NavigationMenu.Root>
 
