@@ -58,7 +58,7 @@ export const ChoosePlan = ({ webinarId }: ChoosePlanProps) => {
   const plans = [
     {
       title: '4-Day Access Plan',
-      price: '₹99',
+      price: '₹199',
       duration: '/4 days',
       description: 'Get access to 4 exclusive webinars',
       features: [
@@ -68,7 +68,7 @@ export const ChoosePlan = ({ webinarId }: ChoosePlanProps) => {
         '24/7 support',
       ],
       planType: 'FOUR_DAY' as const,
-      amount: 99,
+      amount: 199,
       highlight: false,
     },
     {

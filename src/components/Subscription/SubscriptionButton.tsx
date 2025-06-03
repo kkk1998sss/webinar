@@ -93,18 +93,33 @@ export const SubscriptionButton = ({
 
     setIsLoading(true);
     try {
+      console.log('Creating payment:', { planType, amount, webinarId });
+
       const response = await fetch('/api/razorpay/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planType, amount, webinarId }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create order');
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error('Failed to parse response:', jsonError);
+        throw new Error('Invalid response from server');
       }
 
-      const { key, order } = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create order');
+      }
+
+      if (!data.key || !data.order) {
+        console.error('Invalid response data:', data);
+        throw new Error('Invalid response data from server');
+      }
+
+      const { key, order } = data;
+      console.log('Payment order created:', { key, order });
 
       const options: RazorpayOptions = {
         key,
@@ -160,10 +175,10 @@ export const SubscriptionButton = ({
       <button
         onClick={handleSubscription}
         disabled={isLoading}
-        className={`rounded-lg px-6 py-3 font-medium transition-colors duration-200 ${
+        className={`rounded-full px-6 py-3 font-semibold shadow-md transition-all duration-200 ${
           isLoading
             ? 'cursor-not-allowed bg-gray-400'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
+            : 'bg-gradient-to-r from-red-600 to-yellow-400 text-white hover:scale-105 hover:shadow-xl'
         }`}
       >
         {isLoading ? (

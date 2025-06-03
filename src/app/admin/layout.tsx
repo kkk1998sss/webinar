@@ -4,6 +4,7 @@
 import { ReactNode, useState } from 'react';
 import {
   FaBars,
+  FaBook,
   FaChartLine,
   FaCog,
   FaSignOutAlt,
@@ -131,6 +132,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     )}
                   >
                     <FaVideo className="size-5" /> Videos
+                  </Link>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item>
+                  <Link
+                    href="/admin/ebooks"
+                    className={clsx(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
+                      pathname === '/admin/ebooks' &&
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
+                    )}
+                  >
+                    <FaBook className="size-5" /> E-Books
+                  </Link>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item>
+                  <Link
+                    href="/admin/four-day-plan-videos"
+                    className={clsx(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
+                      pathname === '/admin/four-day-plan-videos' &&
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
+                    )}
+                  >
+                    <FaVideo className="size-5" /> Four-Day
                   </Link>
                 </NavigationMenu.Item>
                 <NavigationMenu.Item>

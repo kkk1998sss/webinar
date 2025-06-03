@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Book, Calendar, Music, Play, Sparkles } from 'lucide-react';
+import { Book, Calendar, Music, Play, Plus, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -33,6 +33,47 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'unlocked' | 'locked'>('unlocked');
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const [premiumContentItems, setPremiumContentItems] = useState<ContentItem[]>(
+    [
+      {
+        id: '6',
+        title: 'Live Sunday Sessions',
+        description: 'Join our weekly live events',
+        type: 'live',
+      },
+      {
+        id: '4',
+        title: 'Daily Meditations',
+        description: 'Guided meditation sessions',
+        type: 'meditation',
+      },
+      {
+        id: '2',
+        title: 'Hanuman Chalisa Course',
+        description: 'Complete course with detailed explanations',
+        type: 'course',
+      },
+      {
+        id: '3',
+        title: 'Swar Vigyan',
+        description: 'Learn the science of sound',
+        type: 'course',
+      },
+      {
+        id: '5',
+        title: 'E-books Collection',
+        description: 'Downloadable meditation guides',
+        type: 'ebook',
+      },
+    ]
+  );
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newModule, setNewModule] = useState<ContentItem>({
+    id: '',
+    title: '',
+    description: '',
+    type: 'course',
+  });
 
   const contentItems: ContentItem[] = [
     {
@@ -40,39 +81,6 @@ export default function Dashboard() {
       title: '3-4 Days Webinar',
       description: 'Access all webinar recordings',
       type: 'video',
-    },
-  ];
-
-  const premiumContentItems: ContentItem[] = [
-    {
-      id: '2',
-      title: 'Hanuman Chalisa Course',
-      description: 'Complete course with detailed explanations',
-      type: 'course',
-    },
-    {
-      id: '3',
-      title: 'Swar Vigyan',
-      description: 'Learn the science of sound',
-      type: 'course',
-    },
-    {
-      id: '4',
-      title: 'Daily Meditations',
-      description: 'Guided meditation sessions',
-      type: 'meditation',
-    },
-    {
-      id: '5',
-      title: 'E-books Collection',
-      description: 'Downloadable meditation guides',
-      type: 'ebook',
-    },
-    {
-      id: '6',
-      title: 'Live Sunday Sessions',
-      description: 'Join our weekly live events',
-      type: 'live',
     },
   ];
 
@@ -155,8 +163,28 @@ export default function Dashboard() {
         setCurrentView('webinar');
         return;
       }
+      // Add route for E-books Collection
+      if (item.type === 'ebook') {
+        router.push('/users/ebooks');
+        return;
+      }
       setCurrentView('webinar');
     }
+  };
+
+  // Add this function to handle adding new modules
+  const handleAddModule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newModule.title || !newModule.description) return;
+    setPremiumContentItems([
+      {
+        ...newModule,
+        id: Date.now().toString(),
+      },
+      ...premiumContentItems,
+    ]);
+    setShowAddModal(false);
+    setNewModule({ id: '', title: '', description: '', type: 'course' });
   };
 
   // Render different views based on currentView state
@@ -316,6 +344,80 @@ export default function Dashboard() {
                 </motion.div>
               ))}
         </div>
+
+        {activeTab === 'locked' && session?.user?.isAdmin && (
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700"
+              title="Add Module"
+            >
+              <Plus className="size-4" />
+              Add Module
+            </button>
+          </div>
+        )}
+
+        {/* Add Module Modal */}
+        {showAddModal && session?.user?.isAdmin && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <form
+              onSubmit={handleAddModule}
+              className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg"
+            >
+              <h2 className="mb-4 text-lg font-bold">Add New Module</h2>
+              <input
+                className="mb-2 w-full rounded border px-3 py-2"
+                placeholder="Title"
+                value={newModule.title}
+                onChange={(e) =>
+                  setNewModule({ ...newModule, title: e.target.value })
+                }
+                required
+              />
+              <textarea
+                className="mb-2 w-full rounded border px-3 py-2"
+                placeholder="Description"
+                value={newModule.description}
+                onChange={(e) =>
+                  setNewModule({ ...newModule, description: e.target.value })
+                }
+                required
+              />
+              <select
+                className="mb-4 w-full rounded border px-3 py-2"
+                value={newModule.type}
+                onChange={(e) =>
+                  setNewModule({
+                    ...newModule,
+                    type: e.target.value as ContentItem['type'],
+                  })
+                }
+              >
+                <option value="course">Course</option>
+                <option value="meditation">Meditation</option>
+                <option value="ebook">Ebook</option>
+                <option value="live">Live</option>
+                <option value="video">Video</option>
+              </select>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="rounded bg-gray-200 px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded bg-blue-600 px-4 py-2 text-white"
+                >
+                  Add
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );

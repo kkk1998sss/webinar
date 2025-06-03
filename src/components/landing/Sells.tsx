@@ -1,38 +1,33 @@
 // components/WebinarFeatures.tsx
 'use client';
 
-import { FaDollarSign, FaLayerGroup, FaToggleOn } from 'react-icons/fa';
+import { FaCalendarAlt, FaPrayingHands, FaVideo } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
 const featuresData = [
   {
     icon: (
-      <FaLayerGroup className="text-primary dark:text-primary-dark mr-4 size-8" />
+      <FaPrayingHands className="text-primary dark:text-primary-dark mr-4 size-8" />
     ),
-    title: 'Scale Limitlessly: Unlimited Funnels, Infinite Sales.',
+    title: 'Guided Mantra Chanting with Proper Vidhi',
     description:
-      'Design countless high-conversion webinar funnels. No caps on attendees, registrants, or events. Amplify sales, leads, and revenue—effortlessly on autopilot.',
+      'Receive authentic guidance on how to chant the Shree Suktam with correct pronunciation, rhythm, and spiritual method — ensuring your sadhana is powerful and fruitful.',
   },
   {
     icon: (
-      <FaToggleOn className="text-accent dark:text-accent-dark mr-4 size-8" />
+      <FaCalendarAlt className="text-accent dark:text-accent-dark mr-4 size-8" />
     ),
-    title: '24/7 Sales Machine: Convert Leads While You Sleep.',
+    title: 'Live Webinars Every Sunday at 10:00 AM',
     description:
-      'Transform your best pitches into evergreen assets. Sell courses, software, or coaching automatically. Set it once, and let consistent sales flow.',
-    points: [
-      'Automate sales of courses, software, and coaching.',
-      'Convert leads with high-converting, pre-recorded webinars.',
-      'No live hosting required – set it and forget it.',
-    ],
+      'Join weekly interactive satsangs and teachings with spiritual mentors to clarify doubts, deepen your understanding, and stay connected with divine energy and sangha.',
   },
   {
     icon: (
-      <FaDollarSign className="text-primary dark:text-primary-dark mr-4 size-8" />
+      <FaVideo className="text-primary dark:text-primary-dark mr-4 size-8" />
     ),
-    title: 'AI-Powered Selling: Intelligent Automation, Zero Hassle.',
+    title: 'Daily Practice Videos for Consistency',
     description:
-      "Our smart AI handles Q&A, overcomes objections, and guides prospects to purchase, 24/7. Focus on your passion; we'll handle the persuasion.",
+      'Access daily video content including mantra recitations, sadhana instructions, and spiritual insights — helping you maintain regularity and devotion throughout the 6 months.',
   },
 ];
 
@@ -40,7 +35,7 @@ export default function Sells() {
   return (
     <section
       id="features"
-      className="from-background to-secondary/30 dark:from-background dark:to-secondary-dark/20 w-full bg-gradient-to-b px-4 py-16 md:px-20"
+      className="w-full bg-gradient-to-b from-white to-yellow-50 px-4 py-16 md:px-20 dark:from-gray-900 dark:to-slate-800"
     >
       <motion.h2
         className="text-foreground dark:text-foreground-dark mb-16 text-center text-3xl font-bold md:text-4xl lg:text-5xl"
@@ -49,9 +44,9 @@ export default function Sells() {
         viewport={{ once: true }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        Unlock Your Webinar{' '}
+        Invoke the Grace of Maa Mahalakshmi in{' '}
         <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-transparent dark:from-red-500 dark:to-yellow-400">
-          Superpowers
+          6 Months
         </span>
       </motion.h2>
 
@@ -63,7 +58,11 @@ export default function Sells() {
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.15, ease: 'easeOut' }}
+            transition={{
+              duration: 0.5,
+              delay: index * 0.15,
+              ease: 'easeOut',
+            }}
           >
             <div className="mb-5 flex items-start">
               {feature.icon}
@@ -74,38 +73,6 @@ export default function Sells() {
             <p className="mb-4 grow text-sm text-gray-600 dark:text-gray-300">
               {feature.description}
             </p>
-            {feature.points && (
-              <ul className="mt-auto space-y-2 text-sm">
-                {feature.points.map((point, pIndex) => (
-                  <motion.li
-                    key={pIndex}
-                    className="flex items-start text-gray-600 dark:text-gray-300"
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{
-                      duration: 0.4,
-                      delay: 0.2 + index * 0.1 + pIndex * 0.1,
-                      ease: 'easeOut',
-                    }}
-                  >
-                    <svg
-                      className="mr-2 mt-1 size-4 shrink-0 text-green-500 dark:text-green-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
-                    {point}
-                  </motion.li>
-                ))}
-              </ul>
-            )}
           </motion.div>
         ))}
       </div>

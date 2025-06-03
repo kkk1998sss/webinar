@@ -14,9 +14,6 @@ interface Subscription {
   isActive: boolean;
 }
 
-// interface ChoosePlanProps {
-//   webinarId?: string;
-// }
 const Pricing = () => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +54,7 @@ const Pricing = () => {
   const plans = [
     {
       title: '4-Day Access Plan',
-      price: '₹99',
+      price: '₹199',
       duration: '/4 days',
       description: 'Get access to 4 exclusive webinars',
       features: [
@@ -67,8 +64,7 @@ const Pricing = () => {
         '24/7 support',
       ],
       planType: 'FOUR_DAY',
-      amount: 99,
-      webinarId: '3ca214ed-9b6a-4797-bcb1-ce32a9f0e8f7',
+      amount: 199,
       highlight: false,
       popular: false,
     },
@@ -86,7 +82,6 @@ const Pricing = () => {
       ],
       planType: 'SIX_MONTH',
       amount: 599,
-      webinarId: '3ca214ed-9b6a-4797-bcb1-ce32a9f0e8f7',
       highlight: true,
       popular: true,
     },
@@ -95,7 +90,7 @@ const Pricing = () => {
   return (
     <section
       id="pricing"
-      className="from-background to-secondary/30 dark:from-background dark:to-secondary-dark/20 scroll-mt-24 bg-gradient-to-b py-16"
+      className="dark:to-secondary-dark/20 scroll-mt-24 bg-gradient-to-t from-white to-yellow-50 py-16 dark:from-gray-900"
     >
       <div className="mx-auto max-w-screen-xl px-4 lg:px-6">
         <div className="mx-auto mb-12 max-w-screen-md text-center">
@@ -118,7 +113,6 @@ const Pricing = () => {
             Start your mindfulness journey with flexible subscription options
           </motion.p>
         </div>
-
         <div className="grid justify-center gap-8 md:grid-cols-2 lg:grid-cols-2">
           {plans.map((plan, index) => (
             <motion.div
@@ -210,7 +204,6 @@ const Pricing = () => {
                     <SubscriptionButton
                       planType={plan.planType as 'FOUR_DAY' | 'SIX_MONTH'}
                       amount={plan.amount}
-                      webinarId={plan.webinarId}
                     />
                   </motion.div>
                 )}

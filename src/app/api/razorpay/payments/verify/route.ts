@@ -11,7 +11,7 @@ export const POST = async (req: Request) => {
     razorpay_order_id,
     razorpay_signature,
     planType,
-    // amount,
+    webinarId,
   } = body;
 
   try {
@@ -25,13 +25,18 @@ export const POST = async (req: Request) => {
     if (!isValid)
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
 
-    // Update payment record
+    // Update payment record with proper webinar relation
     const payment = await prisma.payment.update({
       where: { razorpayOrderId: razorpay_order_id },
       data: {
         razorpayPaymentId: razorpay_payment_id,
         razorpaySignature: razorpay_signature,
         status: 'captured',
+        ...(webinarId && {
+          webinar: {
+            connect: { id: webinarId },
+          },
+        }),
       },
       include: { user: true },
     });

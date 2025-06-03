@@ -3,7 +3,14 @@ import { Dispatch, SetStateAction } from 'react';
 import { ClipLoader } from 'react-spinners';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion } from 'framer-motion';
-import { Layout, Trash, Upload, Video } from 'lucide-react';
+import {
+  CheckCircle2,
+  Link,
+  Trash,
+  Upload,
+  Video,
+  Video as VideoIcon,
+} from 'lucide-react';
 
 import UploadProgress from '@/components/ui/UploadProgress';
 import { VideoUploadData, WebinarFormData } from '@/types/user';
@@ -28,13 +35,27 @@ const WebinarRegistrationPage = ({
   const [uploadErrors, setUploadErrors] = React.useState<{
     [key: string]: string;
   }>({});
+  const [urlTitle, setUrlTitle] = React.useState('');
+  const [urlInput, setUrlInput] = React.useState('');
+
+  // Simplified meeting state
+  const [meetingTitle, setMeetingTitle] = React.useState('');
+  const [meetingUrl, setMeetingUrl] = React.useState('');
+  const [meetingType, setMeetingType] = React.useState<'google' | 'zoom' | ''>(
+    ''
+  );
+
+  // Add new state variables for loading and success states
+  const [isAddingUrl, setIsAddingUrl] = React.useState(false);
+  const [isAddingMeeting, setIsAddingMeeting] = React.useState(false);
+  const [showUrlSuccess, setShowUrlSuccess] = React.useState(false);
+  const [showMeetingSuccess, setShowMeetingSuccess] = React.useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileList = Array.from(e.target.files);
       setTempFiles(fileList);
       setTitles(fileList.map((file) => file.name));
-      // Reset progress and errors for new files
       setUploadProgress({});
       setUploadErrors({});
     }
@@ -147,6 +168,113 @@ const WebinarRegistrationPage = ({
     }
   };
 
+  const handleAddUrl = async () => {
+    if (!urlInput || !urlTitle) {
+      return;
+    }
+    setIsAddingUrl(true);
+    try {
+      const response = await fetch('/api/videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: urlTitle,
+          url: urlInput,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add video URL');
+      }
+
+      const data = await response.json();
+      if (data.video) {
+        setFormData((prev) => ({
+          ...prev,
+          videoUploads: [
+            ...prev.videoUploads,
+            {
+              id: data.video.id,
+              title: data.video.title,
+              url: data.video.url,
+            },
+          ],
+        }));
+        // Show success animation
+        setShowUrlSuccess(true);
+        setTimeout(() => {
+          setShowUrlSuccess(false);
+          // Reset form
+          setUrlTitle('');
+          setUrlInput('');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error adding video URL:', error);
+    } finally {
+      setIsAddingUrl(false);
+    }
+  };
+
+  const handleCreateMeeting = async () => {
+    if (!meetingTitle || !meetingUrl) {
+      return;
+    }
+    setIsAddingMeeting(true);
+    try {
+      const response = await fetch('/api/videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: meetingTitle,
+          url: meetingUrl,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add meeting URL');
+      }
+
+      const data = await response.json();
+      if (data.video) {
+        setFormData((prev) => ({
+          ...prev,
+          videoUploads: [
+            ...prev.videoUploads,
+            {
+              id: data.video.id,
+              title: data.video.title,
+              url: data.video.url,
+            },
+          ],
+        }));
+        // Show success animation
+        setShowMeetingSuccess(true);
+        setTimeout(() => {
+          setShowMeetingSuccess(false);
+          // Reset form
+          setMeetingTitle('');
+          setMeetingUrl('');
+          setMeetingType('');
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error adding meeting URL:', error);
+    } finally {
+      setIsAddingMeeting(false);
+    }
+  };
+
+  const handlePlatformSelect = (type: 'google' | 'zoom') => {
+    setMeetingType(type);
+    // Open the respective platform in a new tab
+    if (type === 'google') {
+      window.open('https://meet.google.com/', '_blank');
+    } else if (type === 'zoom') {
+      window.open('https://zoom.us/start', '_blank');
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -186,15 +314,27 @@ const WebinarRegistrationPage = ({
                 whileHover={{ y: -5 }}
               >
                 <div className="relative aspect-video overflow-hidden rounded-lg bg-gray-100">
-                  <video
-                    controls
-                    className="size-full object-cover"
-                    poster="/video-placeholder.png"
-                  >
-                    <source src={video.url} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                  {video.publicId ? (
+                    <video
+                      controls
+                      className="size-full object-cover"
+                      poster="/video-placeholder.png"
+                    >
+                      <source src={video.url} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <div className="flex size-full items-center justify-center bg-gray-50 p-4">
+                      <a
+                        href={video.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:underline"
+                      >
+                        {video.title} (External Link)
+                      </a>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-3">
                   <h3 className="truncate text-lg font-semibold text-gray-800">
@@ -391,37 +531,190 @@ const WebinarRegistrationPage = ({
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* Thank You Section */}
-      <motion.div
-        className="mt-12 text-center"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        <h2 className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-3xl font-bold text-transparent">
-          Thank You Page
-        </h2>
-        <p className="mt-2 text-gray-600">
-          Create a beautiful thank you page for your webinar attendees
-        </p>
-      </motion.div>
+      <div className="mt-6 space-y-6">
+        {/* Live Meeting Integration Section */}
+        <motion.div
+          className="rounded-xl bg-white p-6 shadow-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <h3 className="mb-4 text-lg font-semibold text-gray-800">
+            Add Live Meeting
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="meetingTitle"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Meeting Title
+              </label>
+              <input
+                id="meetingTitle"
+                type="text"
+                value={meetingTitle}
+                onChange={(e) => setMeetingTitle(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder="Enter meeting title"
+              />
+            </div>
 
-      <motion.div
-        className="group relative mt-6 w-full cursor-pointer overflow-hidden rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 p-8 text-center text-white shadow-lg transition-all duration-300 hover:shadow-xl"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        <div className="relative">
-          <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/10">
-            <Layout className="size-8 text-white" />
+            <div>
+              <fieldset className="mb-2 block text-sm font-medium text-gray-700">
+                <legend className="mb-2 block text-sm font-medium text-gray-700">
+                  Select Platform
+                </legend>
+                <div className="grid grid-cols-2 gap-4">
+                  <motion.button
+                    type="button"
+                    onClick={() => handlePlatformSelect('google')}
+                    className={`flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                      meetingType === 'google'
+                        ? 'border-blue-500 bg-blue-50 text-blue-600'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-blue-500 hover:bg-blue-50'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <VideoIcon className="size-5" />
+                    <span>Google Meet</span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={() => handlePlatformSelect('zoom')}
+                    className={`flex items-center justify-center gap-2 rounded-lg border-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                      meetingType === 'zoom'
+                        ? 'border-blue-500 bg-blue-50 text-blue-600'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-blue-500 hover:bg-blue-50'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <VideoIcon className="size-5" />
+                    <span>Zoom</span>
+                  </motion.button>
+                </div>
+              </fieldset>
+            </div>
+
+            <div>
+              <label
+                htmlFor="meetingUrl"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Meeting URL
+              </label>
+              <input
+                id="meetingUrl"
+                type="url"
+                value={meetingUrl}
+                onChange={(e) => setMeetingUrl(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder={`Paste your ${meetingType === 'google' ? 'Google Meet' : meetingType === 'zoom' ? 'Zoom' : 'meeting'} URL here`}
+              />
+            </div>
+
+            <motion.button
+              onClick={handleCreateMeeting}
+              disabled={
+                !meetingTitle || !meetingUrl || !meetingType || isAddingMeeting
+              }
+              className="relative flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isAddingMeeting ? (
+                <>
+                  <ClipLoader size={16} color="#fff" />
+                  <span>Adding Meeting...</span>
+                </>
+              ) : showMeetingSuccess ? (
+                <>
+                  <CheckCircle2 className="size-4" />
+                  <span>Meeting Added Successfully!</span>
+                </>
+              ) : (
+                <>
+                  <VideoIcon className="size-4" />
+                  <span>Add Meeting</span>
+                </>
+              )}
+            </motion.button>
           </div>
-          <h3 className="text-2xl font-bold">Build Your Thank You Page</h3>
-          <p className="mt-2 text-sm text-white/80">
-            Click to customize your thank you page
-          </p>
-        </div>
-      </motion.div>
+        </motion.div>
+
+        {/* URL Input Section */}
+        <motion.div
+          className="rounded-xl bg-white p-6 shadow-lg"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <h3 className="mb-4 text-lg font-semibold text-gray-800">
+            Add Video URL
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label
+                htmlFor="videoTitle"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Video Title
+              </label>
+              <input
+                id="videoTitle"
+                type="text"
+                value={urlTitle}
+                onChange={(e) => setUrlTitle(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                placeholder="Enter video title"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="videoUrl"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Video URL
+              </label>
+              <input
+                id="videoUrl"
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none"
+                placeholder="Enter video URL (YouTube, Vimeo, etc.)"
+              />
+            </div>
+            <motion.button
+              onClick={handleAddUrl}
+              disabled={!urlInput || !urlTitle || isAddingUrl}
+              className="relative flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isAddingUrl ? (
+                <>
+                  <ClipLoader size={16} color="#fff" />
+                  <span>Adding URL...</span>
+                </>
+              ) : showUrlSuccess ? (
+                <>
+                  <CheckCircle2 className="size-4" />
+                  <span>URL Added Successfully!</span>
+                </>
+              ) : (
+                <>
+                  <Link className="size-4" />
+                  <span>Add Video URL</span>
+                </>
+              )}
+            </motion.button>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 };

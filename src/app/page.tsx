@@ -11,9 +11,7 @@ import FAQ from '@/components/landing/FAQ';
 import Pricing from '@/components/landing/Pricing';
 import Sells from '@/components/landing/Sells';
 import WebinarKitSection from '@/components/landing/WebinarkitSection';
-import WebinarkitSectionBuild from '@/components/landing/WebinarkitSectionBuild';
 import WebinarkitSectionPlatform from '@/components/landing/WebinarkitSectionPlatform';
-import WebinarkitSectionScale from '@/components/landing/WebinarkitSectionScale';
 import WebinarPage1 from '@/components/landing/WebinarPage1';
 import { Button } from '@/components/ui/button';
 
@@ -83,7 +81,14 @@ const Home = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {userName ? `Welcome ${userName}!` : 'Welcome to SMVSP Webinar'}
+            {userName ? (
+              <>
+                Hi {userName}!<br />
+                Welcome to Shree Mahavidya Shaktipeeth
+              </>
+            ) : (
+              'Welcome to Shree Mahavidya Shaktipeeth'
+            )}
           </motion.h1>
 
           <motion.div
@@ -93,8 +98,8 @@ const Home = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
           >
             <p className="text-lg">
-              Your platform for creating, managing, and scaling successful
-              webinars
+              Awaken abundance, peace, and grace through guided spiritual
+              practices and sacred wisdom
             </p>
           </motion.div>
 
@@ -154,9 +159,7 @@ const Home = () => {
             <Sells />
             <Pricing />
             <WebinarKitSection />
-            <WebinarkitSectionBuild />
             <WebinarkitSectionPlatform />
-            <WebinarkitSectionScale />
             <BusinessTypes />
             <FAQ />
           </motion.div>
