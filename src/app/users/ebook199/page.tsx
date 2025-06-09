@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
-interface EBook {
+interface EBook199 {
   id: string;
   title: string;
   description?: string;
@@ -30,7 +30,7 @@ interface EBook {
   downloads: number;
 }
 
-export default function EBooksPage() {
+export default function EBook199Page() {
   const { data: session, status } = useSession();
   const isAdmin = session?.user?.isAdmin;
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -38,7 +38,7 @@ export default function EBooksPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
-  const [ebooks, setEbooks] = useState<EBook[]>([]);
+  const [ebooks, setEbooks] = useState<EBook199[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -46,9 +46,9 @@ export default function EBooksPage() {
     thumbnail: null as File | null,
   });
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
-  const [selectedEbook, setSelectedEbook] = useState<EBook | null>(null);
+  const [selectedEbook, setSelectedEbook] = useState<EBook199 | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [ebookToDelete, setEbookToDelete] = useState<EBook | null>(null);
+  const [ebookToDelete, setEbookToDelete] = useState<EBook199 | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
@@ -62,9 +62,9 @@ export default function EBooksPage() {
         return;
       }
 
-      // If user is admin, grant immediate access
+      // If user is admin, redirect to admin ebooks page
       if (isAdmin) {
-        setHasAccess(true);
+        window.location.href = '/users/ebooks';
         return;
       }
 
@@ -80,8 +80,9 @@ export default function EBooksPage() {
             new Date(sub.endDate) > new Date()
         );
 
-        if (!hasSixMonthPlan) {
-          window.location.href = '/users/ebook199';
+        // If user has SIX_MONTH plan, redirect to ebooks page
+        if (hasSixMonthPlan) {
+          window.location.href = '/users/ebooks';
           return;
         }
 
@@ -100,7 +101,7 @@ export default function EBooksPage() {
 
     const fetchEbooks = async (): Promise<void> => {
       try {
-        const response = await fetch('/api/ebooks');
+        const response = await fetch('/api/ebook199');
         if (!response.ok) throw new Error('Failed to fetch ebooks');
         const data = await response.json();
         if (data.ebooks) setEbooks(data.ebooks);
@@ -144,6 +145,14 @@ export default function EBooksPage() {
         formDataToSend.append('thumbnail', formData.thumbnail);
       }
 
+      console.log('Sending form data:', {
+        title: formData.title,
+        description: formData.description,
+        fileType: formData.file.type,
+        fileSize: formData.file.size,
+        hasThumbnail: !!formData.thumbnail,
+      });
+
       // Simulate file upload progress
       const uploadInterval = setInterval(() => {
         setUploadProgress((prev) => {
@@ -155,16 +164,17 @@ export default function EBooksPage() {
         });
       }, 500);
 
-      const response = await fetch('/api/ebooks', {
+      const response = await fetch('/api/ebook199', {
         method: 'POST',
         body: formDataToSend,
       });
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ message: 'Failed to create ebook' }));
-        throw new Error(errorData.message || 'Failed to create ebook');
+        const errorData = await response.json();
+        console.error('Upload failed:', errorData);
+        throw new Error(
+          errorData.error || errorData.details || 'Failed to create ebook'
+        );
       }
 
       const responseData = await response.json();
@@ -199,7 +209,7 @@ export default function EBooksPage() {
     }
   };
 
-  const handleDelete = (ebook: EBook): void => {
+  const handleDelete = (ebook: EBook199): void => {
     setEbookToDelete(ebook);
   };
 
@@ -208,7 +218,7 @@ export default function EBooksPage() {
 
     setIsDeleting(true);
     try {
-      const response = await fetch(`/api/ebooks/${ebookToDelete.id}`, {
+      const response = await fetch(`/api/ebook199/${ebookToDelete.id}`, {
         method: 'DELETE',
       });
 
@@ -228,9 +238,11 @@ export default function EBooksPage() {
     }
   };
 
-  const handleDownload = async (ebook: EBook): Promise<void> => {
+  const handleDownload = async (ebook: EBook199): Promise<void> => {
     try {
-      const response = await fetch(`/api/ebooks/${ebook.id}/download`);
+      const response = await fetch(`/api/ebook199/${ebook.id}/download`, {
+        method: 'POST',
+      });
       if (!response.ok) {
         throw new Error('Failed to download e-book');
       }
@@ -258,7 +270,7 @@ export default function EBooksPage() {
     }
   };
 
-  const handlePreview = (ebook: EBook): void => {
+  const handlePreview = (ebook: EBook199): void => {
     setSelectedEbook(ebook);
     setPreviewModalOpen(true);
   };
@@ -275,7 +287,9 @@ export default function EBooksPage() {
   return (
     <div className="container mx-auto px-2 py-4 sm:px-4 sm:py-8">
       <div className="mb-4 flex flex-col justify-between gap-3 sm:mb-8 sm:flex-row sm:items-center">
-        <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">E-Books</h1>
+        <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">
+          E-Book 199 Collection
+        </h1>
         {isAdmin && (
           <motion.button
             onClick={() => setIsUploadModalOpen(true)}
@@ -786,7 +800,7 @@ export default function EBooksPage() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <AlertDialog.Cancel asChild>
+                    <AlertDialog.Cancel>
                       <motion.div
                         className="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 sm:px-4 sm:py-2 sm:text-sm"
                         whileHover={{ scale: 1.05 }}

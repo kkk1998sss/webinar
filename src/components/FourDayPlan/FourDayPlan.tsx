@@ -1,7 +1,14 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react'; // <-- add useCallback
 import { motion } from 'framer-motion';
-import { CheckCircle, Clock, Lock, Play, Sparkles } from 'lucide-react';
+import {
+  BookOpen,
+  CheckCircle,
+  Clock,
+  Lock,
+  Play,
+  Sparkles,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -148,16 +155,25 @@ export default function FourDayPlan() {
 
   // Helper for YouTube/Vimeo embed
   function getEmbedUrl(url: string, isLive: boolean) {
+    // Handle pCloud links
+    if (url.includes('pcloud.link')) {
+      return url; // pCloud links are already in the correct format for embedding
+    }
+
+    // Handle YouTube links
     const ytMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/
     );
     if (ytMatch) {
       return `https://www.youtube.com/embed/${ytMatch[1]}?${isLive ? 'autoplay=1&controls=0&disablekb=1&modestbranding=1&rel=0' : 'controls=1&modestbranding=1&rel=0'}`;
     }
+
+    // Handle Vimeo links
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
       return `https://player.vimeo.com/video/${vimeoMatch[1]}?${isLive ? 'autoplay=1&controls=0' : 'controls=1'}`;
     }
+
     return url;
   }
 
@@ -282,8 +298,28 @@ export default function FourDayPlan() {
   // --- UI ---
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      {/* E-Books Access Button */}
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-green-500 to-green-600 p-2 shadow-md">
+        <motion.div
+          className="mx-auto max-w-7xl"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Button
+            className="w-full rounded-lg bg-white py-3 font-semibold text-green-600 shadow-lg transition-all hover:bg-green-50 hover:shadow-xl"
+            onClick={() => router.push('/users/ebook199')}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <BookOpen className="size-5" />
+              <span>Access Your E-Books Collection</span>
+            </div>
+          </Button>
+        </motion.div>
+      </div>
+
       {/* Day selection bar */}
-      <div className="sticky top-0 z-10 bg-white shadow-sm dark:bg-gray-800">
+      <div className="sticky top-14 z-10 bg-white shadow-sm dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 pb-4">
           <div className="grid grid-cols-3 gap-4 pt-2">
             {[1, 2, 3].map((day) => {
@@ -386,8 +422,8 @@ export default function FourDayPlan() {
 
       {/* Video Player Section */}
       <div className="flex flex-1 flex-col lg:flex-row">
-        <div className="flex w-full flex-col p-4 lg:w-8/12">
-          <div className="relative h-full overflow-hidden rounded-xl bg-black shadow-xl">
+        <div className="flex w-full flex-col p-2 sm:p-4 lg:w-8/12">
+          <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-xl">
             {currentVideo ? (
               (() => {
                 const day = currentVideo.day;
@@ -405,22 +441,22 @@ export default function FourDayPlan() {
 
                 if (!isUnlocked) {
                   return (
-                    <div className="flex h-full flex-col items-center justify-center p-8 text-center text-gray-300">
-                      <Lock className="mb-4 size-16 text-gray-400" />
-                      <h3 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white">
+                    <div className="flex h-full flex-col items-center justify-center p-4 text-center text-gray-300 sm:p-8">
+                      <Lock className="mb-4 size-12 text-gray-400 sm:size-16" />
+                      <h3 className="mb-2 text-lg font-semibold text-gray-800 sm:text-xl dark:text-white">
                         {countdown ? 'Available at 9:00 PM' : 'Content Locked'}
                       </h3>
-                      <p className="mb-4 max-w-md text-gray-600 dark:text-gray-300">
+                      <p className="mb-4 max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
                         {countdown
                           ? 'This video unlocks at 9:00 PM today'
                           : `This video will be available on day ${currentVideo.day} of your challenge`}
                       </p>
                       {countdown && (
                         <div className="flex flex-col items-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          <div className="text-xl font-bold text-blue-600 sm:text-2xl dark:text-blue-400">
                             {countdown}
                           </div>
-                          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="mt-2 text-xs text-gray-500 sm:text-sm dark:text-gray-400">
                             Until unlock
                           </div>
                         </div>
@@ -432,9 +468,9 @@ export default function FourDayPlan() {
                 // Video is unlocked
                 return (
                   <div className="flex h-full flex-col">
-                    <div className="absolute left-4 top-4 z-10">
+                    <div className="absolute left-2 top-2 z-10 sm:left-4 sm:top-4">
                       <span
-                        className={`rounded-full px-3 py-1 text-xs text-white shadow ${
+                        className={`rounded-full px-2 py-0.5 text-xs text-white shadow sm:px-3 sm:py-1 ${
                           isLiveMode
                             ? 'animate-pulse bg-red-600'
                             : 'bg-green-600'
@@ -454,8 +490,9 @@ export default function FourDayPlan() {
                         src={getEmbedUrl(currentVideo.videoUrl, true)}
                         title={currentVideo.title}
                         className="absolute left-0 top-0 size-full"
-                        allow="autoplay; encrypted-media"
+                        allow="autoplay; encrypted-media; fullscreen"
                         allowFullScreen
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                       />
                     ) : (
                       <iframe
@@ -463,22 +500,24 @@ export default function FourDayPlan() {
                         title={currentVideo.title}
                         className="absolute left-0 top-0 size-full"
                         allowFullScreen
+                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                       />
                     )}
 
                     {isLiveMode && !isCompleted && (
-                      <div className="absolute inset-x-0 bottom-4 text-center">
-                        <div className="inline-block animate-pulse rounded-full bg-red-600 px-3 py-1 text-sm text-white">
+                      <div className="absolute inset-x-0 bottom-2 text-center sm:bottom-4">
+                        <div className="inline-block animate-pulse rounded-full bg-red-600 px-2 py-0.5 text-xs text-white sm:px-3 sm:py-1 sm:text-sm">
                           LIVE PLAYBACK: Controls disabled during first viewing
                         </div>
                       </div>
                     )}
 
                     {isLiveMode && (
-                      <div className="absolute bottom-4 right-4 z-10">
+                      <div className="absolute bottom-2 right-2 z-10 sm:bottom-4 sm:right-4">
                         <Button
                           variant="destructive"
                           size="sm"
+                          className="text-xs sm:text-sm"
                           onClick={() => {
                             if (
                               confirm(
@@ -497,12 +536,12 @@ export default function FourDayPlan() {
                 );
               })()
             ) : (
-              <div className="flex h-full flex-col items-center justify-center p-8 text-center text-gray-300">
-                <Play className="mb-4 size-16 text-gray-400" />
-                <h3 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white">
+              <div className="flex h-full flex-col items-center justify-center p-4 text-center text-gray-300 sm:p-8">
+                <Play className="mb-4 size-12 text-gray-400 sm:size-16" />
+                <h3 className="mb-2 text-lg font-semibold text-gray-800 sm:text-xl dark:text-white">
                   Select a Video
                 </h3>
-                <p className="max-w-md text-gray-600 dark:text-gray-300">
+                <p className="max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
                   Choose a day from the menu above to start watching the
                   meditation session
                 </p>
@@ -511,41 +550,41 @@ export default function FourDayPlan() {
           </div>
         </div>
         {/* Upgrade card on the right */}
-        <div className="flex w-full items-center p-4 lg:w-4/12">
+        <div className="flex w-full items-center p-2 sm:p-4 lg:w-4/12">
           <motion.div
-            className="flex w-full flex-col items-center rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800"
+            className="flex w-full flex-col items-center rounded-xl bg-white p-4 shadow-lg sm:p-6 dark:bg-gray-800"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Sparkles className="mb-4 size-10 text-blue-500 dark:text-blue-400" />
-            <h2 className="mb-2 text-center text-xl font-bold text-gray-800 dark:text-white">
+            <Sparkles className="mb-4 size-8 text-blue-500 sm:size-10 dark:text-blue-400" />
+            <h2 className="mb-2 text-center text-lg font-bold text-gray-800 sm:text-xl dark:text-white">
               Continue Your Journey
             </h2>
-            <p className="mb-4 text-center text-sm text-gray-600 dark:text-gray-300">
+            <p className="mb-4 text-center text-xs text-gray-600 sm:text-sm dark:text-gray-300">
               Unlock more premium meditation courses and live sessions with our
               extended subscription.
             </p>
-            <ul className="mb-6 w-full space-y-2 text-sm text-gray-600 dark:text-gray-300">
+            <ul className="mb-6 w-full space-y-2 text-xs text-gray-600 sm:text-sm dark:text-gray-300">
               <li className="flex items-center gap-2">
-                <CheckCircle className="size-4 text-green-500" />
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
                 <span>Full access to all meditation programs</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="size-4 text-green-500" />
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
                 <span>Exclusive live sessions</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="size-4 text-green-500" />
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
                 <span>Downloadable resources</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="size-4 text-green-500" />
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
                 <span>Priority support</span>
               </li>
             </ul>
             <Button
-              className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-3 font-semibold text-white shadow transition hover:shadow-lg"
+              className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg sm:py-3 sm:text-base"
               onClick={() => router.push('/')}
             >
               Upgrade to Full Access

@@ -65,6 +65,12 @@ export default function Dashboard() {
         description: 'Downloadable meditation guides',
         type: 'ebook',
       },
+      {
+        id: '7',
+        title: 'All Videos Available Here',
+        description: 'Access our complete video library',
+        type: 'video',
+      },
     ]
   );
   const [showAddModal, setShowAddModal] = useState(false);
@@ -81,6 +87,12 @@ export default function Dashboard() {
       title: '3-4 Days Webinar',
       description: 'Access all webinar recordings',
       type: 'video',
+    },
+    {
+      id: '2',
+      title: 'E-Books Collection',
+      description: 'Access your collection of meditation e-books',
+      type: 'ebook',
     },
   ];
 
@@ -143,7 +155,7 @@ export default function Dashboard() {
   // Function to check if content is accessible based on subscription
   const isContentAccessible = (item: ContentItem) => {
     if (subscription.type === 'FOUR_DAY') {
-      return item.title === '3-4 Days Webinar';
+      return item.title === '3-4 Days Webinar' || item.type === 'ebook';
     }
     return subscription.type === 'SIX_MONTH';
   };
@@ -152,6 +164,10 @@ export default function Dashboard() {
     if (subscription.type === 'FOUR_DAY') {
       if (item.title === '3-4 Days Webinar') {
         setCurrentView('fourDay');
+        return;
+      }
+      if (item.type === 'ebook') {
+        router.push('/users/ebook199');
         return;
       }
       router.push('/');
@@ -163,7 +179,6 @@ export default function Dashboard() {
         setCurrentView('webinar');
         return;
       }
-      // Add route for E-books Collection
       if (item.type === 'ebook') {
         router.push('/users/ebooks');
         return;
@@ -269,13 +284,29 @@ export default function Dashboard() {
                         {item.description}
                       </p>
                       {isContentAccessible(item) ? (
-                        <button
-                          onClick={() => handleStartLearning(item)}
-                          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
-                        >
-                          <Play className="size-4" />
-                          Start Learning
-                        </button>
+                        item.title === 'All Videos Available Here' ? (
+                          <div className="w-full">
+                            {' '}
+                            {/* This wrapper maintains consistent width */}
+                            <a
+                              href="https://shreemahavidyashaktipeeth.com/subscription/"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                            >
+                              <Play className="size-4" />
+                              Start Learning
+                            </a>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleStartLearning(item)}
+                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                          >
+                            <Play className="size-4" />
+                            Start Learning
+                          </button>
+                        )
                       ) : (
                         <button
                           onClick={() => router.push('/')}
@@ -323,13 +354,30 @@ export default function Dashboard() {
                         {item.description}
                       </p>
                       {isContentAccessible(item) ? (
-                        <button
-                          onClick={() => handleStartLearning(item)}
-                          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
-                        >
-                          <Play className="size-4" />
-                          Start Learning
-                        </button>
+                        item.title === 'All Videos Available Here' ? (
+                          <a
+                            href="https://shreemahavidyashaktipeeth.com/subscription/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              window.location.href =
+                                'https://shreemahavidyashaktipeeth.com/subscription/';
+                            }}
+                          >
+                            <Play className="size-4" />
+                            Start Learning
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => handleStartLearning(item)}
+                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                          >
+                            <Play className="size-4" />
+                            Start Learning
+                          </button>
+                        )
                       ) : (
                         <button
                           onClick={() => router.push('/')}

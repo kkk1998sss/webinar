@@ -166,14 +166,14 @@ export default function WebinarList() {
 
   return (
     <motion.div
-      className="space-y-6"
+      className="space-y-4 p-2 sm:space-y-6 sm:p-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <motion.h1
-          className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-bold text-transparent dark:from-red-500 dark:to-yellow-400"
+          className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl dark:from-red-500 dark:to-yellow-400"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -184,20 +184,20 @@ export default function WebinarList() {
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="flex gap-2"
+          className="flex flex-wrap gap-2"
         >
           <button
             onClick={handleExport}
-            className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:bg-green-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white shadow-md transition-all duration-300 hover:bg-green-700 sm:px-4 sm:py-2"
           >
-            <FaDownload className="size-4" />
+            <FaDownload className="size-3 sm:size-4" />
             Export
           </button>
           <Link
             href="/users/live-webinar"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-4 py-2 text-white shadow-md transition-all duration-300 hover:from-red-700 hover:to-yellow-600 dark:from-red-500 dark:to-yellow-400"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-3 py-1.5 text-sm text-white shadow-md transition-all duration-300 hover:from-red-700 hover:to-yellow-600 sm:px-4 sm:py-2 dark:from-red-500 dark:to-yellow-400"
           >
-            <FaPlus className="size-4" />
+            <FaPlus className="size-3 sm:size-4" />
             Create
           </Link>
         </motion.div>
@@ -225,7 +225,7 @@ export default function WebinarList() {
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
             <select
-              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500 dark:focus:ring-blue-800/50"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500 dark:focus:ring-blue-800/50"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -235,10 +235,10 @@ export default function WebinarList() {
               <option value="past">Past</option>
             </select>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="date"
-              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500 dark:focus:ring-blue-800/50"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500 dark:focus:ring-blue-800/50"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               placeholder="Start Date"
@@ -246,7 +246,7 @@ export default function WebinarList() {
             <span className="text-sm text-gray-500 dark:text-gray-400">to</span>
             <input
               type="date"
-              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500 dark:focus:ring-blue-800/50"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none transition-all duration-300 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 sm:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:focus:border-blue-500 dark:focus:ring-blue-800/50"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               placeholder="End Date"
@@ -260,7 +260,7 @@ export default function WebinarList() {
               setEndDate('');
               setCurrentPage(1);
             }}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 transition-all duration-300 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 transition-all duration-300 hover:border-gray-300 hover:bg-gray-50 sm:w-auto dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:border-gray-500 dark:hover:bg-gray-600"
           >
             <FaTimes className="size-3 text-gray-500 dark:text-gray-400" />
             Reset
@@ -270,13 +270,13 @@ export default function WebinarList() {
 
       {loading ? (
         <motion.div
-          className="flex items-center justify-center p-12"
+          className="flex items-center justify-center p-8 sm:p-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="size-8 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 dark:border-blue-700 dark:border-t-blue-400"></div>
-          <span className="ml-3 text-gray-600 dark:text-gray-300">
+          <div className="size-6 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 sm:size-8 dark:border-blue-700 dark:border-t-blue-400"></div>
+          <span className="ml-3 text-sm text-gray-600 sm:text-base dark:text-gray-300">
             Loading webinars...
           </span>
         </motion.div>
@@ -284,14 +284,14 @@ export default function WebinarList() {
         <div className="w-full rounded-xl border border-gray-200 shadow-sm dark:border-gray-700">
           <div className="overflow-x-auto">
             <motion.table
-              className="w-full min-w-[800px] text-xs text-gray-700 dark:text-gray-300"
+              className="w-full min-w-[640px] text-xs text-gray-700 sm:text-sm dark:text-gray-300"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               <thead className="bg-gray-50 dark:bg-slate-800">
                 <tr>
-                  <th className="w-12 p-2 text-center font-medium text-gray-500 dark:text-gray-400">
+                  <th className="w-8 p-2 text-center font-medium text-gray-500 sm:w-12 dark:text-gray-400">
                     S.No
                   </th>
                   <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
@@ -322,8 +322,10 @@ export default function WebinarList() {
                       animate="visible"
                       exit={{ opacity: 0 }}
                     >
-                      <td className="w-12 p-2 text-center">{index + 1}</td>
-                      <td className="max-w-[200px] break-words p-2">
+                      <td className="w-8 p-2 text-center sm:w-12">
+                        {index + 1}
+                      </td>
+                      <td className="max-w-[150px] break-words p-2 sm:max-w-[200px]">
                         <span className="font-medium text-gray-900 dark:text-gray-100">
                           {webinar.webinarTitle}
                         </span>
@@ -357,7 +359,7 @@ export default function WebinarList() {
                       </td>
                       <td className="p-2">
                         <Badge
-                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium sm:px-2 ${
                             new Date(webinar.webinarDate) > new Date()
                               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                               : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
@@ -387,19 +389,19 @@ export default function WebinarList() {
                               <Popover.Content
                                 side="top"
                                 align="center"
-                                className="z-50 w-64 rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-lg dark:border-gray-700 dark:bg-slate-800"
+                                className="z-50 w-[280px] rounded-lg border border-gray-200 bg-white p-3 text-sm shadow-lg sm:w-64 sm:p-4 dark:border-gray-700 dark:bg-slate-800"
                               >
                                 <p className="mb-3 text-gray-800 dark:text-gray-200">
                                   Are you sure you want to delete this webinar?
                                 </p>
                                 <div className="flex justify-end gap-2">
                                   <Popover.Close asChild>
-                                    <button className="rounded-lg bg-gray-100 px-3 py-1 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+                                    <button className="rounded-lg bg-gray-100 px-2 py-1 text-sm text-gray-700 transition-colors hover:bg-gray-200 sm:px-3 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
                                       Cancel
                                     </button>
                                   </Popover.Close>
                                   <button
-                                    className="rounded-lg bg-red-600 px-3 py-1 text-white transition-colors hover:bg-red-700"
+                                    className="rounded-lg bg-red-600 px-2 py-1 text-sm text-white transition-colors hover:bg-red-700 sm:px-3"
                                     onClick={() => deleteWebinar(webinar.id)}
                                   >
                                     Confirm
@@ -421,16 +423,16 @@ export default function WebinarList() {
                   >
                     <td
                       colSpan={6}
-                      className="px-4 py-12 text-center text-gray-500 dark:text-gray-400"
+                      className="px-4 py-8 text-center text-gray-500 sm:py-12 dark:text-gray-400"
                     >
                       <div className="flex flex-col items-center justify-center">
-                        <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
-                          <FaSearch className="size-8 text-gray-400 dark:text-gray-500" />
+                        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-gray-100 sm:size-16 dark:bg-gray-700">
+                          <FaSearch className="size-6 text-gray-400 sm:size-8 dark:text-gray-500" />
                         </div>
-                        <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        <p className="text-base font-medium text-gray-900 sm:text-lg dark:text-gray-100">
                           No webinars found
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-gray-500 sm:text-sm dark:text-gray-400">
                           {searchQuery || filterStatus !== 'all'
                             ? 'Try adjusting your search or filter criteria'
                             : 'There are no webinars in the system yet'}
@@ -445,19 +447,19 @@ export default function WebinarList() {
 
           {/* Pagination Controls */}
           {filteredWebinars.length > 0 && (
-            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-slate-800">
+            <div className="flex flex-col items-center justify-between gap-3 border-t border-gray-200 bg-gray-50 p-3 sm:flex-row sm:px-4 dark:border-gray-700 dark:bg-slate-800">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-xs text-gray-700 sm:text-sm dark:text-gray-300">
                   Showing {startIndex + 1} to{' '}
                   {Math.min(endIndex, filteredWebinars.length)} of{' '}
                   {filteredWebinars.length} entries
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
                   onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
-                  className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
+                  className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 disabled:opacity-50 sm:px-3 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
                 >
                   First
                 </button>
@@ -466,11 +468,11 @@ export default function WebinarList() {
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
+                  className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 disabled:opacity-50 sm:px-3 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
                 >
                   Previous
                 </button>
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-xs text-gray-700 sm:text-sm dark:text-gray-300">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
@@ -478,14 +480,14 @@ export default function WebinarList() {
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
+                  className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 disabled:opacity-50 sm:px-3 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
                 >
                   Next
                 </button>
                 <button
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
-                  className="rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
+                  className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 disabled:opacity-50 sm:px-3 sm:text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:disabled:opacity-50"
                 >
                   Last
                 </button>

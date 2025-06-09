@@ -4,38 +4,34 @@ import { DropdownMenuPortal } from '@radix-ui/react-dropdown-menu';
 import { DashboardIcon, ExitIcon } from '@radix-ui/react-icons';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 
 import { SignInButton } from '@/components/navbar/sign-in-button';
-import { SolutionsDropdown } from '@/components/navbar/solutions-dropdown';
-import { UseCasesDropdown } from '@/components/navbar/use-cases-dropdown';
 import { UserDropdown } from '@/components/navbar/user-dropdown';
 import { Link } from '@/lib/i18n';
-import * as m from '@/paraglide/messages';
 
 export const Navbar = () => {
   const { data: session } = useSession();
   const router = useRouter();
-  const pathname = usePathname();
 
-  const navItems = [
-    { href: '#features', label: m.features() },
-    { href: '#demo', label: m.demo() },
-    { href: '#pricing', label: m.pricing() },
-    { href: '#testimonials', label: m.testimonials() },
-  ];
+  // const navItems = [
+  //   { href: '#features', label: m.features() },
+  //   { href: '#demo', label: m.demo() },
+  //   { href: '#pricing', label: m.pricing() },
+  //   { href: '#testimonials', label: m.testimonials() },
+  // ];
 
-  const handleNavClick = (href: string) => (e: React.MouseEvent) => {
-    if (pathname === '/') {
-      e.preventDefault();
-      const sectionId = href.split('#')[1];
-      const section = document.getElementById(sectionId);
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  };
+  // const handleNavClick = (href: string) => (e: React.MouseEvent) => {
+  //   if (pathname === '/') {
+  //     e.preventDefault();
+  //     const sectionId = href.split('#')[1];
+  //     const section = document.getElementById(sectionId);
+  //     if (section) {
+  //       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  //     }
+  //   }
+  // };
 
   return (
     <motion.header
@@ -57,8 +53,7 @@ export const Navbar = () => {
           </Link>
         </motion.div>
 
-        <nav className="hidden items-center gap-6 md:flex">
-          <SolutionsDropdown />
+        {/* <nav className="hidden items-center gap-6 md:flex">
           {navItems.map((item, index) => (
             <motion.div
               key={item.href}
@@ -79,8 +74,7 @@ export const Navbar = () => {
               </Link>
             </motion.div>
           ))}
-          <UseCasesDropdown />
-        </nav>
+        </nav> */}
 
         <div className="flex items-center gap-2">
           {session?.user ? (
@@ -116,6 +110,8 @@ export const Navbar = () => {
                       <DropdownMenu.DropdownMenuContent
                         className="bg-popover/95 dark:border-border z-50 min-w-[220px] rounded-md border p-2 shadow-lg backdrop-blur-sm"
                         sideOffset={5}
+                        align="end"
+                        side="bottom"
                         style={{ zIndex: 9999 }}
                       >
                         {/* Profile Preview */}

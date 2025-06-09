@@ -17,7 +17,7 @@ import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 
-type EBook = {
+type EBook199 = {
   id: string;
   title: string;
   description: string;
@@ -31,8 +31,8 @@ type EBook = {
   downloads: number;
 };
 
-export default function EBooksPage() {
-  const [ebooks, setEBooks] = useState<EBook[]>([]);
+export default function EBook199Page() {
+  const [ebooks, setEBooks] = useState<EBook199[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<
@@ -45,11 +45,12 @@ export default function EBooksPage() {
 
   const fetchEBooks = async () => {
     try {
-      const response = await fetch('/api/ebooks');
+      const response = await fetch('/api/ebook199');
       const data = await response.json();
-      setEBooks(data.ebooks);
+      setEBooks(data.ebooks || []);
     } catch (error) {
       console.error('Error fetching ebooks:', error);
+      setEBooks([]);
     } finally {
       setLoading(false);
     }
@@ -58,7 +59,7 @@ export default function EBooksPage() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this ebook?')) {
       try {
-        const response = await fetch(`/api/ebooks/${id}`, {
+        const response = await fetch(`/api/ebook199/${id}`, {
           method: 'DELETE',
         });
 
@@ -75,8 +76,8 @@ export default function EBooksPage() {
 
   const filteredEBooks = ebooks.filter((ebook) => {
     const matchesSearch =
-      ebook.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ebook.description.toLowerCase().includes(searchTerm.toLowerCase());
+      ebook.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ebook.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && ebook.isActive) ||
@@ -111,7 +112,7 @@ export default function EBooksPage() {
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          E-Books Management
+          E-Book 199 Management
         </motion.h1>
         <motion.div
           initial={{ x: 20, opacity: 0 }}
@@ -120,16 +121,16 @@ export default function EBooksPage() {
           className="flex gap-4"
         >
           <Link
-            href="/users/ebooks"
+            href="/admin/ebook199/new"
             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
           >
             <FaPlus /> Add New E-Book
           </Link>
           <Link
-            href="/admin/ebook199"
+            href="/users/ebook199"
             className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
           >
-            <FaBook /> E-Book 199
+            <FaBook /> View User Page
           </Link>
         </motion.div>
       </div>
@@ -294,7 +295,7 @@ export default function EBooksPage() {
                       <td className="p-2">
                         <div className="flex items-center gap-2">
                           <Link
-                            href={`/admin/ebooks/${ebook.id}/edit`}
+                            href={`/admin/ebook199/${ebook.id}/edit`}
                             className="rounded p-2 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/50"
                           >
                             <FaEdit />
