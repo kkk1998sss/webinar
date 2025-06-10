@@ -47,25 +47,12 @@ export default function FourDayPlan() {
   const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  // Remove unused showSubscriptionModal state
-  // const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [now, setNow] = useState(new Date());
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [videoProgress, setVideoProgress] = useState<VideoCompletionStatus>({});
   const playerRef = useRef<HTMLIFrameElement | null>(null); // Specify type instead of any
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
-
-  // Countdown helper
-  function getCountdown(targetDate: Date) {
-    const diff = targetDate.getTime() - now.getTime();
-    if (diff <= 0) return null;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    return `${hours}h ${minutes}m ${seconds}s`;
-  }
 
   // Load saved video progress from localStorage
   useEffect(() => {
@@ -100,19 +87,17 @@ export default function FourDayPlan() {
           setVideos(videoData.videos);
         }
 
-        // Find active FOUR_DAY subscription
+        // Find any FOUR_DAY subscription (removed isActive check to allow lifetime access)
         if (subData.subscriptions?.length > 0) {
-          const activeSub = subData.subscriptions.find(
-            (sub: Subscription) => sub.type === 'FOUR_DAY' && sub.isActive
+          const fourDaySub = subData.subscriptions.find(
+            (sub: Subscription) => sub.type === 'FOUR_DAY'
           );
-          setSubscription(activeSub || null);
+          setSubscription(fourDaySub || null);
 
-          // Set current video to first unlocked video
-          if (activeSub && videoData.videos?.length > 0) {
-            const firstUnlockedVideo = videoData.videos.find((v: Video) =>
-              activeSub.unlockedContent.unlockedVideos.includes(v.day)
-            );
-            setCurrentVideo(firstUnlockedVideo || videoData.videos[0]);
+          // Set current video to first video if subscription exists
+          if (fourDaySub && videoData.videos?.length > 0) {
+            const firstVideo = videoData.videos[0];
+            setCurrentVideo(firstVideo);
           } else {
             setCurrentVideo(videoData.videos[0] || null);
           }
@@ -126,14 +111,6 @@ export default function FourDayPlan() {
       }
     };
     fetchData();
-  }, []);
-
-  // Update current time every second
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-    return () => clearInterval(interval);
   }, []);
 
   // Reset live mode when video changes
@@ -299,7 +276,7 @@ export default function FourDayPlan() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       {/* E-Books Access Button */}
-      <div className="sticky top-0 z-20 bg-gradient-to-r from-green-500 to-green-600 p-2 shadow-md">
+      <div className="sticky top-0 z-30 bg-gradient-to-r from-green-500 to-green-600 p-2 shadow-md">
         <motion.div
           className="mx-auto max-w-7xl"
           initial={{ opacity: 0, y: -20 }}
@@ -319,23 +296,13 @@ export default function FourDayPlan() {
       </div>
 
       {/* Day selection bar */}
-      <div className="sticky top-14 z-10 bg-white shadow-sm dark:bg-gray-800">
+      <div className="sticky top-[72px] z-20 bg-white shadow-sm dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 pb-4">
           <div className="grid grid-cols-3 gap-4 pt-2">
             {[1, 2, 3].map((day) => {
               const video = videos.find((v) => v.day === day);
-              const startDate = new Date(subscription.startDate);
-
-              // Day 1 unlocks at 9pm on subscription day, others at 9pm on their day
-              const unlockDate = new Date(startDate);
-              if (day > 1) {
-                unlockDate.setDate(startDate.getDate() + (day - 1));
-              }
-              unlockDate.setHours(21, 0, 0, 0);
-
-              const isUnlocked = now >= unlockDate;
+              const isUnlocked = true; // Always unlocked if subscribed
               const isCurrent = currentVideo?.day === day;
-              const countdown = !isUnlocked ? getCountdown(unlockDate) : null;
 
               return (
                 <motion.div
@@ -390,28 +357,12 @@ export default function FourDayPlan() {
                       )}
                     </span>
                   </div>
-                  {isUnlocked ? (
-                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                      <Clock className="size-3" />
-                      <span>Available Now</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                        <Clock className="size-3" />
-                        <span>
-                          Unlocks at 9:00 PM -{' '}
-                          <span className="text-orange-600">{countdown}</span>
-                        </span>
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                    <Clock className="size-3" />
+                    <span>Available Now</span>
+                  </div>
                   <div className="mt-2 text-xs font-semibold">
-                    {isUnlocked ? (
-                      <span className="text-green-600">Unlocked Video</span>
-                    ) : (
-                      <span className="text-orange-600">Locked</span>
-                    )}
+                    <span className="text-green-600">Unlocked Video</span>
                   </div>
                 </motion.div>
               );
@@ -426,49 +377,12 @@ export default function FourDayPlan() {
           <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-xl">
             {currentVideo ? (
               (() => {
-                const day = currentVideo.day;
-                const startDate = new Date(subscription.startDate);
-                const unlockDate = new Date(startDate);
-                if (day > 1) {
-                  unlockDate.setDate(startDate.getDate() + (day - 1));
-                }
-                unlockDate.setHours(21, 0, 0, 0);
-
-                const isUnlocked = now >= unlockDate;
-                const countdown = !isUnlocked ? getCountdown(unlockDate) : null;
                 const videoStatus = videoProgress[currentVideo.id];
                 const isCompleted = videoStatus?.completed || false;
 
-                if (!isUnlocked) {
-                  return (
-                    <div className="flex h-full flex-col items-center justify-center p-4 text-center text-gray-300 sm:p-8">
-                      <Lock className="mb-4 size-12 text-gray-400 sm:size-16" />
-                      <h3 className="mb-2 text-lg font-semibold text-gray-800 sm:text-xl dark:text-white">
-                        {countdown ? 'Available at 9:00 PM' : 'Content Locked'}
-                      </h3>
-                      <p className="mb-4 max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
-                        {countdown
-                          ? 'This video unlocks at 9:00 PM today'
-                          : `This video will be available on day ${currentVideo.day} of your challenge`}
-                      </p>
-                      {countdown && (
-                        <div className="flex flex-col items-center">
-                          <div className="text-xl font-bold text-blue-600 sm:text-2xl dark:text-blue-400">
-                            {countdown}
-                          </div>
-                          <div className="mt-2 text-xs text-gray-500 sm:text-sm dark:text-gray-400">
-                            Until unlock
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-
-                // Video is unlocked
                 return (
                   <div className="flex h-full flex-col">
-                    <div className="absolute left-2 top-2 z-10 sm:left-4 sm:top-4">
+                    <div className="absolute left-2 top-2 z-[5] sm:left-4 sm:top-4">
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs text-white shadow sm:px-3 sm:py-1 ${
                           isLiveMode

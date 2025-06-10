@@ -5,9 +5,7 @@ import { EyeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
 
-import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -309,52 +307,6 @@ export default function RegisterPage() {
                 </Button>
               </motion.div>
             </motion.form>
-
-            <motion.div
-              className="my-6 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isPageLoaded ? 1 : 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-            >
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Or sign up with
-              </span>
-            </motion.div>
-
-            <motion.div
-              className="flex justify-center space-x-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{
-                opacity: isPageLoaded ? 1 : 0,
-                y: isPageLoaded ? 0 : 10,
-              }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-            >
-              <motion.button
-                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-slate-700"
-                whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => signIn('github')}
-              >
-                <Icons.github className="size-5" />
-              </motion.button>
-              <motion.button
-                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-slate-700"
-                whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => signIn('google')}
-              >
-                <Icons.google className="size-5" />
-              </motion.button>
-              <motion.button
-                className="flex size-10 items-center justify-center rounded-full border border-gray-300 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-slate-700"
-                whileHover={{ scale: 1.1, backgroundColor: '#f3f4f6' }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => signIn('twitter')}
-              >
-                <Icons.twitter className="size-5" />
-              </motion.button>
-            </motion.div>
 
             <motion.p
               className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400"

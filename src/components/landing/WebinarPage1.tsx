@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { FaBook, FaDownload, FaLock } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+// import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 type Subscription = {
@@ -16,6 +17,8 @@ export default function WebinarPage1() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [hasSixMonthPlan, setHasSixMonthPlan] = useState(false);
+  const [has599Plan, setHas599Plan] = useState(false);
+  // const router = useRouter();
 
   useEffect(() => {
     const checkSubscription = async () => {
@@ -36,6 +39,15 @@ export default function WebinarPage1() {
               new Date(sub.endDate) > new Date()
           );
           setHasSixMonthPlan(!!sixMonthSub);
+
+          // Check for either SIX_MONTH or FIVE_NINE_NINE plan
+          const premiumSub = data.subscriptions?.find(
+            (sub: Subscription) =>
+              (sub.type === 'SIX_MONTH' || sub.type === 'FIVE_NINE_NINE') &&
+              sub.isActive &&
+              new Date(sub.endDate) > new Date()
+          );
+          setHas599Plan(!!premiumSub);
         } catch (error) {
           console.error('Subscription check failed:', error);
           toast.error('Failed to check subscription status');
@@ -63,6 +75,17 @@ export default function WebinarPage1() {
 
     // If has access, redirect to ebooks page
     window.location.href = '/users/ebooks';
+  };
+
+  const handleSubscriptionRedirect = () => {
+    if (session && has599Plan) {
+      window.location.href =
+        'https://shreemahavidyashaktipeeth.com/subscription/';
+    } else if (session && hasSubscription) {
+      toast.error('This content is only available for 599 plan subscribers');
+    } else {
+      toast.error('Please subscribe to access this content');
+    }
   };
 
   return (
@@ -152,7 +175,7 @@ export default function WebinarPage1() {
             />
             <div className="relative size-full overflow-hidden rounded-xl shadow-2xl">
               <Image
-                src="/assets/shree.png"
+                src="/assets/Shree.png"
                 layout="fill"
                 objectFit="cover"
                 className="transition-transform duration-700 hover:scale-105"
@@ -320,12 +343,13 @@ export default function WebinarPage1() {
 
           <div className="relative mx-auto max-w-4xl">
             <motion.div
-              className="relative aspect-[16/9] w-full overflow-hidden rounded-lg shadow-2xl"
+              className="relative aspect-[16/9] w-full cursor-pointer overflow-hidden rounded-lg shadow-2xl"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               viewport={{ once: true }}
               whileHover={{ scale: 1.02 }}
+              onClick={handleSubscriptionRedirect}
             >
               <Image
                 src="/assets/599.jpg"
@@ -359,6 +383,29 @@ export default function WebinarPage1() {
                   Best Value
                 </span>
               </div>
+            </motion.div>
+
+            {/* Subscribe Button */}
+            <motion.div
+              className="mt-6 flex justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <motion.button
+                className="rounded-full bg-gradient-to-r from-red-600 to-yellow-500 px-8 py-3 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 dark:from-red-500 dark:to-yellow-400"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSubscriptionRedirect}
+                disabled={!session || !has599Plan}
+              >
+                {!session
+                  ? 'Login to Access'
+                  : !has599Plan
+                    ? 'Upgrade to 599 Plan'
+                    : 'Access Subscription Portal'}
+              </motion.button>
             </motion.div>
           </div>
         </div>

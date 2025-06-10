@@ -37,19 +37,9 @@ export const UserDropdown = ({ session: { user } }: { session: Session }) => {
   // };
 
   return (
-    <DropdownMenu modal={true}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
-          className="touch-manipulation focus:outline-none"
-          style={{ touchAction: 'manipulation' }}
-        >
-          {/* <Image
-            className="overflow-hidden rounded-full"
-            src={`${user?.image}`}
-            alt={`${user?.name}`}
-            width={32}
-            height={32}
-          /> */}
+        <button className="focus:outline-none">
           {user?.image ? (
             <Image
               className="overflow-hidden rounded-full"
@@ -70,12 +60,6 @@ export const UserDropdown = ({ session: { user } }: { session: Session }) => {
         side="bottom"
         sideOffset={5}
         className="z-50 min-w-[220px] rounded-md border bg-white/95 p-2 shadow-lg backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/95"
-        onInteractOutside={(e) => {
-          // Prevent closing on touch outside
-          if (e.type === 'touchstart') {
-            e.preventDefault();
-          }
-        }}
       >
         <DropdownMenuLabel className="text-sm font-semibold text-gray-700 dark:text-gray-200">
           {m.my_account()}
