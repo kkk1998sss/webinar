@@ -14,6 +14,7 @@ interface Subscription {
   startDate: Date;
   endDate: Date;
   isActive: boolean;
+  isValid: boolean;
 }
 
 const Pricing = () => {
@@ -48,17 +49,19 @@ const Pricing = () => {
   }, [status]);
 
   const hasActiveFourDayPlan = subscriptions.some(
-    (sub) =>
-      sub.type === 'FOUR_DAY' &&
-      sub.isActive &&
-      new Date(sub.endDate) > new Date()
+    (sub) => sub.type === 'FOUR_DAY' && sub.isValid
   );
 
   const hasActiveSixMonthPlan = subscriptions.some(
-    (sub) =>
-      sub.type === 'SIX_MONTH' &&
-      sub.isActive &&
-      new Date(sub.endDate) > new Date()
+    (sub) => sub.type === 'SIX_MONTH' && sub.isValid
+  );
+
+  const hasExpiredFourDayPlan = subscriptions.some(
+    (sub) => sub.type === 'FOUR_DAY' && !sub.isValid
+  );
+
+  const hasExpiredSixMonthPlan = subscriptions.some(
+    (sub) => sub.type === 'SIX_MONTH' && !sub.isValid
   );
 
   const handleSubscribe = () => {
@@ -218,12 +221,20 @@ const Pricing = () => {
                     </button>
                   </motion.div>
                 ) : plan.planType === 'FOUR_DAY' && hasActiveFourDayPlan ? (
-                  <div className="rounded-md bg-yellow-100 p-3 text-sm text-yellow-800 dark:bg-yellow-700/30 dark:text-yellow-300">
-                    You already have an active 4-Day plan
+                  <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                    You have an active 4-Day plan
+                  </div>
+                ) : plan.planType === 'FOUR_DAY' && hasExpiredFourDayPlan ? (
+                  <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                    You have purchased the 4-Day plan
                   </div>
                 ) : plan.planType === 'SIX_MONTH' && hasActiveSixMonthPlan ? (
-                  <div className="rounded-md bg-yellow-100 p-3 text-sm text-yellow-800 dark:bg-yellow-700/30 dark:text-yellow-300">
-                    You already have an active 6-Month plan
+                  <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                    You have an active 6-Month plan
+                  </div>
+                ) : plan.planType === 'SIX_MONTH' && hasExpiredSixMonthPlan ? (
+                  <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                    You have purchased the 6-Month plan
                   </div>
                 ) : (
                   <motion.div

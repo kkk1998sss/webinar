@@ -16,10 +16,6 @@ export const GET = async () => {
       where: { id: session.user.id },
       include: {
         subscriptions: {
-          where: {
-            isActive: true,
-            endDate: { gt: new Date() },
-          },
           include: {
             payment: {
               select: {
@@ -38,19 +34,26 @@ export const GET = async () => {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const formattedSubscriptions = user.subscriptions.map((sub) => ({
-      id: sub.id,
-      type: sub.type,
-      startDate: sub.startDate,
-      endDate: sub.endDate,
-      isActive: sub.isActive,
-      payment: {
-        amount: sub.payment.amount,
-        planType: sub.payment.planType,
-        paidAt: sub.payment.createdAt,
-      },
-      unlockedContent: sub.unlockedContent,
-    }));
+    const formattedSubscriptions = user.subscriptions.map((sub) => {
+      const currentDate = new Date();
+      const endDate = new Date(sub.endDate);
+      const isValid = sub.isActive && currentDate <= endDate;
+
+      return {
+        id: sub.id,
+        type: sub.type,
+        startDate: sub.startDate,
+        endDate: sub.endDate,
+        isActive: sub.isActive,
+        isValid,
+        payment: {
+          amount: sub.payment.amount,
+          planType: sub.payment.planType,
+          paidAt: sub.payment.createdAt,
+        },
+        unlockedContent: sub.unlockedContent,
+      };
+    });
 
     return NextResponse.json({
       subscriptions: formattedSubscriptions,

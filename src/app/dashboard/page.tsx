@@ -5,9 +5,8 @@ import { Book, Calendar, Music, Play, Plus, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
-import FourDayPlan from './FourDayPlan/FourDayPlan';
-
 import WebinarView from '@/app/users/live-webinar/webinar-view';
+import FourDayPlan from '@/components/FourDayPlan/FourDayPlan';
 
 interface Subscription {
   id: string;
@@ -15,6 +14,7 @@ interface Subscription {
   startDate: string;
   endDate: string;
   isActive: boolean;
+  isValid: boolean;
 }
 
 interface ContentItem {
@@ -41,24 +41,22 @@ export default function Dashboard() {
         description: 'Join our weekly live events',
         type: 'live',
       },
-      {
-        id: '4',
-        title: 'Daily Meditations',
-        description: 'Guided meditation sessions',
-        type: 'meditation',
-      },
-      {
-        id: '2',
-        title: 'Hanuman Chalisa Course',
-        description: 'Complete course with detailed explanations',
-        type: 'course',
-      },
-      {
-        id: '3',
-        title: 'Swar Vigyan',
-        description: 'Learn the science of sound',
-        type: 'course',
-      },
+      // {
+      //   id: '4',
+      //   title: 'ly Meditans',
+      //   deiption: 'Guided meditation sessions',    //   type: 'meditation',
+      // },
+      // {
+      //   id: '2',
+      //   te: 'Hanumahalisa Coe',
+      //   desption: 'Complete course with detailed expltions',
+      //   type: 'course',
+      // },
+      // {
+      //  : '3',
+      //   title: ar Vigyan'     //  scription: 'Learn  science of sound',
+      //   e: 'course',
+      // },
       {
         id: '5',
         title: 'E-books Collection',
@@ -96,6 +94,12 @@ export default function Dashboard() {
     },
   ];
 
+  // Reset currentView to dashboard when component mounts
+  useEffect(() => {
+    setCurrentView('dashboard');
+  }, []);
+
+  // Fetch subscription data
   useEffect(() => {
     const fetchSubscription = async () => {
       try {
@@ -103,10 +107,12 @@ export default function Dashboard() {
         const data = await response.json();
 
         if (data.subscriptions?.length > 0) {
-          const activeSub = data.subscriptions.find(
-            (sub: Subscription) => sub.isActive
+          // Find any subscription, regardless of validity
+          const userSub = data.subscriptions.find(
+            (sub: Subscription) =>
+              sub.type === 'FOUR_DAY' || sub.type === 'SIX_MONTH'
           );
-          setSubscription(activeSub);
+          setSubscription(userSub);
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
@@ -119,6 +125,18 @@ export default function Dashboard() {
       fetchSubscription();
     }
   }, [status]);
+
+  // Listen for route changes
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (window.location.pathname === '/dashboard') {
+        setCurrentView('dashboard');
+      }
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
 
   if (status === 'loading' || loading) {
     return (
@@ -154,10 +172,17 @@ export default function Dashboard() {
 
   // Function to check if content is accessible based on subscription
   const isContentAccessible = (item: ContentItem) => {
-    if (subscription.type === 'FOUR_DAY') {
-      return item.title === '3-4 Days Webinar' || item.type === 'ebook';
+    // Allow access to basic content for all subscribers
+    if (item.title === '3-4 Days Webinar' || item.type === 'ebook') {
+      return true;
     }
-    return subscription.type === 'SIX_MONTH';
+
+    // For premium content, check subscription type
+    if (subscription?.type === 'SIX_MONTH') {
+      return true;
+    }
+
+    return false;
   };
 
   const handleStartLearning = (item: ContentItem) => {
@@ -186,6 +211,13 @@ export default function Dashboard() {
       setCurrentView('webinar');
     }
   };
+
+  // Handle navigation to dashboard
+  //   const handleDashboardNavigation = () => {
+  //     setCurrentView('dashboard');
+  //     // Force a complete page reload to ensure clean state
+  //     window.location.replace('/dashboard');
+  //   };
 
   // Add this function to handle adding new modules
   const handleAddModule = (e: React.FormEvent) => {
@@ -232,73 +264,61 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Tabs */}
-        <div className="mb-8 flex justify-center gap-4">
-          <button
-            onClick={() => setActiveTab('unlocked')}
-            className={`rounded-lg px-6 py-2 font-medium transition-all ${
-              activeTab === 'unlocked'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Unlocked Content
-          </button>
-          <button
-            onClick={() => setActiveTab('locked')}
-            className={`rounded-lg px-6 py-2 font-medium transition-all ${
-              activeTab === 'locked'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Premium Content
-          </button>
-        </div>
+        {subscription.type === 'FOUR_DAY' && (
+          <div className="mb-8 flex justify-center gap-4">
+            <button
+              onClick={() => setActiveTab('unlocked')}
+              className={`rounded-lg px-6 py-2 font-medium transition-all ${
+                activeTab === 'unlocked'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Unlocked Content
+            </button>
+            <button
+              onClick={() => setActiveTab('locked')}
+              className={`rounded-lg px-6 py-2 font-medium transition-all ${
+                activeTab === 'locked'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Premium Content
+            </button>
+          </div>
+        )}
 
         {/* Content Grid */}
         <div className="grid gap-6 md:grid-cols-2">
-          {activeTab === 'unlocked'
-            ? // Show 3-4 Days Webinar in unlocked content
-              contentItems.map((item) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="rounded-lg bg-white p-6 shadow-lg"
-                >
-                  <div className="flex items-start gap-4">
-                    <div
-                      className={`rounded-full p-3 ${
-                        isContentAccessible(item)
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'bg-gray-100 text-gray-400'
-                      }`}
-                    >
-                      <Play className="size-6" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="mb-1 text-lg font-semibold text-gray-900">
-                        {item.title}
-                      </h3>
-                      <p className="mb-4 text-sm text-gray-600">
-                        {item.description}
-                      </p>
-                      {isContentAccessible(item) ? (
-                        item.title === 'All Videos Available Here' ? (
-                          <div className="w-full">
-                            {' '}
-                            {/* This wrapper maintains consistent width */}
-                            <a
-                              href="https://shreemahavidyashaktipeeth.com/subscription/"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
-                            >
-                              <Play className="size-4" />
-                              Start Learning
-                            </a>
-                          </div>
-                        ) : (
+          {subscription.type === 'FOUR_DAY'
+            ? activeTab === 'unlocked'
+              ? // Show 3-4 Days Webinar in unlocked content for 199 plan
+                contentItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg bg-white p-6 shadow-lg"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div
+                        className={`rounded-full p-3 ${
+                          isContentAccessible(item)
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'bg-gray-100 text-gray-400'
+                        }`}
+                      >
+                        <Play className="size-6" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="mb-1 text-lg font-semibold text-gray-900">
+                          {item.title}
+                        </h3>
+                        <p className="mb-4 text-sm text-gray-600">
+                          {item.description}
+                        </p>
+                        {isContentAccessible(item) ? (
                           <button
                             onClick={() => handleStartLearning(item)}
                             className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
@@ -306,21 +326,58 @@ export default function Dashboard() {
                             <Play className="size-4" />
                             Start Learning
                           </button>
-                        )
-                      ) : (
+                        ) : (
+                          <button
+                            onClick={() => router.push('/')}
+                            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                          >
+                            <Sparkles className="size-4" />
+                            Upgrade to Unlock
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              : // Show premium content for 199 plan
+                premiumContentItems.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-lg bg-white p-6 shadow-lg"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="rounded-full bg-gray-100 p-3 text-gray-400">
+                        {item.type === 'course' ? (
+                          <Book className="size-6" />
+                        ) : item.type === 'meditation' ? (
+                          <Music className="size-6" />
+                        ) : item.type === 'live' ? (
+                          <Calendar className="size-6" />
+                        ) : (
+                          <Book className="size-6" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="mb-1 text-lg font-semibold text-gray-900">
+                          {item.title}
+                        </h3>
+                        <p className="mb-4 text-sm text-gray-600">
+                          {item.description}
+                        </p>
                         <button
                           onClick={() => router.push('/')}
                           className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
                         >
                           <Sparkles className="size-4" />
-                          Upgrade to Unlock
+                          Upgrade to 599
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))
-            : // Show premium content
+                  </motion.div>
+                ))
+            : // Show all content for 599 plan
               premiumContentItems.map((item) => (
                 <motion.div
                   key={item.id}
@@ -329,13 +386,7 @@ export default function Dashboard() {
                   className="rounded-lg bg-white p-6 shadow-lg"
                 >
                   <div className="flex items-start gap-4">
-                    <div
-                      className={`rounded-full p-3 ${
-                        isContentAccessible(item)
-                          ? 'bg-blue-100 text-blue-600'
-                          : 'bg-gray-100 text-gray-400'
-                      }`}
-                    >
+                    <div className="rounded-full bg-blue-100 p-3 text-blue-600">
                       {item.type === 'course' ? (
                         <Book className="size-6" />
                       ) : item.type === 'meditation' ? (
@@ -353,40 +404,13 @@ export default function Dashboard() {
                       <p className="mb-4 text-sm text-gray-600">
                         {item.description}
                       </p>
-                      {isContentAccessible(item) ? (
-                        item.title === 'All Videos Available Here' ? (
-                          <a
-                            href="https://shreemahavidyashaktipeeth.com/subscription/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              window.location.href =
-                                'https://shreemahavidyashaktipeeth.com/subscription/';
-                            }}
-                          >
-                            <Play className="size-4" />
-                            Start Learning
-                          </a>
-                        ) : (
-                          <button
-                            onClick={() => handleStartLearning(item)}
-                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
-                          >
-                            <Play className="size-4" />
-                            Start Learning
-                          </button>
-                        )
-                      ) : (
-                        <button
-                          onClick={() => router.push('/')}
-                          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
-                        >
-                          <Sparkles className="size-4" />
-                          Upgrade to Unlock
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleStartLearning(item)}
+                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                      >
+                        <Play className="size-4" />
+                        Start Learning
+                      </button>
                     </div>
                   </div>
                 </motion.div>

@@ -1,7 +1,5 @@
 'use client';
 
-// import { useState } from 'react';
-// import { loadStripe } from '@stripe/stripe-js';
 import { LayoutDashboard } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -34,6 +32,18 @@ export const UserDropdown = ({ session: { user } }: { session: Session }) => {
   //   await stripe!.redirectToCheckout({
   //     sessionId: checkoutSession.id,
   //   });
+  // };
+
+  // const handleNavigation = (path: string) => {
+  //   // Clear any existing state and force a clean navigation
+  //   if (path === '/dashboard') {
+  //     // For dashboard, ensure we clear any RSC parameters
+  //     window.location.replace('/dashboard');
+  //   } else if (user?.isAdmin && path === '/admin/users') {
+  //     router.push('/admin/users');
+  //   } else {
+  //     router.push(path);
+  //   }
   // };
 
   return (
@@ -101,16 +111,21 @@ export const UserDropdown = ({ session: { user } }: { session: Session }) => {
             if (user?.isAdmin === true) {
               router.push('/admin/users');
             } else {
-              router.push('/users/live-webinar');
+              // Force a complete page reload to dashboard
+              window.location.href = '/dashboard';
             }
           }}
-          className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+          className="text-foreground hover:bg-secondary dark:hover:bg-secondary-dark hover:text-secondary-foreground dark:hover:text-secondary-foreground-dark group flex cursor-pointer items-center gap-2 rounded p-2 text-sm transition-colors duration-200"
         >
-          <LayoutDashboard className="mr-2 size-4" />
+          <LayoutDashboard className="text-primary dark:text-primary-dark group-hover:text-primary-hover dark:group-hover:text-primary-dark-hover size-4" />
           <span>Dashboard</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={() => {
+            signOut({ redirect: false }).then(() => {
+              window.location.replace('/');
+            });
+          }}
           className="cursor-pointer rounded-md px-2 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
         >
           <Icons.logOut className="mr-2 size-4" />

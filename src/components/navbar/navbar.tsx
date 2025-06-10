@@ -114,7 +114,8 @@ export const Navbar = () => {
                           if (session?.user?.isAdmin === true) {
                             router.push('/admin/users');
                           } else {
-                            router.push('/users/live-webinar');
+                            // Force a complete page reload to dashboard
+                            window.location.href = '/dashboard';
                           }
                         }}
                         className="text-foreground hover:bg-secondary dark:hover:bg-secondary-dark hover:text-secondary-foreground dark:hover:text-secondary-foreground-dark group flex cursor-pointer items-center gap-2 rounded p-2 text-sm transition-colors duration-200"
@@ -124,7 +125,11 @@ export const Navbar = () => {
                       </DropdownMenu.DropdownMenuItem>
 
                       <DropdownMenu.DropdownMenuItem
-                        onClick={() => signOut({ callbackUrl: '/' })}
+                        onClick={() => {
+                          signOut({ redirect: false }).then(() => {
+                            window.location.replace('/');
+                          });
+                        }}
                         className="text-destructive dark:text-destructive-dark hover:bg-destructive/10 dark:hover:bg-destructive-dark/20 hover:text-destructive-hover dark:hover:text-destructive-dark-hover group flex cursor-pointer items-center gap-2 rounded p-2 text-sm transition-colors duration-200"
                       >
                         <ExitIcon className="text-destructive dark:text-destructive-dark group-hover:text-destructive-hover dark:group-hover:text-destructive-dark-hover size-4" />

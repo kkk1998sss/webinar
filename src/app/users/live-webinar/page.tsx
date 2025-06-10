@@ -5,33 +5,32 @@ import { useSession } from 'next-auth/react';
 
 import WebinarView from './webinar-view';
 
-import Dashboard from '@/components/Dashboard';
-import WelcomePage from '@/components/WelcomePage';
-
 interface Subscription {
   id: string;
   type: 'FOUR_DAY' | 'SIX_MONTH';
   startDate: string;
   endDate: string;
   isActive: boolean;
+  isValid: boolean;
 }
 
 export default function LiveWebinarPage() {
   const { data: session, status } = useSession();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchSubscription = async () => {
-      console.log('Fetching subscription');
       try {
         const response = await fetch('/api/subscription');
         const data = await response.json();
 
         if (data.subscriptions?.length > 0) {
-          const activeSub = data.subscriptions.find(
-            (sub: Subscription) => sub.isActive
+          const userSub = data.subscriptions.find(
+            (sub: Subscription) =>
+              sub.type === 'FOUR_DAY' || sub.type === 'SIX_MONTH'
           );
-          setSubscription(activeSub);
+          setSubscription(userSub);
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
@@ -40,13 +39,12 @@ export default function LiveWebinarPage() {
       }
     };
 
-    if (status === 'authenticated' && !session?.user?.isAdmin) {
-      console.log('User is not admin');
+    if (status === 'authenticated') {
       fetchSubscription();
     } else {
       setLoading(false);
     }
-  }, [status, session?.user?.isAdmin]);
+  }, [status]);
 
   if (status === 'loading' || loading) {
     return (
@@ -60,26 +58,26 @@ export default function LiveWebinarPage() {
     redirect('/auth/login');
   }
 
-  // Check if user is admin and active - no subscription required
-  if (session?.user?.isAdmin && session?.user?.isActive) {
-    console.log('Admin user is active');
+  // Check if user is admin
+  if (session?.user?.isAdmin) {
     return <WebinarView session={session} />;
   }
 
   // For non-admin users, check subscription
   if (!subscription) {
-    redirect('/#pricing');
+    redirect('/');
   }
 
-  // For new FOUR_DAY subscribers, show welcome page
-  if (
-    subscription.type === 'FOUR_DAY' &&
-    new Date(subscription.startDate).getTime() >
-      Date.now() - 24 * 60 * 60 * 1000
-  ) {
-    return <WelcomePage />;
+  // For FOUR_DAY subscribers, redirect to four-day-plan
+  if (subscription.type === 'FOUR_DAY') {
+    redirect('/dashboard');
   }
 
-  // For all other cases, show the dashboard
-  return <Dashboard />;
+  // For SIX_MONTH subscribers, show the webinar view
+  if (subscription.type === 'SIX_MONTH' && session) {
+    return <WebinarView session={session} />;
+  }
+
+  // If no valid subscription type is found, redirect to home
+  redirect('/');
 }

@@ -25,15 +25,15 @@ export async function middleware(request: NextRequest) {
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      cookieName:
-        process.env.NODE_ENV === 'production'
-          ? '__Secure-authjs.session-token'
-          : 'next-auth.session-token',
+      // cookieName:
+      //   process.env.NODE_ENV === 'production'
+      //     ? '__Secure-authjs.session-token'
+      //     : 'next-auth.session-token',
     });
 
     const { pathname } = request.nextUrl;
 
-    const protectedRoutes = ['/users/live-webinar', '/dashboard'];
+    const protectedRoutes = ['/users/live-webinar'];
     const adminRoutes = ['/admin'];
     const authRoutes = ['/auth/login', '/auth/register'];
     // const pricingRoute = '/pricing';
@@ -72,23 +72,12 @@ export async function middleware(request: NextRequest) {
           const userData = await response.json();
           const user = userData.find((u: User) => u.email === token.email);
 
-          if (
-            !user ||
-            !user.subscriptions ||
-            !user.subscriptions[0]?.isActive
-          ) {
-            return NextResponse.redirect(new URL('/#pricing', request.url));
+          if (!user || !user.subscriptions || user.subscriptions.length === 0) {
+            return NextResponse.redirect(new URL('/', request.url));
           }
 
-          // Check subscription plan type and validity
+          // Check subscription plan type
           const subscription = user.subscriptions[0];
-          const currentDate = new Date();
-          const subscriptionEndDate = new Date(subscription.endDate);
-
-          // If subscription has expired, redirect to pricing
-          if (currentDate > subscriptionEndDate) {
-            return NextResponse.redirect(new URL('/#pricing', request.url));
-          }
 
           // For FOUR_DAY plan users, show locked content but allow access to webinar
           if (subscription.type === 'FOUR_DAY') {
@@ -109,7 +98,7 @@ export async function middleware(request: NextRequest) {
         }
       } catch (error) {
         console.error('Error checking subscription:', error);
-        return NextResponse.redirect(new URL('/#pricing', request.url));
+        return NextResponse.redirect(new URL('/', request.url));
       }
     }
 
@@ -164,7 +153,7 @@ export async function middleware(request: NextRequest) {
               }
             } else {
               // If subscription is expired or inactive, redirect to pricing
-              return NextResponse.redirect(new URL('/#pricing', request.url));
+              return NextResponse.redirect(new URL('/', request.url));
             }
           }
         }
@@ -173,7 +162,7 @@ export async function middleware(request: NextRequest) {
       }
 
       // If no valid subscription found, redirect to pricing
-      return NextResponse.redirect(new URL('/#pricing', request.url));
+      return NextResponse.redirect(new URL('/', request.url));
     }
 
     return response;
