@@ -8,6 +8,20 @@ import { useSession } from 'next-auth/react';
 import WebinarView from '@/app/users/live-webinar/webinar-view';
 import FourDayPlan from '@/components/FourDayPlan/FourDayPlan';
 
+// Add LoadingScreen component
+const LoadingScreen = () => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+      <div className="flex flex-col items-center gap-4">
+        <div className="size-12 animate-spin rounded-full border-y-2 border-blue-600"></div>
+        <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+          Loading Dashboard...
+        </p>
+      </div>
+    </div>
+  );
+};
+
 interface Subscription {
   id: string;
   type: 'FOUR_DAY' | 'SIX_MONTH';
@@ -31,6 +45,7 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'unlocked' | 'locked'>('unlocked');
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [premiumContentItems, setPremiumContentItems] = useState<ContentItem[]>(
@@ -94,6 +109,11 @@ export default function Dashboard() {
     },
   ];
 
+  // Add page load effect
+  useEffect(() => {
+    setIsPageLoaded(true);
+  }, []);
+
   // Reset currentView to dashboard when component mounts
   useEffect(() => {
     setCurrentView('dashboard');
@@ -138,12 +158,8 @@ export default function Dashboard() {
     return () => window.removeEventListener('popstate', handleRouteChange);
   }, []);
 
-  if (status === 'loading' || loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (status === 'loading' || loading || !isPageLoaded) {
+    return <LoadingScreen />;
   }
 
   if (status === 'unauthenticated') {
@@ -301,7 +317,7 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     className="rounded-lg bg-white p-6 shadow-lg"
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-center gap-4">
                       <div
                         className={`rounded-full p-3 ${
                           isContentAccessible(item)
@@ -321,7 +337,7 @@ export default function Dashboard() {
                         {isContentAccessible(item) ? (
                           <button
                             onClick={() => handleStartLearning(item)}
-                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
                           >
                             <Play className="size-4" />
                             Start Learning
@@ -329,7 +345,7 @@ export default function Dashboard() {
                         ) : (
                           <button
                             onClick={() => router.push('/')}
-                            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
                           >
                             <Sparkles className="size-4" />
                             Upgrade to Unlock
@@ -347,7 +363,7 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     className="rounded-lg bg-white p-6 shadow-lg"
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-center gap-4">
                       <div className="rounded-full bg-gray-100 p-3 text-gray-400">
                         {item.type === 'course' ? (
                           <Book className="size-6" />
@@ -368,7 +384,7 @@ export default function Dashboard() {
                         </p>
                         <button
                           onClick={() => router.push('/')}
-                          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
                         >
                           <Sparkles className="size-4" />
                           Upgrade to 599
@@ -385,7 +401,7 @@ export default function Dashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   className="rounded-lg bg-white p-6 shadow-lg"
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-center gap-4">
                     <div className="rounded-full bg-blue-100 p-3 text-blue-600">
                       {item.type === 'course' ? (
                         <Book className="size-6" />
@@ -404,13 +420,25 @@ export default function Dashboard() {
                       <p className="mb-4 text-sm text-gray-600">
                         {item.description}
                       </p>
-                      <button
-                        onClick={() => handleStartLearning(item)}
-                        className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
-                      >
-                        <Play className="size-4" />
-                        Start Learning
-                      </button>
+                      {item.title === 'All Videos Available Here' ? (
+                        <a
+                          href="https://shreemahavidyashaktipeeth.com/subscription/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                        >
+                          <Play className="size-4" />
+                          Start Learning
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => handleStartLearning(item)}
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
+                        >
+                          <Play className="size-4" />
+                          Start Learning
+                        </button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
