@@ -7,17 +7,31 @@ import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  ArrowLeft,
   BookOpen,
   CheckCircle2,
   Download,
   Eye,
   FileText,
-  Loader2,
   Trash2,
   Upload,
   X,
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+
+// Add LoadingScreen component
+const LoadingScreen = () => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+      <div className="flex flex-col items-center gap-4">
+        <div className="size-12 animate-spin rounded-full border-y-2 border-blue-600"></div>
+        <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+          Loading E-Books...
+        </p>
+      </div>
+    </div>
+  );
+};
 
 interface EBook {
   id: string;
@@ -39,6 +53,7 @@ export default function EBooksPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [ebooks, setEbooks] = useState<EBook[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -100,12 +115,15 @@ export default function EBooksPage() {
 
     const fetchEbooks = async (): Promise<void> => {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/ebooks');
         if (!response.ok) throw new Error('Failed to fetch ebooks');
         const data = await response.json();
         if (data.ebooks) setEbooks(data.ebooks);
       } catch (error) {
         console.error('Error fetching ebooks:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchEbooks();
@@ -263,19 +281,27 @@ export default function EBooksPage() {
     setPreviewModalOpen(true);
   };
 
-  if (status === 'loading' || !hasAccess) {
-    return (
-      <div className="flex h-[60vh] items-center justify-center">
-        <Loader2 className="animate-spin text-blue-600" size={48} />
-        <span className="ml-4 text-lg text-gray-700">Loading...</span>
-      </div>
-    );
+  if (status === 'loading' || !hasAccess || isLoading) {
+    return <LoadingScreen />;
   }
 
   return (
     <div className="container mx-auto px-2 py-4 sm:px-4 sm:py-8">
       <div className="mb-4 flex flex-col justify-between gap-3 sm:mb-8 sm:flex-row sm:items-center">
-        <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">E-Books</h1>
+        <div className="flex items-center gap-4">
+          <motion.button
+            onClick={() => (window.location.href = '/dashboard')}
+            className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-md transition-all hover:bg-gray-50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <ArrowLeft className="size-4" />
+            Back to Dashboard
+          </motion.button>
+          <h1 className="text-xl font-bold text-gray-900 sm:text-3xl">
+            E-Books
+          </h1>
+        </div>
         {isAdmin && (
           <motion.button
             onClick={() => setIsUploadModalOpen(true)}

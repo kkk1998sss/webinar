@@ -224,15 +224,6 @@ const BusinessTypes = () => {
               </motion.p>
 
               {/* Learn more button - visible on hover for business types */}
-              {type.alternateNames && (
-                <motion.button
-                  className="mt-4 rounded-full bg-white px-4 py-1 text-sm font-medium text-gray-800 opacity-0 transition-all duration-300 group-hover:opacity-100"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Learn More
-                </motion.button>
-              )}
             </div>
           </motion.div>
         ))}

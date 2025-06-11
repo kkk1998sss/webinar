@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'; // <-- add useCallback
 import { motion } from 'framer-motion';
 import {
+  ArrowLeft,
   BookOpen,
   CheckCircle,
   Clock,
@@ -275,8 +276,28 @@ export default function FourDayPlan() {
   // --- UI ---
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      {/* Back to Dashboard Button */}
+      <div className="sticky top-0 z-40 bg-gradient-to-r from-blue-500 to-blue-600 p-2 shadow-md">
+        <motion.div
+          className="mx-auto max-w-7xl"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Button
+            className="w-full rounded-lg bg-white py-3 font-semibold text-blue-600 shadow-lg transition-all hover:bg-blue-50 hover:shadow-xl"
+            onClick={() => (window.location.href = '/dashboard')}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <ArrowLeft className="size-5" />
+              <span>Back to Dashboard</span>
+            </div>
+          </Button>
+        </motion.div>
+      </div>
+
       {/* E-Books Access Button */}
-      <div className="sticky top-0 z-30 bg-gradient-to-r from-green-500 to-green-600 p-2 shadow-md">
+      <div className="sticky top-[72px] z-30 bg-gradient-to-r from-green-500 to-green-600 p-2 shadow-md">
         <motion.div
           className="mx-auto max-w-7xl"
           initial={{ opacity: 0, y: -20 }}

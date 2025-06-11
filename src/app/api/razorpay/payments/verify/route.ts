@@ -54,6 +54,20 @@ export const POST = async (req: Request) => {
       isActive: true,
     };
 
+    // If upgrading to SIX_MONTH, deactivate any existing FOUR_DAY subscriptions
+    if (planType === 'SIX_MONTH') {
+      await prisma.subscription.updateMany({
+        where: {
+          userId: payment.userId,
+          type: SubscriptionType.FOUR_DAY,
+          isActive: true,
+        },
+        data: {
+          isActive: false,
+        },
+      });
+    }
+
     // Additional data for FOUR_DAY plan
     const fourDayData =
       planType === 'FOUR_DAY'

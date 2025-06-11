@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Book, Calendar, Music, Play, Plus, Sparkles } from 'lucide-react';
+import { Book, Calendar, Music, Play, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -48,51 +48,32 @@ export default function Dashboard() {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'unlocked' | 'locked'>('unlocked');
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
-  const [premiumContentItems, setPremiumContentItems] = useState<ContentItem[]>(
-    [
-      {
-        id: '6',
-        title: 'Live Sunday Sessions',
-        description: 'Join our weekly live events',
-        type: 'live',
-      },
-      // {
-      //   id: '4',
-      //   title: 'ly Meditans',
-      //   deiption: 'Guided meditation sessions',    //   type: 'meditation',
-      // },
-      // {
-      //   id: '2',
-      //   te: 'Hanumahalisa Coe',
-      //   desption: 'Complete course with detailed expltions',
-      //   type: 'course',
-      // },
-      // {
-      //  : '3',
-      //   title: ar Vigyan'     //  scription: 'Learn  science of sound',
-      //   e: 'course',
-      // },
-      {
-        id: '5',
-        title: 'E-books Collection',
-        description: 'Downloadable meditation guides',
-        type: 'ebook',
-      },
-      {
-        id: '7',
-        title: 'All Videos Available Here',
-        description: 'Access our complete video library',
-        type: 'video',
-      },
-    ]
-  );
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newModule, setNewModule] = useState<ContentItem>({
-    id: '',
-    title: '',
-    description: '',
-    type: 'course',
-  });
+  const premiumContentItems: ContentItem[] = [
+    {
+      id: '6',
+      title: 'Live Sunday Sessions',
+      description: 'Join our weekly live events',
+      type: 'live',
+    },
+    {
+      id: '5',
+      title: 'E-books Collection',
+      description: 'Downloadable meditation guides',
+      type: 'ebook',
+    },
+    {
+      id: '7',
+      title: 'All Videos Available Here',
+      description: 'Access our complete video library',
+      type: 'video',
+    },
+    {
+      id: '3',
+      title: 'Live webinars and Past webinars',
+      description: 'Complete course with detailed expltions',
+      type: 'course',
+    },
+  ];
 
   const contentItems: ContentItem[] = [
     {
@@ -127,12 +108,34 @@ export default function Dashboard() {
         const data = await response.json();
 
         if (data.subscriptions?.length > 0) {
-          // Find any subscription, regardless of validity
-          const userSub = data.subscriptions.find(
-            (sub: Subscription) =>
-              sub.type === 'FOUR_DAY' || sub.type === 'SIX_MONTH'
+          // Sort subscriptions by startDate to get the latest first
+          const sortedSubs = [...data.subscriptions].sort(
+            (a, b) =>
+              new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           );
-          setSubscription(userSub);
+
+          // First try to find an active SIX_MONTH subscription
+          const sixMonthSub = sortedSubs.find(
+            (sub) => sub.type === 'SIX_MONTH' && sub.isActive
+          );
+
+          if (sixMonthSub) {
+            setSubscription(sixMonthSub);
+            return;
+          }
+
+          // If no active SIX_MONTH, find the latest active FOUR_DAY subscription
+          const fourDaySub = sortedSubs.find(
+            (sub) => sub.type === 'FOUR_DAY' && sub.isActive
+          );
+
+          if (fourDaySub) {
+            setSubscription(fourDaySub);
+            return;
+          }
+
+          // If no active subscriptions found, set the latest subscription
+          setSubscription(sortedSubs[0]);
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
@@ -180,10 +183,17 @@ export default function Dashboard() {
   // For new FOUR_DAY subscribers, show welcome page
   if (
     subscription.type === 'FOUR_DAY' &&
+    subscription.isActive &&
     new Date(subscription.startDate).getTime() >
       Date.now() - 24 * 60 * 60 * 1000
   ) {
     return <FourDayPlan />;
+  }
+
+  // If no active subscription, redirect to home
+  if (!subscription.isActive) {
+    router.push('/');
+    return null;
   }
 
   // Function to check if content is accessible based on subscription
@@ -235,19 +245,25 @@ export default function Dashboard() {
   //     window.location.replace('/dashboard');
   //   };
 
-  // Add this function to handle adding new modules
-  const handleAddModule = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newModule.title || !newModule.description) return;
-    setPremiumContentItems([
-      {
-        ...newModule,
-        id: Date.now().toString(),
-      },
-      ...premiumContentItems,
-    ]);
-    setShowAddModal(false);
-    setNewModule({ id: '', title: '', description: '', type: 'course' });
+  // Add this helper function at the top level of the component
+  const getLatestActiveSubscription = () => {
+    if (!subscription) return null;
+
+    // Sort by startDate in descending order to get latest first
+    const sortedSubs = [subscription].sort(
+      (a, b) =>
+        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+    );
+
+    // First try to find an active SIX_MONTH subscription
+    const sixMonthSub = sortedSubs.find(
+      (sub) => sub.type === 'SIX_MONTH' && sub.isActive
+    );
+
+    if (sixMonthSub) return sixMonthSub;
+
+    // If no active SIX_MONTH, return the latest FOUR_DAY subscription
+    return sortedSubs.find((sub) => sub.type === 'FOUR_DAY' && sub.isActive);
   };
 
   // Render different views based on currentView state
@@ -280,7 +296,7 @@ export default function Dashboard() {
         </motion.div>
 
         {/* Tabs */}
-        {subscription.type === 'FOUR_DAY' && (
+        {getLatestActiveSubscription()?.type === 'FOUR_DAY' && (
           <div className="mb-8 flex justify-center gap-4">
             <button
               onClick={() => setActiveTab('unlocked')}
@@ -307,7 +323,7 @@ export default function Dashboard() {
 
         {/* Content Grid */}
         <div className="grid gap-6 md:grid-cols-2">
-          {subscription.type === 'FOUR_DAY'
+          {getLatestActiveSubscription()?.type === 'FOUR_DAY'
             ? activeTab === 'unlocked'
               ? // Show 3-4 Days Webinar in unlocked content for 199 plan
                 contentItems.map((item) => (
@@ -420,7 +436,8 @@ export default function Dashboard() {
                       <p className="mb-4 text-sm text-gray-600">
                         {item.description}
                       </p>
-                      {item.title === 'All Videos Available Here' ? (
+                      {item.title === 'All Videos Available Here' ||
+                      item.title === 'Live Sunday Sessions' ? (
                         <a
                           href="https://shreemahavidyashaktipeeth.com/subscription/"
                           target="_blank"
@@ -444,80 +461,6 @@ export default function Dashboard() {
                 </motion.div>
               ))}
         </div>
-
-        {activeTab === 'locked' && session?.user?.isAdmin && (
-          <div className="mb-4 flex justify-end">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white shadow hover:bg-blue-700"
-              title="Add Module"
-            >
-              <Plus className="size-4" />
-              Add Module
-            </button>
-          </div>
-        )}
-
-        {/* Add Module Modal */}
-        {showAddModal && session?.user?.isAdmin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <form
-              onSubmit={handleAddModule}
-              className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg"
-            >
-              <h2 className="mb-4 text-lg font-bold">Add New Module</h2>
-              <input
-                className="mb-2 w-full rounded border px-3 py-2"
-                placeholder="Title"
-                value={newModule.title}
-                onChange={(e) =>
-                  setNewModule({ ...newModule, title: e.target.value })
-                }
-                required
-              />
-              <textarea
-                className="mb-2 w-full rounded border px-3 py-2"
-                placeholder="Description"
-                value={newModule.description}
-                onChange={(e) =>
-                  setNewModule({ ...newModule, description: e.target.value })
-                }
-                required
-              />
-              <select
-                className="mb-4 w-full rounded border px-3 py-2"
-                value={newModule.type}
-                onChange={(e) =>
-                  setNewModule({
-                    ...newModule,
-                    type: e.target.value as ContentItem['type'],
-                  })
-                }
-              >
-                <option value="course">Course</option>
-                <option value="meditation">Meditation</option>
-                <option value="ebook">Ebook</option>
-                <option value="live">Live</option>
-                <option value="video">Video</option>
-              </select>
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="rounded bg-gray-200 px-4 py-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded bg-blue-600 px-4 py-2 text-white"
-                >
-                  Add
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
       </div>
     </div>
   );

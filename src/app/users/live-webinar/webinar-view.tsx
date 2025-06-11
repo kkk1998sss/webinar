@@ -13,7 +13,7 @@ import {
   parseISO,
 } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Play, Plus, Search, Video, X } from 'lucide-react';
+import { ArrowLeft, Play, Plus, Search, Video, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 
@@ -293,14 +293,25 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <motion.h2
-            className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl dark:from-blue-400 dark:to-purple-400"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            Webinars
-          </motion.h2>
+          <div className="flex items-center gap-4">
+            <motion.button
+              onClick={() => (window.location.href = '/dashboard')}
+              className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-md transition-all hover:bg-gray-50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <ArrowLeft className="size-4" />
+              Back to Dashboard
+            </motion.button>
+            <motion.h2
+              className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-2xl font-bold text-transparent sm:text-3xl dark:from-blue-400 dark:to-purple-400"
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              Webinars
+            </motion.h2>
+          </div>
 
           <motion.div
             className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row"

@@ -43,7 +43,7 @@ export default function LoginPage() {
         if (session?.user?.isAdmin) {
           router.push('/admin/users');
         } else {
-          router.push('/users/live-webinar');
+          router.push('/dashboard');
         }
       }
     } catch (error: unknown) {
