@@ -64,6 +64,9 @@ const Pricing = () => {
     (sub) => sub.type === 'SIX_MONTH' && !sub.isValid
   );
 
+  // Add check for restricted user
+  const isRestrictedUser = session?.user?.email === 'User@gmail.com';
+
   const handleSubscribe = () => {
     if (!session) {
       window.location.href = '/auth/login';
@@ -72,6 +75,8 @@ const Pricing = () => {
   };
 
   const plans = [
+    // Commenting out 199 plan temporarily
+    /*
     {
       title: '4-Day Access Plan',
       price: '₹199',
@@ -88,6 +93,7 @@ const Pricing = () => {
       highlight: false,
       popular: false,
     },
+    */
     {
       title: '6-Month Membership',
       price: '₹599',
@@ -133,7 +139,7 @@ const Pricing = () => {
             Start your mindfulness journey with flexible subscription options
           </motion.p>
         </div>
-        <div className="grid justify-center gap-8 md:grid-cols-2 lg:grid-cols-2">
+        <div className="mx-auto max-w-md">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -235,6 +241,10 @@ const Pricing = () => {
                 ) : plan.planType === 'SIX_MONTH' && hasExpiredSixMonthPlan ? (
                   <div className="rounded-md bg-green-100 p-3 text-sm text-green-800 dark:bg-green-700/30 dark:text-green-300">
                     You have purchased the 6-Month plan
+                  </div>
+                ) : isRestrictedUser && plan.planType === 'SIX_MONTH' ? (
+                  <div className="rounded-md bg-gray-100 p-3 text-sm text-gray-800 dark:bg-gray-700/30 dark:text-gray-300">
+                    This plan is not available for your account please register
                   </div>
                 ) : (
                   <motion.div

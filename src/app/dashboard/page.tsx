@@ -29,6 +29,7 @@ interface Subscription {
   endDate: string;
   isActive: boolean;
   isValid: boolean;
+  shouldShowFourDayPlan: boolean;
 }
 
 interface ContentItem {
@@ -130,7 +131,25 @@ export default function Dashboard() {
           );
 
           if (fourDaySub) {
-            setSubscription(fourDaySub);
+            // Add shouldShowFourDayPlan flag based on multiple conditions
+            const shouldShowFourDayPlan =
+              fourDaySub.unlockedContent?.currentDay === 1 &&
+              new Date(fourDaySub.startDate).getTime() >
+                Date.now() - 48 * 60 * 60 * 1000;
+
+            console.log('FourDayPlan Debug:', {
+              subscriptionType: fourDaySub.type,
+              isActive: fourDaySub.isActive,
+              currentDay: fourDaySub.unlockedContent?.currentDay,
+              startDate: new Date(fourDaySub.startDate),
+              timeWindow: new Date(Date.now() - 48 * 60 * 60 * 1000),
+              shouldShowFourDayPlan,
+            });
+
+            setSubscription({
+              ...fourDaySub,
+              shouldShowFourDayPlan,
+            });
             return;
           }
 
@@ -161,17 +180,36 @@ export default function Dashboard() {
     return () => window.removeEventListener('popstate', handleRouteChange);
   }, []);
 
+  // Add navigation effects
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/login');
+    }
+  }, [status, router]);
+
+  useEffect(() => {
+    if (!loading && !subscription) {
+      router.push('/');
+    }
+  }, [loading, subscription, router]);
+
+  useEffect(() => {
+    if (subscription && !subscription.isActive) {
+      router.push('/');
+    }
+  }, [subscription, router]);
+
+  useEffect(() => {
+    if (session?.user?.isAdmin) {
+      setCurrentView('webinar');
+    }
+  }, [session]);
+
   if (status === 'loading' || loading || !isPageLoaded) {
     return <LoadingScreen />;
   }
 
-  if (status === 'unauthenticated') {
-    router.push('/auth/login');
-    return null;
-  }
-
-  if (!subscription) {
-    router.push('/');
+  if (status === 'unauthenticated' || !subscription || !subscription.isActive) {
     return null;
   }
 
@@ -180,20 +218,9 @@ export default function Dashboard() {
     return <WebinarView session={session} />;
   }
 
-  // For new FOUR_DAY subscribers, show welcome page
-  if (
-    subscription.type === 'FOUR_DAY' &&
-    subscription.isActive &&
-    new Date(subscription.startDate).getTime() >
-      Date.now() - 24 * 60 * 60 * 1000
-  ) {
+  // For FOUR_DAY subscribers, check if they should see the welcome page
+  if (subscription.type === 'FOUR_DAY' && subscription.shouldShowFourDayPlan) {
     return <FourDayPlan />;
-  }
-
-  // If no active subscription, redirect to home
-  if (!subscription.isActive) {
-    router.push('/');
-    return null;
   }
 
   // Function to check if content is accessible based on subscription

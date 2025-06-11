@@ -134,7 +134,7 @@ model Payment {
   currency            String
   status              String           @default("created")
   planType            String
-  user                User             @relation(fields: [userId], references: [id], name: "UserPayments")
+  user                User             @relation(fields: [userId], references: [id], name: "UserPayments", onDelete: Cascade)
   userId              String
   webinar             WebinarDetails?  @relation(fields: [webinarId], references: [id], name: "WebinarPayments")
   webinarId           String?
@@ -149,7 +149,7 @@ enum SubscriptionType {
 
 model Subscription {
   id              String           @id @default(uuid())
-  user            User             @relation(fields: [userId], references: [id])
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
   type            SubscriptionType
   startDate       DateTime         @default(now())

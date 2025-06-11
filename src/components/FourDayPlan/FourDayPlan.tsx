@@ -276,118 +276,109 @@ export default function FourDayPlan() {
   // --- UI ---
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Back to Dashboard Button */}
-      <div className="sticky top-0 z-40 bg-gradient-to-r from-blue-500 to-blue-600 p-2 shadow-md">
-        <motion.div
-          className="mx-auto max-w-7xl"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Button
-            className="w-full rounded-lg bg-white py-3 font-semibold text-blue-600 shadow-lg transition-all hover:bg-blue-50 hover:shadow-xl"
-            onClick={() => (window.location.href = '/dashboard')}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <ArrowLeft className="size-5" />
-              <span>Back to Dashboard</span>
-            </div>
-          </Button>
-        </motion.div>
-      </div>
-
-      {/* E-Books Access Button */}
-      <div className="sticky top-[72px] z-30 bg-gradient-to-r from-green-500 to-green-600 p-2 shadow-md">
-        <motion.div
-          className="mx-auto max-w-7xl"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Button
-            className="w-full rounded-lg bg-white py-3 font-semibold text-green-600 shadow-lg transition-all hover:bg-green-50 hover:shadow-xl"
-            onClick={() => router.push('/users/ebook199')}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <BookOpen className="size-5" />
-              <span>Access Your E-Books Collection</span>
-            </div>
-          </Button>
-        </motion.div>
-      </div>
-
       {/* Day selection bar */}
-      <div className="sticky top-[72px] z-20 bg-white shadow-sm dark:bg-gray-800">
+      <div className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 pb-4">
-          <div className="grid grid-cols-3 gap-4 pt-2">
-            {[1, 2, 3].map((day) => {
-              const video = videos.find((v) => v.day === day);
-              const isUnlocked = true; // Always unlocked if subscribed
-              const isCurrent = currentVideo?.day === day;
+          <div className="flex items-center gap-8 pt-2">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="-ml-2"
+            >
+              <Button
+                className="rounded-full bg-gradient-to-r from-red-500 to-yellow-500 p-3 font-semibold text-white shadow-lg transition-all hover:from-red-600 hover:to-yellow-600 hover:shadow-xl"
+                onClick={() => (window.location.href = '/dashboard')}
+              >
+                <ArrowLeft className="size-6" />
+              </Button>
+            </motion.div>
 
-              return (
-                <motion.div
-                  key={day}
-                  className={`relative select-none rounded-lg border p-3 transition-all
-                    ${
-                      isCurrent
-                        ? 'border-blue-300 ring-2 ring-blue-500 dark:border-blue-600 dark:ring-blue-400'
-                        : 'border-gray-200 dark:border-gray-700'
-                    }
-                    ${
-                      isUnlocked
-                        ? 'cursor-pointer bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50'
-                        : 'pointer-events-none cursor-not-allowed bg-gray-100 opacity-60 dark:bg-gray-800'
-                    }`}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * day }}
-                  onClick={() => {
-                    if (video && isUnlocked) setCurrentVideo(video);
-                  }}
-                >
-                  <div className="mb-2 flex items-center gap-2">
-                    <div
-                      className={`flex size-6 items-center justify-center rounded-full ${
+            <div className="grid flex-1 grid-cols-3 gap-4">
+              {[1, 2, 3].map((day) => {
+                const video = videos.find((v) => v.day === day);
+                const isUnlocked = true; // Always unlocked if subscribed
+                const isCurrent = currentVideo?.day === day;
+
+                return (
+                  <motion.div
+                    key={day}
+                    className={`relative select-none rounded-lg border p-3 transition-all
+                      ${
+                        isCurrent
+                          ? 'border-blue-300 ring-2 ring-blue-500 dark:border-blue-600 dark:ring-blue-400'
+                          : 'border-gray-200 dark:border-gray-700'
+                      }
+                      ${
                         isUnlocked
-                          ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-400'
-                          : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
+                          ? 'cursor-pointer bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50'
+                          : 'pointer-events-none cursor-not-allowed bg-gray-100 opacity-60 dark:bg-gray-800'
                       }`}
-                    >
-                      {isUnlocked ? (
-                        <CheckCircle className="size-4" />
-                      ) : (
-                        <Lock className="size-4" />
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * day }}
+                    onClick={() => {
+                      if (video && isUnlocked) setCurrentVideo(video);
+                    }}
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <div
+                        className={`flex size-6 items-center justify-center rounded-full ${
+                          isUnlocked
+                            ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-400'
+                            : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
+                        }`}
+                      >
+                        {isUnlocked ? (
+                          <CheckCircle className="size-4" />
+                        ) : (
+                          <Lock className="size-4" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                        Day {day}
+                      </span>
+                      {isCurrent && (
+                        <span className="absolute right-3 top-3 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Playing
+                        </span>
                       )}
                     </div>
-                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
-                      Day {day}
-                    </span>
-                    {isCurrent && (
-                      <span className="absolute right-3 top-3 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                        Playing
+                    <div className="mb-2 flex min-h-[40px] items-center rounded-md bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 px-3 py-2 shadow-sm dark:from-blue-900 dark:via-indigo-900 dark:to-purple-900">
+                      <span className="w-full truncate text-xs font-semibold text-blue-900 dark:text-blue-200">
+                        {video ? (
+                          video.title
+                        ) : (
+                          <span className="italic text-gray-400">No video</span>
+                        )}
                       </span>
-                    )}
-                  </div>
-                  <div className="mb-2 flex min-h-[40px] items-center rounded-md bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 px-3 py-2 shadow-sm dark:from-blue-900 dark:via-indigo-900 dark:to-purple-900">
-                    <span className="w-full truncate text-xs font-semibold text-blue-900 dark:text-blue-200">
-                      {video ? (
-                        video.title
-                      ) : (
-                        <span className="italic text-gray-400">No video</span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                    <Clock className="size-3" />
-                    <span>Available Now</span>
-                  </div>
-                  <div className="mt-2 text-xs font-semibold">
-                    <span className="text-green-600">Unlocked Video</span>
-                  </div>
-                </motion.div>
-              );
-            })}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <Clock className="size-3" />
+                      <span>Available Now</span>
+                    </div>
+                    <div className="mt-2 text-xs font-semibold">
+                      <span className="text-green-600">Unlocked Video</span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="-mr-2"
+            >
+              <Button
+                className="flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500 to-red-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:from-yellow-600 hover:to-red-600 hover:shadow-xl"
+                onClick={() => router.push('/users/ebook199')}
+              >
+                <BookOpen className="size-6" />
+                <span className="text-sm">E-Books</span>
+              </Button>
+            </motion.div>
           </div>
         </div>
       </div>
