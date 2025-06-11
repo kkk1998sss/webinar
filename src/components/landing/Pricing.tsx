@@ -65,7 +65,9 @@ const Pricing = () => {
   );
 
   // Add check for restricted user
-  const isRestrictedUser = session?.user?.email === 'User@gmail.com';
+  const isRestrictedUser =
+    session?.user?.email === 'user@gmail.com' ||
+    session?.user?.email === 'User@gmail.com';
 
   const handleSubscribe = () => {
     if (!session) {
