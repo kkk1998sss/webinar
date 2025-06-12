@@ -11,32 +11,86 @@ import {
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 
+interface Stats {
+  totalUsers: number;
+  activeUsers: number;
+  totalWebinars: number;
+  upcomingWebinars: number;
+  userGrowth: number;
+  webinarGrowth: number;
+  plan199Count: number;
+  plan599Count: number;
+  totalRevenue: number;
+}
+
+interface ChartData {
+  month: string;
+  count: number;
+}
+
+interface Activity {
+  user: string;
+  action: string;
+  time: string;
+  color: string;
+}
+
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     activeUsers: 0,
     totalWebinars: 0,
     upcomingWebinars: 0,
     userGrowth: 0,
     webinarGrowth: 0,
+    plan199Count: 0,
+    plan599Count: 0,
+    totalRevenue: 0,
   });
+  const [userGrowthData, setUserGrowthData] = useState<ChartData[]>([]);
+  const [webinarEngagementData, setWebinarEngagementData] = useState<
+    ChartData[]
+  >([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching data
-    const timer = setTimeout(() => {
-      setStats({
-        totalUsers: 1250,
-        activeUsers: 876,
-        totalWebinars: 48,
-        upcomingWebinars: 12,
-        userGrowth: 15,
-        webinarGrowth: 8,
-      });
-      setIsLoading(false);
-    }, 1000);
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch all dashboard data in parallel
+        const [statsRes, userGrowthRes, webinarEngagementRes, activitiesRes] =
+          await Promise.all([
+            fetch('/api/dashboard/stats'),
+            fetch('/api/dashboard/user-growth'),
+            fetch('/api/dashboard/webinar-engagement'),
+            fetch('/api/dashboard/recent-activity'),
+          ]);
 
-    return () => clearTimeout(timer);
+        const [
+          statsData,
+          userGrowthData,
+          webinarEngagementData,
+          activitiesData,
+        ] = await Promise.all([
+          statsRes.json(),
+          userGrowthRes.json(),
+          webinarEngagementRes.json(),
+          activitiesRes.json(),
+        ]);
+
+        if (statsData.success) setStats(statsData.stats);
+        if (userGrowthData.success) setUserGrowthData(userGrowthData.data);
+        if (webinarEngagementData.success)
+          setWebinarEngagementData(webinarEngagementData.data);
+        if (activitiesData.success) setActivities(activitiesData.activities);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   // Animation variants
@@ -234,6 +288,92 @@ export default function AdminDashboard() {
             </p>
           </div>
         </motion.div>
+
+        {/* Plan 199 Card */}
+        <motion.div
+          className="rounded-xl border border-gray-100 bg-white p-6 shadow-md transition-shadow duration-300 hover:shadow-lg"
+          variants={itemVariants}
+          whileHover={{ y: -5 }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex size-12 items-center justify-center rounded-full bg-yellow-100">
+              <FaUsers className="size-6 text-yellow-600" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">₹199 Plan</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : stats.plan199Count.toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">
+              {Math.round(
+                (stats.plan199Count /
+                  (stats.plan199Count + stats.plan599Count)) *
+                  100
+              )}
+              % of total subscriptions
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Plan 599 Card */}
+        <motion.div
+          className="rounded-xl border border-gray-100 bg-white p-6 shadow-md transition-shadow duration-300 hover:shadow-lg"
+          variants={itemVariants}
+          whileHover={{ y: -5 }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex size-12 items-center justify-center rounded-full bg-indigo-100">
+              <FaUsers className="size-6 text-indigo-600" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">₹599 Plan</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : stats.plan599Count.toLocaleString()}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">
+              {Math.round(
+                (stats.plan599Count /
+                  (stats.plan199Count + stats.plan599Count)) *
+                  100
+              )}
+              % of total subscriptions
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Total Revenue Card */}
+        <motion.div
+          className="rounded-xl border border-gray-100 bg-white p-6 shadow-md transition-shadow duration-300 hover:shadow-lg"
+          variants={itemVariants}
+          whileHover={{ y: -5 }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex size-12 items-center justify-center rounded-full bg-emerald-100">
+              <FaChartLine className="size-6 text-emerald-600" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Total Revenue</p>
+              <p className="text-2xl font-bold">
+                {isLoading ? '...' : `₹${stats.totalRevenue.toLocaleString()}`}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">
+              Average: ₹
+              {Math.round(
+                stats.totalRevenue / (stats.plan199Count + stats.plan599Count)
+              )}{' '}
+              per subscription
+            </p>
+          </div>
+        </motion.div>
       </motion.div>
 
       {/* Charts Section */}
@@ -255,21 +395,21 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex h-64 items-end justify-between space-x-1">
-            {[30, 45, 60, 75, 90, 85, 95, 100].map((height, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div
-                  className="w-8 rounded-t-md bg-blue-500 transition-all duration-300 hover:bg-blue-600"
-                  style={{ height: `${height}%` }}
-                ></div>
-                <span className="mt-2 text-xs text-gray-500">
-                  {
-                    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'][
-                      index
-                    ]
-                  }
-                </span>
-              </div>
-            ))}
+            {userGrowthData.map((data, index) => {
+              const maxCount = Math.max(...userGrowthData.map((d) => d.count));
+              const height = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
+              return (
+                <div key={index} className="flex flex-col items-center">
+                  <div
+                    className="w-8 rounded-t-md bg-blue-500 transition-all duration-300 hover:bg-blue-600"
+                    style={{ height: `${height}%` }}
+                  ></div>
+                  <span className="mt-2 text-xs text-gray-500">
+                    {data.month}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </motion.div>
 
@@ -285,21 +425,23 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex h-64 items-end justify-between space-x-1">
-            {[40, 55, 65, 80, 70, 85, 90, 95].map((height, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div
-                  className="w-8 rounded-t-md bg-purple-500 transition-all duration-300 hover:bg-purple-600"
-                  style={{ height: `${height}%` }}
-                ></div>
-                <span className="mt-2 text-xs text-gray-500">
-                  {
-                    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'][
-                      index
-                    ]
-                  }
-                </span>
-              </div>
-            ))}
+            {webinarEngagementData.map((data, index) => {
+              const maxCount = Math.max(
+                ...webinarEngagementData.map((d) => d.count)
+              );
+              const height = maxCount > 0 ? (data.count / maxCount) * 100 : 0;
+              return (
+                <div key={index} className="flex flex-col items-center">
+                  <div
+                    className="w-8 rounded-t-md bg-purple-500 transition-all duration-300 hover:bg-purple-600"
+                    style={{ height: `${height}%` }}
+                  ></div>
+                  <span className="mt-2 text-xs text-gray-500">
+                    {data.month}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       </motion.div>
@@ -313,32 +455,7 @@ export default function AdminDashboard() {
       >
         <h3 className="mb-4 text-lg font-semibold">Recent Activity</h3>
         <div className="space-y-4">
-          {[
-            {
-              user: 'John Doe',
-              action: 'created a new webinar',
-              time: '2 hours ago',
-              color: 'bg-blue-500',
-            },
-            {
-              user: 'Jane Smith',
-              action: 'registered for a webinar',
-              time: '4 hours ago',
-              color: 'bg-green-500',
-            },
-            {
-              user: 'Mike Johnson',
-              action: 'updated webinar settings',
-              time: '6 hours ago',
-              color: 'bg-purple-500',
-            },
-            {
-              user: 'Sarah Williams',
-              action: 'completed a webinar',
-              time: '1 day ago',
-              color: 'bg-orange-500',
-            },
-          ].map((activity, index) => (
+          {activities.map((activity, index) => (
             <motion.div
               key={index}
               className="flex items-center rounded-lg p-3 transition-colors duration-300 hover:bg-gray-50"

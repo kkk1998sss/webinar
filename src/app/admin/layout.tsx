@@ -47,7 +47,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-[90.8vh] overflow-hidden bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar toggle */}
       <button
         onClick={toggleSidebar}
@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed inset-y-0 left-0 z-40 w-64 space-y-6 bg-gradient-to-b from-gray-900 to-gray-800 p-6 text-white shadow-xl md:relative md:translate-x-0"
+            className="fixed inset-y-0 left-0 z-40 flex h-[91vh] w-64 flex-col bg-gradient-to-b from-gray-900 to-gray-800 p-6 text-white shadow-xl md:relative md:translate-x-0"
           >
             <motion.div
               initial={{ y: -20, opacity: 0 }}
@@ -83,7 +83,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </h2>
             </motion.div>
 
-            <NavigationMenu.Root orientation="vertical" className="space-y-4">
+            <NavigationMenu.Root className="mt-8 flex-1">
               <NavigationMenu.List className="space-y-2">
                 <NavigationMenu.Item>
                   <Link
@@ -172,7 +172,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </NavigationMenu.List>
             </NavigationMenu.Root>
 
-            <div className="absolute inset-x-0 bottom-6 px-6">
+            <div className="mt-auto">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -191,7 +191,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className={`flex-1 p-4 transition-all duration-300 md:p-8`}
+        className="flex-1 overflow-y-auto p-4 transition-all duration-300 md:p-8"
       >
         <motion.div
           initial={{ y: 20, opacity: 0 }}

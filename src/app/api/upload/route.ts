@@ -1,22 +1,39 @@
 import { Readable } from 'stream';
-import { v2 as cloudinary } from 'cloudinary';
+import axios from 'axios';
 import { NextResponse } from 'next/server';
 
 import prisma from '@/lib/prisma';
 
-// Cloudinary config
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
-  api_key: process.env.CLOUDINARY_API_KEY!,
-  api_secret: process.env.CLOUDINARY_API_SECRET!,
-});
+// pCloud API configuration
+const PCLOUD_API_URL = process.env.PCLOUD_API_URL!;
+const PCLOUD_CLIENT_ID = process.env.PCLOUD_CLIENT_ID!;
+const PCLOUD_CLIENT_SECRET = process.env.PCLOUD_CLIENT_SECRET!;
 
 // Chunk size for streaming (100MB)
-const CHUNK_SIZE = 100 * 1024 * 1024;
+// const CHUNK_SIZE = 100 * 1024 * 1024;
 
-interface CloudinaryUploadResult {
-  secure_url: string;
-  public_id: string;
+interface PCloudUploadResult {
+  url: string;
+  fileid: number;
+}
+
+// Function to get access token
+async function getAccessToken() {
+  try {
+    const response = await axios.post('https://api.pcloud.com/oauth2_token', {
+      client_id: PCLOUD_CLIENT_ID,
+      client_secret: PCLOUD_CLIENT_SECRET,
+      grant_type: 'client_credentials',
+    });
+
+    if (response.data.access_token) {
+      return response.data.access_token;
+    }
+    throw new Error('Failed to get access token');
+  } catch (error) {
+    console.error('Error getting access token:', error);
+    throw error;
+  }
 }
 
 export async function POST(request: Request) {
@@ -29,44 +46,69 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    // Get access token
+    const accessToken = await getAccessToken();
+
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // Create a readable stream from the buffer
     const stream = Readable.from(buffer);
 
-    // Upload to Cloudinary using streaming
-    const uploadPromise = new Promise<CloudinaryUploadResult>(
-      (resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            resource_type: 'video',
-            chunk_size: CHUNK_SIZE,
-            eager: [
-              { format: 'mp4', quality: 'auto' },
-              { format: 'webm', quality: 'auto' },
-            ],
-            eager_async: true,
-            public_id: `videos/${Date.now()}_${title}`,
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else if (result) resolve(result as CloudinaryUploadResult);
-            else reject(new Error('Upload failed'));
-          }
-        );
-
-        stream.pipe(uploadStream);
+    // First, create a file in pCloud
+    const createFileResponse = await axios.post(
+      `${PCLOUD_API_URL}/createfile`,
+      {
+        access_token: accessToken,
+        path: `/Videos/${Date.now()}_${title}`,
+        size: buffer.length,
       }
     );
 
-    const result = await uploadPromise;
+    if (!createFileResponse.data.fileid) {
+      throw new Error('Failed to create file in pCloud');
+    }
+
+    // Upload to pCloud using streaming
+    const uploadResponse = await axios.post(
+      `${PCLOUD_API_URL}/uploadfile`,
+      stream,
+      {
+        params: {
+          access_token: accessToken,
+          fileid: createFileResponse.data.fileid,
+          path: `/Videos/${Date.now()}_${title}`,
+        },
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'Content-Length': buffer.length,
+        },
+      }
+    );
+
+    if (uploadResponse.data.result !== 0) {
+      throw new Error('Upload failed');
+    }
+
+    const result: PCloudUploadResult = {
+      url: uploadResponse.data.url,
+      fileid: uploadResponse.data.fileid,
+    };
+
+    // Get the public link for the file
+    const publicLinkResponse = await axios.post(
+      `${PCLOUD_API_URL}/getfilepublink`,
+      {
+        access_token: accessToken,
+        fileid: result.fileid,
+      }
+    );
 
     const saved = await prisma.video.create({
       data: {
         title,
-        url: result.secure_url,
-        publicId: result.public_id,
+        url: publicLinkResponse.data.link,
+        publicId: result.fileid.toString(),
       },
     });
 
@@ -92,20 +134,24 @@ export async function DELETE(req: Request) {
     const body: DeleteRequest = await req.json();
     const { publicId } = body;
 
-    console.log('Deleting from Cloudinary publicId:', publicId);
+    console.log('Deleting from pCloud fileid:', publicId);
 
     if (!publicId) {
       return NextResponse.json({ error: 'Missing publicId' }, { status: 400 });
     }
 
-    const result = await cloudinary.uploader.destroy(publicId, {
-      resource_type: 'video',
+    // Get access token
+    const accessToken = await getAccessToken();
+
+    const result = await axios.post(`${PCLOUD_API_URL}/deletefile`, {
+      access_token: accessToken,
+      fileid: parseInt(publicId),
     });
 
-    console.log('Cloudinary delete result:', result);
+    console.log('pCloud delete result:', result.data);
 
     return NextResponse.json({
-      message: 'Video deleted from Cloudinary successfully',
+      message: 'Video deleted from pCloud successfully',
     });
   } catch (error) {
     console.error('Video delete error:', error);

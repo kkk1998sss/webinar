@@ -8,6 +8,7 @@ import {
   FaFilter,
   FaPlus,
   FaSearch,
+  FaSync,
   FaTrash,
 } from 'react-icons/fa';
 import * as Popover from '@radix-ui/react-popover';
@@ -39,6 +40,9 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     // Simulate page load animation
@@ -48,14 +52,28 @@ export default function UsersPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/register');
+      const data = await res.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch('/api/register')
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data);
-        setLoading(false);
-      });
+    fetchUsers();
   }, []);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchUsers();
+    setIsRefreshing(false);
+  };
 
   const deleteUser = async (id: string) => {
     await fetch(`/api/register/${id}`, { method: 'DELETE' });
@@ -76,6 +94,16 @@ export default function UsersPage() {
 
     return matchesSearch && matchesFilter;
   });
+
+  // Calculate pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
 
   const handleExport = () => {
     const headers = {
@@ -148,6 +176,16 @@ export default function UsersPage() {
           className="flex gap-2"
         >
           <button
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:bg-blue-700 disabled:opacity-50"
+          >
+            <FaSync
+              className={`size-4 ${isRefreshing ? 'animate-spin' : ''}`}
+            />
+            Refresh
+          </button>
+          <button
             onClick={handleExport}
             className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-white shadow-md transition-all duration-300 hover:bg-green-700"
           >
@@ -210,227 +248,271 @@ export default function UsersPage() {
           </span>
         </motion.div>
       ) : (
-        <div className="w-full overflow-auto rounded-xl border border-gray-200 shadow-sm dark:border-gray-700">
-          <ScrollArea.Root className="w-full">
-            <ScrollArea.Viewport className="w-full">
-              <motion.table
-                className="w-full min-w-[800px] text-xs text-gray-700 dark:text-gray-300"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <thead className="bg-gray-50 dark:bg-slate-800">
-                  <tr>
-                    <th className="w-12 p-2 text-center font-medium text-gray-500 dark:text-gray-400">
-                      S.No
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Name
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Email
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Phone
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Plan
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Purchase Date
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Expiry Date
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Status
-                    </th>
-                    <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <AnimatePresence>
-                    {filteredUsers.map((user, index) => (
-                      <motion.tr
-                        key={user.id}
-                        className="border-t border-gray-200 transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-slate-700"
-                        variants={itemVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit={{ opacity: 0 }}
-                      >
-                        <td className="w-12 p-2 text-center">{index + 1}</td>
-                        <td className="max-w-[120px] break-words p-2">
-                          <span className="font-medium text-gray-900 dark:text-gray-100">
-                            {user.name}
-                          </span>
-                        </td>
-                        <td className="max-w-[150px] break-words p-2">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            {user.email}
-                          </span>
-                        </td>
-                        <td className="max-w-[100px] break-words p-2">
-                          <span className="text-gray-600 dark:text-gray-400">
-                            {user.phoneNumber}
-                          </span>
-                        </td>
-                        <td className="p-2">
-                          {user.subscriptions &&
-                          user.subscriptions.length > 0 ? (
-                            <div className="flex flex-col gap-0.5">
-                              <Badge className="bg-blue-100 text-[10px] text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                                {user.subscriptions[0].type === 'FOUR_DAY'
-                                  ? '4 Days Plan'
-                                  : '6 Months Plan'}
-                              </Badge>
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400">
-                                {user.subscriptions[0].isActive
-                                  ? 'Active'
-                                  : 'Expired'}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 dark:text-gray-500">
-                              —
+        <>
+          <div className="w-full overflow-auto rounded-xl border border-gray-200 shadow-sm dark:border-gray-700">
+            <ScrollArea.Root className="w-full">
+              <ScrollArea.Viewport className="w-full">
+                <motion.table
+                  className="w-full min-w-[800px] text-xs text-gray-700 dark:text-gray-300"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <thead className="bg-gray-50 dark:bg-slate-800">
+                    <tr>
+                      <th className="w-12 p-2 text-center font-medium text-gray-500 dark:text-gray-400">
+                        S.No
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Name
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Email
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Phone
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Plan
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Purchase Date
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Expiry Date
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Status
+                      </th>
+                      <th className="p-2 text-left font-medium text-gray-500 dark:text-gray-400">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <AnimatePresence>
+                      {currentItems.map((user, index) => (
+                        <motion.tr
+                          key={user.id}
+                          className="border-t border-gray-200 transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-slate-700"
+                          variants={itemVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit={{ opacity: 0 }}
+                        >
+                          <td className="w-12 p-2 text-center">{index + 1}</td>
+                          <td className="max-w-[120px] break-words p-2">
+                            <span className="font-medium text-gray-900 dark:text-gray-100">
+                              {user.name}
                             </span>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          {user.subscriptions &&
-                          user.subscriptions.length > 0 ? (
-                            <div className="flex items-center">
-                              <FaCalendarAlt
-                                className="mr-1 text-green-500 dark:text-green-400"
-                                size={12}
-                              />
-                              <span className="text-gray-600 dark:text-gray-400">
-                                {new Date(
-                                  user.subscriptions[0].startDate
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 dark:text-gray-500">
-                              —
+                          </td>
+                          <td className="max-w-[150px] break-words p-2">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {user.email}
                             </span>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          {user.subscriptions &&
-                          user.subscriptions.length > 0 ? (
-                            <div className="flex items-center">
-                              <FaCalendarAlt
-                                className="mr-1 text-red-500 dark:text-red-400"
-                                size={12}
-                              />
-                              <span className="text-gray-600 dark:text-gray-400">
-                                {new Date(
-                                  user.subscriptions[0].endDate
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 dark:text-gray-500">
-                              —
+                          </td>
+                          <td className="max-w-[100px] break-words p-2">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              {user.phoneNumber}
                             </span>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          <Badge
-                            className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                              user.isActive
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                            }`}
-                          >
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </td>
-                        <td className="p-2">
-                          <div className="flex items-center space-x-2">
-                            <Link
-                              href={`/admin/users/${user.id}/edit`}
-                              className="rounded-full bg-blue-100 p-1.5 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800"
+                          </td>
+                          <td className="p-2">
+                            {user.subscriptions &&
+                            user.subscriptions.length > 0 ? (
+                              <div className="flex flex-col gap-0.5">
+                                <Badge className="bg-blue-100 text-[10px] text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                                  {user.subscriptions[0].type === 'FOUR_DAY'
+                                    ? '4 Days Plan'
+                                    : '6 Months Plan'}
+                                </Badge>
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                  {user.subscriptions[0].isActive
+                                    ? 'Active'
+                                    : 'Expired'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 dark:text-gray-500">
+                                —
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2">
+                            {user.subscriptions &&
+                            user.subscriptions.length > 0 ? (
+                              <div className="flex items-center">
+                                <FaCalendarAlt
+                                  className="mr-1 text-green-500 dark:text-green-400"
+                                  size={12}
+                                />
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  {new Date(
+                                    user.subscriptions[0].startDate
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 dark:text-gray-500">
+                                —
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2">
+                            {user.subscriptions &&
+                            user.subscriptions.length > 0 ? (
+                              <div className="flex items-center">
+                                <FaCalendarAlt
+                                  className="mr-1 text-red-500 dark:text-red-400"
+                                  size={12}
+                                />
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  {new Date(
+                                    user.subscriptions[0].endDate
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 dark:text-gray-500">
+                                —
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2">
+                            <Badge
+                              className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                user.isActive
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                              }`}
                             >
-                              <FaEdit className="size-3" />
-                            </Link>
+                              {user.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </td>
+                          <td className="p-2">
+                            <div className="flex items-center space-x-2">
+                              <Link
+                                href={`/admin/users/${user.id}/edit`}
+                                className="rounded-full bg-blue-100 p-1.5 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-400 dark:hover:bg-blue-800"
+                              >
+                                <FaEdit className="size-3" />
+                              </Link>
 
-                            <Popover.Root>
-                              <Popover.Trigger asChild>
-                                <button className="rounded-full bg-red-100 p-1.5 text-red-600 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-400 dark:hover:bg-red-800">
-                                  <FaTrash className="size-3" />
-                                </button>
-                              </Popover.Trigger>
-                              <Popover.Portal>
-                                <Popover.Content
-                                  side="top"
-                                  align="center"
-                                  className="z-50 w-64 rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-lg dark:border-gray-700 dark:bg-slate-800"
-                                >
-                                  <p className="mb-3 text-gray-800 dark:text-gray-200">
-                                    Are you sure you want to delete this user?
-                                  </p>
-                                  <div className="flex justify-end gap-2">
-                                    <Popover.Close asChild>
-                                      <button className="rounded-lg bg-gray-100 px-3 py-1 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
-                                        Cancel
+                              <Popover.Root>
+                                <Popover.Trigger asChild>
+                                  <button className="rounded-full bg-red-100 p-1.5 text-red-600 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-400 dark:hover:bg-red-800">
+                                    <FaTrash className="size-3" />
+                                  </button>
+                                </Popover.Trigger>
+                                <Popover.Portal>
+                                  <Popover.Content
+                                    side="top"
+                                    align="center"
+                                    className="z-50 w-64 rounded-lg border border-gray-200 bg-white p-4 text-sm shadow-lg dark:border-gray-700 dark:bg-slate-800"
+                                  >
+                                    <p className="mb-3 text-gray-800 dark:text-gray-200">
+                                      Are you sure you want to delete this user?
+                                    </p>
+                                    <div className="flex justify-end gap-2">
+                                      <Popover.Close asChild>
+                                        <button className="rounded-lg bg-gray-100 px-3 py-1 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+                                          Cancel
+                                        </button>
+                                      </Popover.Close>
+                                      <button
+                                        className="rounded-lg bg-red-600 px-3 py-1 text-white transition-colors hover:bg-red-700"
+                                        onClick={() => deleteUser(user.id)}
+                                      >
+                                        Confirm
                                       </button>
-                                    </Popover.Close>
-                                    <button
-                                      className="rounded-lg bg-red-600 px-3 py-1 text-white transition-colors hover:bg-red-700"
-                                      onClick={() => deleteUser(user.id)}
-                                    >
-                                      Confirm
-                                    </button>
-                                  </div>
-                                </Popover.Content>
-                              </Popover.Portal>
-                            </Popover.Root>
+                                    </div>
+                                  </Popover.Content>
+                                </Popover.Portal>
+                              </Popover.Root>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                    {filteredUsers.length === 0 && (
+                      <motion.tr
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <td
+                          colSpan={9}
+                          className="px-4 py-12 text-center text-gray-500 dark:text-gray-400"
+                        >
+                          <div className="flex flex-col items-center justify-center">
+                            <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                              <FaSearch className="size-8 text-gray-400 dark:text-gray-500" />
+                            </div>
+                            <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                              No users found
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {searchQuery || filterStatus !== 'all'
+                                ? 'Try adjusting your search or filter criteria'
+                                : 'There are no users in the system yet'}
+                            </p>
                           </div>
                         </td>
                       </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                  {filteredUsers.length === 0 && (
-                    <motion.tr
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
+                    )}
+                  </tbody>
+                </motion.table>
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar
+                orientation="vertical"
+                className="w-2 bg-gray-100 dark:bg-gray-700"
+              >
+                <ScrollArea.Thumb className="rounded bg-gray-400 dark:bg-gray-500" />
+              </ScrollArea.Scrollbar>
+            </ScrollArea.Root>
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="text-sm text-gray-700 dark:text-gray-300">
+                Showing {indexOfFirstItem + 1} to{' '}
+                {Math.min(indexOfLastItem, filteredUsers.length)} of{' '}
+                {filteredUsers.length} entries
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`rounded-lg px-3 py-1 text-sm transition-colors ${
+                        currentPage === page
+                          ? 'bg-blue-600 text-white'
+                          : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                      }`}
                     >
-                      <td
-                        colSpan={9}
-                        className="px-4 py-12 text-center text-gray-500 dark:text-gray-400"
-                      >
-                        <div className="flex flex-col items-center justify-center">
-                          <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
-                            <FaSearch className="size-8 text-gray-400 dark:text-gray-500" />
-                          </div>
-                          <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                            No users found
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {searchQuery || filterStatus !== 'all'
-                              ? 'Try adjusting your search or filter criteria'
-                              : 'There are no users in the system yet'}
-                          </p>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  )}
-                </tbody>
-              </motion.table>
-            </ScrollArea.Viewport>
-            <ScrollArea.Scrollbar
-              orientation="vertical"
-              className="w-2 bg-gray-100 dark:bg-gray-700"
-            >
-              <ScrollArea.Thumb className="rounded bg-gray-400 dark:bg-gray-500" />
-            </ScrollArea.Scrollbar>
-          </ScrollArea.Root>
-        </div>
+                      {page}
+                    </button>
+                  )
+                )}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </motion.div>
   );

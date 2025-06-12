@@ -3,59 +3,100 @@
 import { useEffect, useState } from 'react';
 import { EyeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { AnimatePresence, motion } from 'framer-motion';
+import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getSession, signIn } from 'next-auth/react';
+import { signIn } from 'next-auth/react';
 
+import { SubscriptionButton } from '@/components/Subscription/SubscriptionButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+interface Subscription {
+  type: 'FOUR_DAY' | 'SIX_MONTH';
+  isValid: boolean;
+}
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   useEffect(() => {
     setIsPageLoaded(true);
   }, []);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  useEffect(() => {
+    console.log('Subscription modal state changed:', showSubscriptionModal);
+  }, [showSubscriptionModal]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
     try {
-      const res = await signIn('credentials', {
-        redirect: false,
+      const result = await signIn('credentials', {
         email,
         password,
+        redirect: false,
       });
 
-      if (res?.error) {
-        setError('Invalid email or password');
-      } else {
-        const session = await getSession();
-        if (session?.user?.isAdmin) {
-          router.push('/admin/users');
-        } else {
+      console.log('Sign in result:', result);
+
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+
+      if (result?.ok) {
+        // Check if user is restricted
+        const isRestrictedUser = email.toLowerCase() === 'user@gmail.com';
+        if (isRestrictedUser) {
           router.push('/dashboard');
+          return;
         }
+
+        // Check subscription status
+        const subscriptionRes = await fetch('/api/subscription');
+        const subscriptionData = await subscriptionRes.json();
+
+        if (subscriptionData.subscriptions) {
+          const hasActiveSixMonthPlan = subscriptionData.subscriptions.some(
+            (sub: Subscription) => sub.type === 'SIX_MONTH' && sub.isValid
+          );
+          const hasExpiredSixMonthPlan = subscriptionData.subscriptions.some(
+            (sub: Subscription) => sub.type === 'SIX_MONTH' && !sub.isValid
+          );
+
+          if (hasActiveSixMonthPlan || hasExpiredSixMonthPlan) {
+            // User already has a 6-month plan (active or expired)
+            router.push('/dashboard');
+            return;
+          }
+        }
+
+        // Show subscription modal for users without subscription
+        setShowSubscriptionModal(true);
       }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message || 'Something went wrong. Please try again.');
-      } else {
-        setError('An unexpected error occurred.');
-      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // const handleSubscriptionComplete = () => {
+  //   setShowSubscriptionModal(false);
+  //   router.push('/dashboard');
+  // };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-red-50 to-white px-4 py-12 sm:px-6 lg:px-8 dark:from-gray-800 dark:to-gray-900">
@@ -86,7 +127,7 @@ export default function LoginPage() {
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              Sign in to continue to your account
+              Sign in to your account
             </motion.p>
           </div>
 
@@ -106,11 +147,11 @@ export default function LoginPage() {
             </AnimatePresence>
 
             <motion.form
-              onSubmit={handleEmailLogin}
+              onSubmit={handleLogin}
               className="space-y-5"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isPageLoaded ? 1 : 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
             >
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -182,14 +223,6 @@ export default function LoginPage() {
                     </motion.button>
                   </div>
                 </div>
-                <div className="flex justify-center pt-2">
-                  <Link
-                    href="/auth/reset-password"
-                    className="font-medium text-red-600 transition-colors hover:text-red-800 hover:underline dark:text-red-400 dark:hover:text-red-300"
-                  >
-                    Forgot Password?
-                  </Link>
-                </div>
               </motion.div>
 
               <motion.div
@@ -237,7 +270,7 @@ export default function LoginPage() {
                       <span>Signing in...</span>
                     </div>
                   ) : (
-                    'Sign in'
+                    'Sign In'
                   )}
                 </Button>
               </motion.div>
@@ -247,7 +280,7 @@ export default function LoginPage() {
               className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400"
               initial={{ opacity: 0 }}
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
             >
               Don&apos;t have an account?{' '}
               <Link
@@ -260,6 +293,125 @@ export default function LoginPage() {
           </div>
         </motion.div>
       </motion.div>
+
+      {/* Custom Subscription Modal */}
+      <AnimatePresence>
+        {showSubscriptionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowSubscriptionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.5 }}
+              className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowSubscriptionModal(false)}
+                className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <X className="size-5" />
+              </button>
+
+              <div className="text-center">
+                <motion.h2
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-4 text-2xl font-bold text-gray-900 dark:text-white"
+                >
+                  Choose Your Plan
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-6 text-gray-600 dark:text-gray-300"
+                >
+                  Start your mindfulness journey today
+                </motion.p>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="border-primary dark:border-primary-dark rounded-xl border-2 bg-white p-6 shadow-lg dark:bg-gray-800"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    6-Month Membership
+                  </h3>
+                  <span className="bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark rounded-full px-3 py-1 text-sm font-medium">
+                    POPULAR
+                  </span>
+                </div>
+
+                <div className="mb-6">
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                    ₹599
+                  </span>
+                  <span className="text-gray-500 dark:text-gray-400">
+                    /6 months
+                  </span>
+                </div>
+
+                <ul className="mb-6 space-y-3">
+                  {[
+                    'Full course library access',
+                    'Premium content',
+                    'Advanced analytics',
+                    'Priority support',
+                    'New content weekly',
+                  ].map((feature, index) => (
+                    <motion.li
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + index * 0.1 }}
+                      className="flex items-center space-x-3 text-gray-700 dark:text-gray-300"
+                    >
+                      <svg
+                        className="size-5 text-yellow-500"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>{feature}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+
+                <div className="space-y-3">
+                  <SubscriptionButton planType="SIX_MONTH" amount={599} />
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setShowSubscriptionModal(false);
+                      router.push('/');
+                    }}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
+                  >
+                    Skip for Later
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
