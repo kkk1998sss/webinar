@@ -60,11 +60,36 @@ export default function RegisterPage() {
         router.push('/auth/login');
       } else {
         const data = await res.json();
-        setError(data.message || 'Signup failed. Please try again.');
+        // Handle specific error messages
+        if (data.error?.includes('already exists')) {
+          setError(
+            'This email or phone number is already registered. Please use different credentials or try logging in.'
+          );
+        } else if (data.message?.includes('email')) {
+          setError(
+            'This email is already registered. Please use a different email or try logging in.'
+          );
+        } else if (data.message?.includes('phone')) {
+          setError(
+            'This phone number is already registered. Please use a different phone number.'
+          );
+        } else if (data.message?.includes('password')) {
+          setError('Password must be at least 6 characters long.');
+        } else if (data.message?.includes('invalid')) {
+          setError('Please enter valid information in all fields.');
+        } else {
+          setError(
+            data.message ||
+              data.error ||
+              'Registration failed. Please check your information and try again.'
+          );
+        }
       }
     } catch (error) {
       console.error(error);
-      setError('An unexpected error occurred. Please try again.');
+      setError(
+        'Unable to connect to the server. Please check your internet connection and try again.'
+      );
     } finally {
       setIsLoading(false);
     }

@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { getSession, signIn } from 'next-auth/react';
 
 import { SubscriptionButton } from '@/components/Subscription/SubscriptionButton';
 import { Button } from '@/components/ui/button';
@@ -38,8 +38,8 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+    setIsLoading(true);
 
     try {
       const result = await signIn('credentials', {
@@ -48,42 +48,90 @@ export default function LoginPage() {
         redirect: false,
       });
 
-      console.log('Sign in result:', result);
-
       if (result?.error) {
-        setError(result.error);
+        console.log('Login error:', result.error);
+        // Handle specific error messages from NextAuth
+        let errorMessage = '';
+        switch (result.error) {
+          case 'Configuration':
+            setError('Invalid email or password');
+            break;
+          case 'CredentialsSignin':
+          case 'Invalid email or password':
+          case 'Missing email or password':
+            setError(result.error);
+            break;
+          case 'AccessDenied':
+            setError('Access denied. Please check your credentials.');
+            break;
+          case 'Verification':
+            setError('Please verify your email before logging in.');
+            break;
+          default:
+            // Check if the error message contains common phrases
+            errorMessage = result.error.toLowerCase();
+            if (
+              errorMessage.includes('invalid') ||
+              errorMessage.includes('incorrect') ||
+              errorMessage.includes('wrong') ||
+              errorMessage.includes('not found')
+            ) {
+              setError('Invalid email or password. Please try again.');
+            } else {
+              setError('An error occurred during login. Please try again.');
+            }
+        }
         return;
       }
 
       if (result?.ok) {
+        // Wait a bit for the session to be established
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Get session directly after successful login
+        const session = await getSession();
+        console.log('session', session);
+
+        if (session?.user?.isAdmin) {
+          // Force a page reload to ensure session is properly set
+          window.location.href = '/admin/users';
+          return;
+        }
+
         // Check if user is restricted
-        const isRestrictedUser = email.toLowerCase() === 'user@gmail.com';
-        if (isRestrictedUser) {
+        if (email === 'user@gmail.com') {
           router.push('/dashboard');
           return;
         }
 
         // Check subscription status
-        const subscriptionRes = await fetch('/api/subscription');
-        const subscriptionData = await subscriptionRes.json();
+        try {
+          const response = await fetch('/api/subscription');
+          const data = await response.json();
+          console.log('Subscription check response:', data);
 
-        if (subscriptionData.subscriptions) {
-          const hasActiveSixMonthPlan = subscriptionData.subscriptions.some(
-            (sub: Subscription) => sub.type === 'SIX_MONTH' && sub.isValid
-          );
-          const hasExpiredSixMonthPlan = subscriptionData.subscriptions.some(
-            (sub: Subscription) => sub.type === 'SIX_MONTH' && !sub.isValid
-          );
+          if (data.subscriptions && Array.isArray(data.subscriptions)) {
+            const hasActiveSixMonthPlan = data.subscriptions.some(
+              (sub: Subscription) => sub.type === 'SIX_MONTH' && sub.isValid
+            );
+            const hasExpiredSixMonthPlan = data.subscriptions.some(
+              (sub: Subscription) => sub.type === 'SIX_MONTH' && !sub.isValid
+            );
 
-          if (hasActiveSixMonthPlan || hasExpiredSixMonthPlan) {
-            // User already has a 6-month plan (active or expired)
-            router.push('/dashboard');
-            return;
+            if (hasActiveSixMonthPlan || hasExpiredSixMonthPlan) {
+              // User already has a 6-month plan (active or expired)
+              router.push('/dashboard');
+              return;
+            }
           }
-        }
 
-        // Show subscription modal for users without subscription
-        setShowSubscriptionModal(true);
+          // If no subscription or not 6-month plan, show subscription modal
+          setShowSubscriptionModal(true);
+        } catch (error) {
+          console.error('Error checking subscription:', error);
+          // If there's an error checking subscription, show the modal anyway
+          setShowSubscriptionModal(true);
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -222,6 +270,14 @@ export default function LoginPage() {
                       {showPassword ? <EyeOpenIcon /> : <EyeClosedIcon />}
                     </motion.button>
                   </div>
+                </div>
+                <div className="mt-1 flex justify-end">
+                  <Link
+                    href="/auth/reset-password"
+                    className="text-sm font-medium text-red-600 transition-colors hover:text-red-800 hover:underline dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    Forgot Password?
+                  </Link>
                 </div>
               </motion.div>
 

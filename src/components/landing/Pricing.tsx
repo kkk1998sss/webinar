@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 import { SubscriptionButton } from '../Subscription/SubscriptionButton';
 
@@ -21,6 +21,7 @@ const Pricing = () => {
   const { data: session, status } = useSession();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
@@ -75,6 +76,56 @@ const Pricing = () => {
       return;
     }
   };
+
+  const handleRegister = async () => {
+    setIsRedirecting(true);
+    try {
+      await signOut({ redirect: false });
+      window.location.href = '/auth/register';
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      setIsRedirecting(false);
+      toast.error('Failed to redirect. Please try again.');
+    }
+  };
+
+  if (isRedirecting) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            className="mb-4"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          >
+            <svg
+              className="text-primary dark:text-primary-dark mx-auto size-12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </motion.div>
+          <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+            Redirecting...
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Please wait while we redirect you to the registration page
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   const plans = [
     // Commenting out 199 plan temporarily
@@ -246,7 +297,13 @@ const Pricing = () => {
                   </div>
                 ) : isRestrictedUser && plan.planType === 'SIX_MONTH' ? (
                   <div className="rounded-md bg-gray-100 p-3 text-sm text-gray-800 dark:bg-gray-700/30 dark:text-gray-300">
-                    This plan is not available for your account please register
+                    This plan is not available for your account please{' '}
+                    <button
+                      onClick={handleRegister}
+                      className="text-primary hover:text-primary-dark font-medium underline"
+                    >
+                      register
+                    </button>
                   </div>
                 ) : (
                   <motion.div

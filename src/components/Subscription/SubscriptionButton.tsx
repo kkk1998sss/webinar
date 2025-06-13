@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import { useSession } from 'next-auth/react';
@@ -54,6 +55,7 @@ export const SubscriptionButton = ({
   const router = useRouter();
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const verifyPayment = async (response: RazorpayPaymentResponse) => {
     try {
@@ -133,7 +135,10 @@ export const SubscriptionButton = ({
           try {
             await verifyPayment(response);
             toast.success('Payment successful!');
-            router.push('/users/live-webinar');
+            setIsRedirecting(true);
+            // Wait for 2 seconds to show the success state
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            router.push('/dashboard');
           } catch (error) {
             console.error('Payment verification failed:', error);
             toast.error('Payment verification failed');
@@ -165,6 +170,44 @@ export const SubscriptionButton = ({
       setIsLoading(false);
     }
   };
+
+  if (isRedirecting) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm dark:bg-gray-900/80">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            className="mb-4"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          >
+            <svg
+              className="text-primary dark:text-primary-dark mx-auto size-12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+          </motion.div>
+          <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+            Payment Successful!
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Redirecting to your dashboard...
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <>

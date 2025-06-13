@@ -30,55 +30,63 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('Missing email or password');
-        }
-        const email = String(credentials.email);
-        const password = String(credentials.password);
-        const user = await prisma.user.findUnique({ where: { email } });
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Missing email or password');
+          }
+          const email = String(credentials.email);
+          const password = String(credentials.password);
+          const user = await prisma.user.findUnique({ where: { email } });
 
-        if (!user || !user.password) {
+          if (!user || !user.password) {
+            throw new Error('Invalid email or password');
+          }
+
+          // Try decryption first
+          try {
+            const decryptedPassword = decryptPassword(user.password);
+            if (
+              decryptedPassword !== 'DECRYPTION_FAILED' &&
+              password === decryptedPassword
+            ) {
+              return {
+                id: user.id ?? undefined,
+                email: user.email ?? undefined,
+                name: user.name ?? undefined,
+                image: user.image || null,
+                isActive: user.isActive,
+                stripeCustomerId: user.stripeCustomerId ?? '',
+              };
+            }
+          } catch (error) {
+            console.error('Decryption attempt failed:', error);
+          }
+
+          // If decryption fails or password doesn't match, try bcrypt
+          try {
+            const isValidBcrypt = await bcrypt.compare(password, user.password);
+            if (isValidBcrypt) {
+              return {
+                id: user.id ?? undefined,
+                email: user.email ?? undefined,
+                name: user.name ?? undefined,
+                image: user.image || null,
+                isActive: user.isActive,
+                stripeCustomerId: user.stripeCustomerId ?? '',
+              };
+            }
+          } catch (error) {
+            console.error('Bcrypt comparison failed:', error);
+          }
+
+          throw new Error('Invalid email or password');
+        } catch (error) {
+          // Ensure the error message is properly propagated
+          if (error instanceof Error) {
+            throw error;
+          }
           throw new Error('Invalid email or password');
         }
-
-        // Try decryption first
-        try {
-          const decryptedPassword = decryptPassword(user.password);
-          if (
-            decryptedPassword !== 'DECRYPTION_FAILED' &&
-            password === decryptedPassword
-          ) {
-            return {
-              id: user.id ?? undefined,
-              email: user.email ?? undefined,
-              name: user.name ?? undefined,
-              image: user.image || null,
-              isActive: user.isActive,
-              stripeCustomerId: user.stripeCustomerId ?? '',
-            };
-          }
-        } catch (error) {
-          console.error('Decryption attempt failed:', error);
-        }
-
-        // If decryption fails or password doesn't match, try bcrypt
-        try {
-          const isValidBcrypt = await bcrypt.compare(password, user.password);
-          if (isValidBcrypt) {
-            return {
-              id: user.id ?? undefined,
-              email: user.email ?? undefined,
-              name: user.name ?? undefined,
-              image: user.image || null,
-              isActive: user.isActive,
-              stripeCustomerId: user.stripeCustomerId ?? '',
-            };
-          }
-        } catch (error) {
-          console.error('Bcrypt comparison failed:', error);
-        }
-
-        throw new Error('Invalid email or password');
       },
     }),
   ],

@@ -72,22 +72,33 @@ export async function middleware(request: NextRequest) {
           const userData = await response.json();
           const user = userData.find((u: User) => u.email === token.email);
 
-          if (!user || !user.subscriptions || user.subscriptions.length === 0) {
+          if (
+            !user ||
+            !user.subscriptions ||
+            !user.subscriptions[0]?.isActive
+          ) {
             return NextResponse.redirect(new URL('/', request.url));
           }
 
-          // Check subscription plan type
+          // Check subscription plan type and validity
           const subscription = user.subscriptions[0];
+          const currentDate = new Date();
+          const subscriptionEndDate = new Date(subscription.endDate);
+
+          // If subscription has expired, redirect to pricing
+          if (currentDate > subscriptionEndDate) {
+            return NextResponse.redirect(new URL('/', request.url));
+          }
 
           // For FOUR_DAY plan users, show locked content but allow access to webinar
           if (subscription.type === 'FOUR_DAY') {
             // Allow access to webinar content
-            if (pathname.startsWith('/users/live-webinar')) {
+            if (pathname.startsWith('/users/dashboard')) {
               return NextResponse.next();
             }
             // Redirect to webinar page for other protected routes
             return NextResponse.redirect(
-              new URL('/users/live-webinar', request.url)
+              new URL('/users/dashboard', request.url)
             );
           }
 
@@ -144,11 +155,11 @@ export async function middleware(request: NextRequest) {
                   );
                 }
                 return NextResponse.redirect(
-                  new URL('/users/live-webinar', request.url)
+                  new URL('/dashboard', request.url)
                 );
               } else if (subscription.type === 'SIX_MONTH') {
                 return NextResponse.redirect(
-                  new URL('/users/live-webinar', request.url)
+                  new URL('/dashboard', request.url)
                 );
               }
             } else {
