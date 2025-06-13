@@ -279,20 +279,36 @@ export default function FourDayPlan() {
       {/* Day selection bar */}
       <div className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 pb-4">
-          <div className="flex items-center gap-8 pt-2">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="-ml-2"
-            >
-              <Button
-                className="rounded-full bg-gradient-to-r from-red-500 to-yellow-500 p-3 font-semibold text-white shadow-lg transition-all hover:from-red-600 hover:to-yellow-600 hover:shadow-xl"
-                onClick={() => (window.location.href = '/dashboard')}
+          <div className="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:gap-8">
+            <div className="flex items-center justify-between gap-4 sm:justify-start">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <ArrowLeft className="size-6" />
-              </Button>
-            </motion.div>
+                <Button
+                  className="rounded-full bg-gradient-to-r from-red-500 to-yellow-500 p-3 font-semibold text-white shadow-lg transition-all hover:from-red-600 hover:to-yellow-600 hover:shadow-xl"
+                  onClick={() => (window.location.href = '/dashboard')}
+                >
+                  <ArrowLeft className="size-6" />
+                </Button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="sm:hidden"
+              >
+                <Button
+                  className="flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500 to-red-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:from-yellow-600 hover:to-red-600 hover:shadow-xl"
+                  onClick={() => router.push('/users/ebook199')}
+                >
+                  <BookOpen className="size-6" />
+                  <span className="text-sm">E-Books</span>
+                </Button>
+              </motion.div>
+            </div>
 
             <div className="grid flex-1 grid-cols-3 gap-4">
               {[1, 2, 3].map((day) => {
@@ -369,7 +385,7 @@ export default function FourDayPlan() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="-mr-2"
+              className="hidden sm:block"
             >
               <Button
                 className="flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-500 to-red-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:from-yellow-600 hover:to-red-600 hover:shadow-xl"

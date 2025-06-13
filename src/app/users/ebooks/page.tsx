@@ -17,6 +17,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 
 // Add LoadingScreen component
@@ -327,7 +328,7 @@ export default function EBooksPage() {
             {ebooks.map((ebook, index) => (
               <motion.div
                 key={ebook.id}
-                className="group relative overflow-hidden rounded-lg bg-white p-2 shadow-md transition-all duration-300 hover:shadow-lg sm:p-3"
+                className="group relative flex h-full flex-col overflow-hidden rounded-lg bg-white p-2 shadow-md transition-all duration-300 hover:shadow-lg sm:p-3"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -344,12 +345,26 @@ export default function EBooksPage() {
                   transition={{ duration: 0.2 }}
                 >
                   {ebook.fileUrl ? (
-                    <iframe
-                      src={`${ebook.fileUrl}#page=1&view=FitH&toolbar=0&navpanes=0&scrollbar=0`}
-                      className="size-full"
-                      title={`${ebook.title} preview`}
-                      style={{ border: 'none' }}
-                    />
+                    <>
+                      {/* Desktop PDF Preview */}
+                      <div className="hidden h-[600px] sm:block">
+                        <iframe
+                          src={`${ebook.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                          className="size-full rounded-lg border border-gray-200"
+                          title={ebook.title}
+                        />
+                      </div>
+                      {/* Mobile Preview */}
+                      <div className="relative aspect-[3/4] w-full sm:hidden">
+                        <Image
+                          src="/assets/shreeSookthPDF.jpg"
+                          layout="fill"
+                          objectFit="contain"
+                          className="transition-transform duration-700 hover:scale-105"
+                          alt="Shree Suktam Sadhana"
+                        />
+                      </div>
+                    </>
                   ) : (
                     <div className="flex h-full items-center justify-center bg-gray-50">
                       <motion.div
@@ -365,7 +380,7 @@ export default function EBooksPage() {
                     </div>
                   )}
                 </motion.div>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-1 flex-col">
                   <motion.h3
                     className="line-clamp-2 text-xs font-medium text-gray-800 sm:text-sm"
                     whileHover={{ color: '#2563eb' }}
@@ -391,10 +406,10 @@ export default function EBooksPage() {
                       {ebook.downloads}
                     </motion.span>
                   </div>
-                  <div className="mt-2 flex items-center gap-1 sm:gap-1.5">
+                  <div className="mt-auto flex items-center gap-1.5 pt-2 sm:gap-2">
                     <motion.button
                       onClick={() => handlePreview(ebook)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-md bg-blue-50 px-1.5 py-1 text-[10px] font-medium text-blue-600 hover:bg-blue-100 sm:gap-1.5 sm:px-2 sm:py-1.5 sm:text-xs"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-blue-50 px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
                       whileHover={{
                         scale: 1.05,
                         backgroundColor: '#93c5fd',
@@ -407,13 +422,13 @@ export default function EBooksPage() {
                         whileHover={{ rotate: 360 }}
                         transition={{ duration: 0.5 }}
                       >
-                        <Eye className="size-3 sm:size-3.5" />
+                        <Eye className="size-5 sm:size-5" />
                       </motion.div>
                       <span>Preview</span>
                     </motion.button>
                     <motion.button
                       onClick={() => handleDownload(ebook)}
-                      className="flex flex-1 items-center justify-center gap-1 rounded-md bg-green-50 px-1.5 py-1 text-[10px] font-medium text-green-600 hover:bg-green-100 sm:gap-1.5 sm:px-2 sm:py-1.5 sm:text-xs"
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-md bg-green-50 px-3 py-2 text-sm font-medium text-green-600 hover:bg-green-100 sm:gap-2 sm:px-3 sm:py-2 sm:text-sm"
                       whileHover={{
                         scale: 1.05,
                         backgroundColor: '#86efac',
@@ -426,7 +441,7 @@ export default function EBooksPage() {
                         animate={{ y: [0, -2, 0] }}
                         transition={{ duration: 1, repeat: Infinity }}
                       >
-                        <Download className="size-3 sm:size-3.5" />
+                        <Download className="size-5 sm:size-5" />
                       </motion.div>
                       <span>Download</span>
                     </motion.button>
@@ -434,7 +449,7 @@ export default function EBooksPage() {
                       <motion.button
                         onClick={() => handleDelete(ebook)}
                         disabled={isDeleting}
-                        className="flex items-center justify-center gap-1 rounded-md bg-red-50 px-1.5 py-1 text-[10px] font-medium text-red-600 hover:bg-red-100 sm:gap-1.5 sm:px-2 sm:py-1.5 sm:text-xs"
+                        className="flex items-center justify-center gap-1 rounded-md bg-red-50 px-2 py-1.5 text-xs font-medium text-red-600 hover:bg-red-100 sm:gap-1.5 sm:px-2 sm:py-1.5 sm:text-xs"
                         whileHover={{
                           scale: 1.05,
                           backgroundColor: '#fca5a5',
@@ -453,14 +468,14 @@ export default function EBooksPage() {
                             }}
                             className="flex items-center gap-1 sm:gap-2"
                           >
-                            <ClipLoader size={12} color="#dc2626" />
+                            <ClipLoader size={14} color="#dc2626" />
                           </motion.div>
                         ) : (
                           <motion.div
                             whileHover={{ rotate: 20 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <Trash2 className="size-3 sm:size-3.5" />
+                            <Trash2 className="size-4 sm:size-3.5" />
                           </motion.div>
                         )}
                       </motion.button>
@@ -728,35 +743,51 @@ export default function EBooksPage() {
                     transition={{ delay: 0.2 }}
                   >
                     {selectedEbook && (
-                      <iframe
-                        src={`${selectedEbook.fileUrl}#view=FitH&toolbar=0`}
-                        className="size-full"
-                        title={selectedEbook.title}
-                        style={{ border: 'none' }}
-                      />
+                      <>
+                        {/* Mobile Preview */}
+                        <div className="relative aspect-[3/4] w-full sm:hidden">
+                          <Image
+                            src="/assets/shreeSookthPDF.jpg"
+                            layout="fill"
+                            objectFit="contain"
+                            className="transition-transform duration-700 hover:scale-105"
+                            alt="Shree Suktam Sadhana"
+                          />
+                        </div>
+                        {/* Desktop PDF Preview */}
+                        <div className="hidden h-[800px] sm:block">
+                          <iframe
+                            src={`${selectedEbook.fileUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+                            className="size-full rounded-lg border border-gray-200"
+                            title={selectedEbook.title}
+                          />
+                        </div>
+                        {/* Action Buttons */}
+                        <div className="mt-4 flex justify-end gap-3">
+                          <motion.button
+                            onClick={() => setPreviewModalOpen(false)}
+                            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <X className="size-4" />
+                            Close
+                          </motion.button>
+                          <motion.button
+                            onClick={() =>
+                              selectedEbook && handleDownload(selectedEbook)
+                            }
+                            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-md hover:bg-blue-700"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                          >
+                            <Download className="size-4" />
+                            Download PDF
+                          </motion.button>
+                        </div>
+                      </>
                     )}
                   </motion.div>
-                  <div className="mt-3 flex justify-end space-x-2 sm:mt-4">
-                    <motion.button
-                      onClick={() => setPreviewModalOpen(false)}
-                      className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 sm:px-4 sm:py-2 sm:text-sm"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      Close
-                    </motion.button>
-                    <motion.button
-                      onClick={() =>
-                        selectedEbook && handleDownload(selectedEbook)
-                      }
-                      className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
-                      whileHover={{ scale: 1.05, backgroundColor: '#2563eb' }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Download className="size-3.5 sm:size-4" />
-                      Download
-                    </motion.button>
-                  </div>
                 </motion.div>
               </Dialog.Content>
             </Dialog.Portal>
