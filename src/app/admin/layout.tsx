@@ -9,6 +9,7 @@ import {
   FaSignOutAlt,
   FaTimes,
   FaUsers,
+  FaVideo as FaLiveVideo,
   FaVideo,
 } from 'react-icons/fa';
 import * as NavigationMenu from '@radix-ui/react-navigation-menu';
@@ -155,6 +156,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     )}
                   >
                     <FaVideo className="size-5" /> Four-Day
+                  </Link>
+                </NavigationMenu.Item>
+                <NavigationMenu.Item>
+                  <Link
+                    href="/admin/webinar-manager"
+                    className={clsx(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
+                      pathname === '/admin/webinar-manager' &&
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
+                    )}
+                  >
+                    <FaLiveVideo className="size-5" /> Webinar Manager
                   </Link>
                 </NavigationMenu.Item>
                 {/* <NavigationMenu.Item>

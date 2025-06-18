@@ -19,6 +19,7 @@ import { useTheme } from 'next-themes';
 
 import WebinarSetupPage from './webinarsetup1';
 
+import { ScheduleModal } from '@/components/Models/ScheduleModal';
 import { SubscriptionModal } from '@/components/Models/SubscriptionModal';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,6 +54,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
   const [selectedWebinarType, setSelectedWebinarType] = useState<string | null>(
     null
   );
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const router = useRouter();
   const { theme } = useTheme();
 
@@ -84,13 +86,17 @@ export default function WebinarDashboard({ session }: { session: Session }) {
 
   const handleNewWebinar = (type: string) => {
     setSelectedWebinarType(type);
-    setShowNewWebinarDialog(true);
+    if (type === 'Automated Webinar') {
+      setShowNewWebinarDialog(true);
+    } else {
+      setShowScheduleModal(true);
+    }
   };
 
   const confirmNewWebinar = () => {
     if (selectedWebinarType) {
       setOpenWebinars((prev) => [...prev, selectedWebinarType]);
-      setShowNewWebinarDialog(false);
+      setShowScheduleModal(false);
       setSelectedWebinarType(null);
     }
   };
@@ -137,34 +143,48 @@ export default function WebinarDashboard({ session }: { session: Session }) {
   }, [webinars, filterWebinars, sortWebinars]);
 
   // Memoize categorized webinars
-  const [todaysWebinars, upcomingWebinars, pastWebinars] = useMemo(() => {
-    const today: Webinar[] = [];
-    const upcoming: Webinar[] = [];
-    const past: Webinar[] = [];
+  const [todaysWebinars, upcomingWebinars, pastWebinars, paidWebinars] =
+    useMemo(() => {
+      const today: Webinar[] = [];
+      const upcoming: Webinar[] = [];
+      const past: Webinar[] = [];
+      const paid: Webinar[] = [];
 
-    filteredAndSortedWebinars.forEach((webinar) => {
-      const date = parseISO(webinar.webinarDate);
-      if (isToday(date)) {
-        today.push(webinar);
-      } else if (isFuture(date)) {
-        upcoming.push(webinar);
-      } else {
-        past.push(webinar);
-      }
-    });
+      filteredAndSortedWebinars.forEach((webinar) => {
+        const date = parseISO(webinar.webinarDate);
+        if (isToday(date)) {
+          today.push(webinar);
+        } else if (isFuture(date)) {
+          upcoming.push(webinar);
+          // PAID LOGIC BASED ON SCHEMA
+          if (
+            webinar &&
+            webinar.isPaid &&
+            typeof webinar.paidAmount === 'number' &&
+            webinar.paidAmount > 0
+          ) {
+            paid.push(webinar);
+          }
+        } else {
+          past.push(webinar);
+        }
+      });
 
-    today.sort((a, b) =>
-      compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
-    );
-    upcoming.sort((a, b) =>
-      compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
-    );
-    past.sort((a, b) =>
-      compareDesc(parseISO(a.webinarDate), parseISO(b.webinarDate))
-    );
+      today.sort((a, b) =>
+        compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+      );
+      upcoming.sort((a, b) =>
+        compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+      );
+      past.sort((a, b) =>
+        compareDesc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+      );
+      paid.sort((a, b) =>
+        compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+      );
 
-    return [today, upcoming, past];
-  }, [filteredAndSortedWebinars]);
+      return [today, upcoming, past, paid];
+    }, [filteredAndSortedWebinars]);
 
   // Countdown timer logic
   const getCountdown = (webinarDate: string, webinarTime: string) => {
@@ -295,7 +315,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         >
           <div className="flex items-center gap-4">
             <motion.button
-              onClick={() => (window.location.href = '/dashboard')}
+              onClick={() => window.location.reload()}
               className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-md transition-all hover:bg-gray-50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -727,7 +747,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                   >
                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 sm:p-4 dark:from-blue-600 dark:to-purple-700">
                       <h3 className="text-lg font-semibold text-white sm:text-xl">
-                        📅 Today&apos;s Webinars
+                        📅 Live Webinars
                       </h3>
                     </div>
                     <div className="overflow-x-auto">
@@ -837,7 +857,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                   >
                     <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 sm:p-4 dark:from-purple-600 dark:to-indigo-700">
                       <h3 className="text-lg font-semibold text-white sm:text-xl">
-                        🔮 Upcoming Webinars
+                        🔮 Upcoming/Free Webinars
                       </h3>
                     </div>
                     <div className="overflow-x-auto">
@@ -862,56 +882,155 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                           </tr>
                         </thead>
                         <tbody>
-                          {upcomingWebinars.map((webinar, index) => (
+                          {upcomingWebinars
+                            .filter(
+                              (webinar) =>
+                                !(
+                                  webinar.isPaid &&
+                                  typeof webinar.paidAmount === 'number' &&
+                                  webinar.paidAmount > 0
+                                )
+                            )
+                            .map((webinar, index) => (
+                              <motion.tr
+                                key={webinar.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 * index }}
+                                className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-purple-50 dark:border-slate-700"
+                                whileHover={{
+                                  scale: 1.01,
+                                  boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+                                }}
+                              >
+                                <td className="px-4 py-3">
+                                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                                    <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-500/20">
+                                      <Video className="size-4 text-purple-600 dark:text-purple-400" />
+                                    </div>
+                                    <div>
+                                      <span className="font-medium text-gray-800 dark:text-slate-200">
+                                        {webinar.webinarTitle}
+                                      </span>
+                                      <div className="mt-1 flex items-center gap-2 text-sm text-gray-500 sm:hidden dark:text-slate-400">
+                                        <span>{webinar.webinarDate}</span>
+                                        <span>•</span>
+                                        <span>{webinar.webinarTime}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
+                                  {webinar.webinarDate}
+                                </td>
+                                <td className="hidden px-4 py-3 sm:table-cell">
+                                  <div className="flex items-center gap-1">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="size-4 text-purple-500 dark:text-purple-400"
+                                      viewBox="0 0 20 20"
+                                      fill="currentColor"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
+                                    <span className="text-gray-600 dark:text-slate-400">
+                                      {webinar.webinarTime}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
+                                    <span className="mr-1 flex size-2 rounded-full bg-blue-500 dark:bg-blue-400"></span>
+                                    Upcoming
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() =>
+                                      handleJoinWebinar(webinar.id)
+                                    }
+                                    className="w-full rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-purple-600 hover:to-indigo-700 sm:w-auto dark:from-purple-600 dark:to-indigo-700 dark:hover:from-purple-700 dark:hover:to-indigo-800"
+                                  >
+                                    Join Now
+                                  </motion.button>
+                                </td>
+                              </motion.tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </motion.div>
+                )}
+                {/* Paid Webinars Table */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.1 }}
+                  className="overflow-hidden rounded-xl border border-yellow-200 bg-white shadow-lg dark:border-yellow-700 dark:bg-yellow-50/10"
+                >
+                  <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 sm:p-4 dark:from-yellow-600 dark:to-orange-700">
+                    <h3 className="text-lg font-semibold text-white sm:text-xl">
+                      💰 Paid Webinars
+                    </h3>
+                  </div>
+                  <div className="overflow-x-auto">
+                    {paidWebinars.length === 0 ? (
+                      <div className="p-6 text-center text-gray-500 dark:text-slate-400">
+                        No paid webinars available.
+                      </div>
+                    ) : (
+                      <table className="w-full min-w-[640px]">
+                        <thead>
+                          <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                              Title
+                            </th>
+                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
+                              Date
+                            </th>
+                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
+                              Time
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                              Status
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                              Price
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paidWebinars.map((webinar, index) => (
                             <motion.tr
                               key={webinar.id}
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: 0.1 * index }}
-                              className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-purple-50 dark:border-slate-700"
+                              className="border-b border-gray-100 transition-colors duration-200 hover:bg-yellow-50 dark:border-yellow-700 dark:hover:bg-yellow-100/10"
                               whileHover={{
                                 scale: 1.01,
                                 boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
                               }}
                             >
                               <td className="px-4 py-3">
-                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                                  <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-500/20">
-                                    <Video className="size-4 text-purple-600 dark:text-purple-400" />
-                                  </div>
-                                  <div>
-                                    <span className="font-medium text-gray-800 dark:text-slate-200">
-                                      {webinar.webinarTitle}
-                                    </span>
-                                    <div className="mt-1 flex items-center gap-2 text-sm text-gray-500 sm:hidden dark:text-slate-400">
-                                      <span>{webinar.webinarDate}</span>
-                                      <span>•</span>
-                                      <span>{webinar.webinarTime}</span>
-                                    </div>
-                                  </div>
-                                </div>
+                                <span className="font-medium text-gray-800 dark:text-slate-200">
+                                  {webinar.webinarTitle}
+                                </span>
                               </td>
                               <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
                                 {webinar.webinarDate}
                               </td>
                               <td className="hidden px-4 py-3 sm:table-cell">
-                                <div className="flex items-center gap-1">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="size-4 text-purple-500 dark:text-purple-400"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                  <span className="text-gray-600 dark:text-slate-400">
-                                    {webinar.webinarTime}
-                                  </span>
-                                </div>
+                                {webinar.webinarTime}
                               </td>
                               <td className="px-4 py-3">
                                 <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
@@ -919,12 +1038,15 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                                   Upcoming
                                 </span>
                               </td>
+                              <td className="px-4 py-3 font-semibold text-yellow-700 dark:text-yellow-400">
+                                ₹{webinar?.paidAmount}
+                              </td>
                               <td className="px-4 py-3">
                                 <motion.button
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                   onClick={() => handleJoinWebinar(webinar.id)}
-                                  className="w-full rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-purple-600 hover:to-indigo-700 sm:w-auto dark:from-purple-600 dark:to-indigo-700 dark:hover:from-purple-700 dark:hover:to-indigo-800"
+                                  className="w-full rounded-md bg-gradient-to-r from-yellow-500 to-orange-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-yellow-600 hover:to-orange-700 sm:w-auto dark:from-yellow-600 dark:to-orange-700 dark:hover:from-yellow-700 dark:hover:to-orange-800"
                                 >
                                   Join Now
                                 </motion.button>
@@ -933,10 +1055,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                           ))}
                         </tbody>
                       </table>
-                    </div>
-                  </motion.div>
-                )}
-
+                    )}
+                  </div>
+                </motion.div>
                 {/* Past Webinars Table */}
                 {pastWebinars.length > 0 && (
                   <motion.div
@@ -1094,6 +1215,15 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           &copy; 2025 RSA Tech Software. All rights reserved.
         </motion.p>
       </motion.footer>
+
+      {/* Add ScheduleModal */}
+      <ScheduleModal
+        open={showScheduleModal}
+        onOpenChange={setShowScheduleModal}
+        webinarType={
+          selectedWebinarType as 'Automated Webinar' | 'Webinar Series'
+        }
+      />
     </motion.div>
   );
 }

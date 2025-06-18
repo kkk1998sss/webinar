@@ -82,7 +82,7 @@ export default function WebinarPage1() {
       window.location.href =
         'https://shreemahavidyashaktipeeth.com/subscription/';
     } else if (session && hasSubscription) {
-      toast.error('This content is only available for 599 plan subscribers');
+      toast.error('This content is only available for 699 plan subscribers');
     } else {
       toast.error('Please subscribe to access this content');
     }
@@ -328,7 +328,7 @@ export default function WebinarPage1() {
         </div>
       </motion.div>
 
-      {/* 599 Image Section */}
+      {/* 699 Image Section */}
       <motion.div
         className="container mx-auto mt-16 px-4 lg:px-8"
         initial={{ opacity: 0 }}
@@ -377,7 +377,7 @@ export default function WebinarPage1() {
             >
               <div className="flex items-center gap-2">
                 <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-lg font-bold text-transparent">
-                  ₹599
+                  ₹699
                 </span>
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                   Best Value
@@ -403,7 +403,7 @@ export default function WebinarPage1() {
                 {!session
                   ? 'Login to Access'
                   : !has599Plan
-                    ? 'Upgrade to 599 Plan'
+                    ? 'Upgrade to 699 Plan'
                     : 'Access Subscription Portal'}
               </motion.button>
             </motion.div>

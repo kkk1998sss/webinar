@@ -318,7 +318,7 @@ export default function AdminDashboard() {
           </div>
         </motion.div>
 
-        {/* Plan 599 Card */}
+        {/* Plan 699 Card */}
         <motion.div
           className="rounded-xl border border-gray-100 bg-white p-6 shadow-md transition-shadow duration-300 hover:shadow-lg"
           variants={itemVariants}

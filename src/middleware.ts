@@ -25,10 +25,10 @@ export async function middleware(request: NextRequest) {
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      cookieName:
-        process.env.NODE_ENV === 'production'
-          ? '__Secure-authjs.session-token'
-          : 'next-auth.session-token',
+      // cookieName:
+      //   process.env.NODE_ENV === 'production'
+      //     ? '__Secure-authjs.session-token'
+      //     : 'next-auth.session-token',
     });
 
     const { pathname } = request.nextUrl;
@@ -92,14 +92,21 @@ export async function middleware(request: NextRequest) {
 
           // For FOUR_DAY plan users, show locked content but allow access to webinar
           if (subscription.type === 'FOUR_DAY') {
-            // Allow access to webinar content
-            if (pathname.startsWith('/users/dashboard')) {
+            const skipFourDayPlan = request.cookies.get('skipFourDayPlan');
+            if (
+              skipFourDayPlan &&
+              (pathname.startsWith('/dashboard') ||
+                pathname.startsWith('/users/dashboard'))
+            ) {
               return NextResponse.next();
             }
-            // Redirect to webinar page for other protected routes
-            return NextResponse.redirect(
-              new URL('/users/dashboard', request.url)
-            );
+            if (
+              pathname.startsWith('/users/dashboard') ||
+              pathname.startsWith('/dashboard')
+            ) {
+              return NextResponse.next();
+            }
+            return NextResponse.redirect(new URL('/dashboard', request.url));
           }
 
           // For SIX_MONTH plan users, allow full access

@@ -28,6 +28,9 @@ export default function LoginPage() {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
+  // Track 4-day plan state for modal
+  const [hasActiveFourDayPlan, setHasActiveFourDayPlan] = useState(false);
+
   useEffect(() => {
     setIsPageLoaded(true);
   }, []);
@@ -49,8 +52,6 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        console.log('Login error:', result.error);
-        // Handle specific error messages from NextAuth
         let errorMessage = '';
         switch (result.error) {
           case 'Configuration':
@@ -68,7 +69,6 @@ export default function LoginPage() {
             setError('Please verify your email before logging in.');
             break;
           default:
-            // Check if the error message contains common phrases
             errorMessage = result.error.toLowerCase();
             if (
               errorMessage.includes('invalid') ||
@@ -81,6 +81,7 @@ export default function LoginPage() {
               setError('An error occurred during login. Please try again.');
             }
         }
+        setIsLoading(false);
         return;
       }
 
@@ -117,9 +118,23 @@ export default function LoginPage() {
             const hasExpiredSixMonthPlan = data.subscriptions.some(
               (sub: Subscription) => sub.type === 'SIX_MONTH' && !sub.isValid
             );
+            const hasActiveFourDay = data.subscriptions.some(
+              (sub: Subscription) => sub.type === 'FOUR_DAY' && sub.isValid
+            );
+            const hasExpiredFourDay = data.subscriptions.some(
+              (sub: Subscription) => sub.type === 'FOUR_DAY' && !sub.isValid
+            );
+
+            setHasActiveFourDayPlan(hasActiveFourDay);
 
             if (hasActiveSixMonthPlan || hasExpiredSixMonthPlan) {
               // User already has a 6-month plan (active or expired)
+              router.push('/dashboard');
+              return;
+            }
+
+            if (hasActiveFourDay || hasExpiredFourDay) {
+              // User already has a 4-day plan (active or expired)
               router.push('/dashboard');
               return;
             }
@@ -365,7 +380,7 @@ export default function LoginPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', duration: 0.5 }}
-              className="relative mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+              className="relative mx-4 flex w-full max-w-6xl flex-col rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -380,7 +395,7 @@ export default function LoginPage() {
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="mb-4 text-2xl font-bold text-gray-900 dark:text-white"
+                  className="mb-4 text-xl font-bold text-gray-900 dark:text-white"
                 >
                   Choose Your Plan
                 </motion.h2>
@@ -388,7 +403,7 @@ export default function LoginPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="mb-6 text-gray-600 dark:text-gray-300"
+                  className="mb-6 text-sm text-gray-600 dark:text-gray-300"
                 >
                   Start your mindfulness journey today
                 </motion.p>
@@ -398,72 +413,137 @@ export default function LoginPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="border-primary dark:border-primary-dark rounded-xl border-2 bg-white p-6 shadow-lg dark:bg-gray-800"
+                className="grid grow grid-cols-1 gap-6 md:grid-cols-2"
               >
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    6-Month Membership
-                  </h3>
-                  <span className="bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark rounded-full px-3 py-1 text-sm font-medium">
-                    POPULAR
-                  </span>
-                </div>
+                {/* 4-Day Plan */}
+                <div className="border-primary dark:border-primary-dark flex h-full flex-col rounded-xl border bg-white p-4 shadow-lg dark:bg-gray-800">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      4-Day Access Plan
+                    </h3>
+                  </div>
 
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                    ₹599
-                  </span>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    /6 months
-                  </span>
-                </div>
+                  <div className="mb-6">
+                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                      ₹199
+                    </span>
+                    <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
+                      /4 days
+                    </span>
+                  </div>
 
-                <ul className="mb-6 space-y-3">
-                  {[
-                    'Full course library access',
-                    'Premium content',
-                    'Advanced analytics',
-                    'Priority support',
-                    'New content weekly',
-                  ].map((feature, index) => (
-                    <motion.li
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.1 }}
-                      className="flex items-center space-x-3 text-gray-700 dark:text-gray-300"
-                    >
-                      <svg
-                        className="size-5 text-yellow-500"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
+                  <ul className="mb-6 grow space-y-2">
+                    {[
+                      'Daily meditation sessions',
+                      'Expert-led webinars',
+                      'Progress tracking',
+                      '24/7 support',
+                    ].map((feature, index) => (
+                      <motion.li
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + index * 0.1 }}
+                        className="flex items-center space-x-3 text-sm text-gray-700 dark:text-gray-300"
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span>{feature}</span>
-                    </motion.li>
-                  ))}
-                </ul>
+                        <svg
+                          className="size-5 text-yellow-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{feature}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
 
-                <div className="space-y-3">
-                  <SubscriptionButton planType="SIX_MONTH" amount={599} />
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setShowSubscriptionModal(false);
-                      router.push('/');
-                    }}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-                  >
-                    Skip for Later
-                  </motion.button>
+                  <div className="mt-auto">
+                    {hasActiveFourDayPlan ? (
+                      <div className="rounded-md bg-green-100 p-2 text-center text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                        You have an active 4-Day plan
+                      </div>
+                    ) : (
+                      <SubscriptionButton planType="FOUR_DAY" amount={199} />
+                    )}
+                  </div>
+                </div>
+
+                {/* 6-Month Plan */}
+                <div className="border-primary dark:border-primary-dark flex h-full flex-col rounded-xl border-2 bg-white p-4 shadow-lg dark:bg-gray-800">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      6-Months Premium Subscription
+                    </h3>
+                    <span className="bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark rounded-full px-2 py-0.5 text-xs font-medium">
+                      POPULAR
+                    </span>
+                  </div>
+
+                  <div className="mb-6">
+                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                      ₹699
+                    </span>
+                    <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
+                      /6 months
+                    </span>
+                  </div>
+
+                  <ul className="mb-6 grow space-y-2">
+                    {[
+                      'Live session Every Sunday at 10 AM',
+                      'Learn Shree Suktam in detail and unlock the secrets',
+                      'Swar Vigyan - Ancient and Powerful breath techniques to control the Destiny',
+                      'Vigyan Bhairav Tantra - 70+ Ancient and powerful meditation techniques',
+                      'Hanuman Chalisa with Spiritual meaning',
+                      'Upanishad Gyan',
+                      'Kundalini Sadhana',
+                      'E-books and Many more...',
+                    ].map((feature, index) => (
+                      <motion.li
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + index * 0.1 }}
+                        className="flex items-center space-x-3 text-sm text-gray-700 dark:text-gray-300"
+                      >
+                        <svg
+                          className="size-5 text-yellow-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{feature}</span>
+                      </motion.li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-auto">
+                    <SubscriptionButton planType="SIX_MONTH" amount={699} />
+                  </div>
                 </div>
               </motion.div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setShowSubscriptionModal(false);
+                  router.push('/');
+                }}
+                className="mt-6 w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
+              >
+                Skip for Later
+              </motion.button>
             </motion.div>
           </motion.div>
         )}

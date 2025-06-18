@@ -73,21 +73,22 @@ export async function POST(req: Request) {
         webinarSettingsId: createdSettings.id,
         webinarName: body.webinarName,
         webinarTitle: body.webinarTitle,
-        durationHours: body.duration?.hours || 0,
-        durationMinutes: body.duration?.minutes || 0,
-        durationSeconds: body.duration?.seconds || 0,
-        attendeeSignIn: body.attendeeSignIn,
-        passwordProtected: body.passwordProtected,
+        description: body.description, // Added description
+        durationHours: body.durationHours || 0,
+        durationMinutes: body.durationMinutes || 0,
+        durationSeconds: body.durationSeconds || 0,
+        attendeeSignIn: body.attendeeSignIn || false,
+        passwordProtected: body.passwordProtected || false,
         webinarDate: parsedWebinarDate,
-        webinarTime: body.webinarTime,
-        selectedLanguage: body.selectedValue,
-        brandImage:
-          typeof body.brandImage === 'string' ? body.brandImage : null,
-        instantWatchEnabled: body.instantWatch,
-        instantWatchSession: body.instantWatchSession,
-        justInTimeEnabled: body.justInTime,
-        justInTimeSession: body.justInTimeSession,
+        webinarTime: body.webinarTime || '12:00', // Default time if not provided
+        selectedLanguage: body.selectedLanguage || 'en',
+        instantWatchEnabled: body.instantWatchEnabled || false,
+        justInTimeEnabled: body.justInTimeEnabled || false,
+        isPaid: body.isPaid || false,
+        paidAmount: body.isPaid ? parseFloat(body.paidAmount || '0') : null,
+        // Add other fields that might be missing
         scheduledDates: body.scheduledDates || null,
+        brandImage: body.brandImage || null,
         resources: {
           // Validate and structure resources
           create: body.resources?.map((res: ResourceInput) => ({

@@ -127,7 +127,7 @@ export const SubscriptionButton = ({
         key,
         amount: order.amount,
         currency: 'INR',
-        name: 'WebinarKit',
+        name: 'Shree Suktam',
         description:
           planType === 'FOUR_DAY' ? '4-Day Access' : '6-Month Subscription',
         order_id: order.id,
@@ -218,16 +218,16 @@ export const SubscriptionButton = ({
       <button
         onClick={handleSubscription}
         disabled={isLoading}
-        className={`rounded-full px-6 py-3 font-semibold shadow-md transition-all duration-200 ${
+        className={`w-full rounded-lg bg-gradient-to-r from-red-600 to-yellow-400 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-gradient-to-br focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800${
           isLoading
             ? 'cursor-not-allowed bg-gray-400'
-            : 'bg-gradient-to-r from-red-600 to-yellow-400 text-white hover:scale-105 hover:shadow-xl'
+            : 'hover:scale-105 hover:shadow-xl'
         }`}
       >
         {isLoading ? (
-          <span className="flex items-center">
+          <span className="flex items-center justify-center">
             <svg
-              className="mr-3 size-5 animate-spin"
+              className="mr-2 size-4 animate-spin"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -249,7 +249,11 @@ export const SubscriptionButton = ({
             Processing...
           </span>
         ) : (
-          `Subscribe for ₹${amount}`
+          <span className="text-sm md:text-base">
+            {planType === 'SIX_MONTH'
+              ? 'Update to 6 months subscription at ₹ 699'
+              : `Subscribe for ₹ ${amount}`}
+          </span>
         )}
       </button>
     </>

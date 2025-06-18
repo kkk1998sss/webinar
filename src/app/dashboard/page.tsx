@@ -430,13 +430,13 @@ export default function Dashboard() {
                           className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-sm text-white shadow-lg transition-all hover:shadow-xl"
                         >
                           <Sparkles className="size-4" />
-                          Upgrade to 599
+                          Upgrade to 699
                         </button>
                       </div>
                     </div>
                   </motion.div>
                 ))
-            : // Show all content for 599 plan
+            : // Show all content for 699 plan
               premiumContentItems.map((item) => (
                 <motion.div
                   key={item.id}

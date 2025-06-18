@@ -80,6 +80,9 @@ export interface Webinar {
   justInTimeEnabled: boolean;
   justInTimeSession: string;
   passwordProtected: boolean;
+  isPaid: boolean;
+  paidAmount: number | null;
+  description?: string;
   scheduledDates: {
     date: string;
     time: string;

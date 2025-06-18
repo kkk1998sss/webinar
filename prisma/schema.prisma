@@ -79,6 +79,7 @@ model WebinarDetails {
   webinarSettings     WebinarSettings? @relation(fields: [webinarSettingsId], references: [id])
   webinarName         String
   webinarTitle        String
+  description         String? // Added from ScheduleModal
   durationHours       Int
   durationMinutes     Int
   durationSeconds     Int
@@ -98,6 +99,8 @@ model WebinarDetails {
   videoId             String? @unique
   resources           Json?
   payments            Payment[] @relation("WebinarPayments")
+  isPaid              Boolean @default(false)
+  paidAmount          Float?
 }
 
 model WebinarSettings {

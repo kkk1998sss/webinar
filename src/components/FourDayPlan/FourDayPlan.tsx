@@ -1,5 +1,15 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react'; // <-- add useCallback
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  addDays,
+  compareAsc,
+  isAfter,
+  isFuture,
+  parseISO,
+  setHours,
+  setMinutes,
+  setSeconds,
+} from 'date-fns';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -7,14 +17,16 @@ import {
   CheckCircle,
   Clock,
   Lock,
+  Maximize2,
   Play,
   Sparkles,
+  Video,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 
-interface Video {
+interface VideoData {
   id: string;
   title: string;
   description: string;
@@ -43,17 +55,30 @@ interface VideoCompletionStatus {
   };
 }
 
+type Webinar = {
+  id: string;
+  webinarTitle: string;
+  webinarDate: string;
+  webinarTime: string;
+  // Add other fields as needed
+};
+
 export default function FourDayPlan() {
-  const [videos, setVideos] = useState<Video[]>([]);
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(null);
+  const [videos, setVideos] = useState<VideoData[]>([]);
+  const [currentVideo, setCurrentVideo] = useState<VideoData | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [videoCompleted, setVideoCompleted] = useState(false);
   const [videoProgress, setVideoProgress] = useState<VideoCompletionStatus>({});
-  const playerRef = useRef<HTMLIFrameElement | null>(null); // Specify type instead of any
+  const [webinars, setWebinars] = useState<Webinar[]>([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const playerRef = useRef<HTMLIFrameElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
+
+  // Dummy session object for handleJoinWebinar (replace with real session if available)
+  const session = { user: { isAdmin: false } };
 
   // Load saved video progress from localStorage
   useEffect(() => {
@@ -113,6 +138,28 @@ export default function FourDayPlan() {
     };
     fetchData();
   }, []);
+
+  // Fetch webinars for upcoming section
+  useEffect(() => {
+    fetch('/api/webinar')
+      .then((res) => res.json())
+      .then((data) => {
+        // If your API returns { webinars: [...] }
+        if (Array.isArray(data.webinars)) setWebinars(data.webinars);
+        // If your API returns an array directly
+        else if (Array.isArray(data)) setWebinars(data);
+      })
+      .catch(() => setWebinars([]));
+  }, []);
+
+  // Memoize upcoming webinars
+  const upcomingWebinars = useMemo(() => {
+    return webinars
+      .filter((webinar) => isFuture(parseISO(webinar.webinarDate)))
+      .sort((a, b) =>
+        compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+      );
+  }, [webinars]);
 
   // Reset live mode when video changes
   useEffect(() => {
@@ -231,6 +278,45 @@ export default function FourDayPlan() {
     };
   }, [isLiveMode, videoCompleted, checkVideoStatus]); // Add checkVideoStatus
 
+  // Handler for join button
+  const handleJoinWebinar = (id: string) => {
+    // If user is admin, allow direct access without subscription check
+    if (session.user?.isAdmin) {
+      router.push(`/users/playing-area/${id}`);
+      return;
+    }
+    router.push(`/users/playing-area/${id}`);
+  };
+
+  // Fullscreen handler
+  const handleFullscreen = () => {
+    setIsFullscreen(true);
+    // Try to request fullscreen for the player container
+    const playerContainer = document.getElementById('video-player-container');
+    if (playerContainer && playerContainer.requestFullscreen) {
+      playerContainer.requestFullscreen();
+    }
+  };
+
+  // Exit fullscreen on ESC or when fullscreen is closed
+  useEffect(() => {
+    const exitHandler = () => {
+      if (!document.fullscreenElement && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', exitHandler);
+    return () => document.removeEventListener('fullscreenchange', exitHandler);
+  }, [isFullscreen]);
+
+  // Helper: Get unlock time for a video (9:00 PM on the correct day)
+  function getUnlockTime(startDate: string, day: number) {
+    const base = addDays(new Date(startDate), day - 1);
+    return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00
+  }
+
+  const now = new Date();
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -266,7 +352,7 @@ export default function FourDayPlan() {
             className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-3 font-semibold text-white shadow transition hover:shadow-lg"
             onClick={() => router.push('/')}
           >
-            Upgrade to 599
+            Upgrade to 699
           </Button>
         </motion.div>
       </div>
@@ -289,6 +375,7 @@ export default function FourDayPlan() {
                 <Button
                   className="rounded-full bg-gradient-to-r from-red-500 to-yellow-500 p-3 font-semibold text-white shadow-lg transition-all hover:from-red-600 hover:to-yellow-600 hover:shadow-xl"
                   onClick={() => (window.location.href = '/dashboard')}
+                  // onClick={() => router.push('/dashboard')}
                 >
                   <ArrowLeft className="size-6" />
                 </Button>
@@ -313,7 +400,13 @@ export default function FourDayPlan() {
             <div className="grid flex-1 grid-cols-3 gap-4">
               {[1, 2, 3].map((day) => {
                 const video = videos.find((v) => v.day === day);
-                const isUnlocked = true; // Always unlocked if subscribed
+                // Only unlock if subscription exists and time has passed
+                let isUnlocked = false;
+                let unlockTime: Date | null = null;
+                if (subscription?.startDate) {
+                  unlockTime = getUnlockTime(subscription.startDate, day);
+                  isUnlocked = isAfter(now, unlockTime);
+                }
                 const isCurrent = currentVideo?.day === day;
 
                 return (
@@ -354,7 +447,7 @@ export default function FourDayPlan() {
                       <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                         Day {day}
                       </span>
-                      {isCurrent && (
+                      {isCurrent && isUnlocked && (
                         <span className="absolute right-3 top-3 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                           Playing
                         </span>
@@ -371,10 +464,25 @@ export default function FourDayPlan() {
                     </div>
                     <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                       <Clock className="size-3" />
-                      <span>Available Now</span>
+                      {isUnlocked ? (
+                        <span>Available Now</span>
+                      ) : (
+                        <span>
+                          Unlocks at{' '}
+                          {unlockTime &&
+                            unlockTime.toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-2 text-xs font-semibold">
-                      <span className="text-green-600">Unlocked Video</span>
+                      {isUnlocked ? (
+                        <span className="text-green-600">Unlocked Video</span>
+                      ) : (
+                        <span className="text-red-600">Locked</span>
+                      )}
                     </div>
                   </motion.div>
                 );
@@ -402,76 +510,121 @@ export default function FourDayPlan() {
       {/* Video Player Section */}
       <div className="flex flex-1 flex-col lg:flex-row">
         <div className="flex w-full flex-col p-2 sm:p-4 lg:w-8/12">
-          <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-xl">
+          <div
+            id="video-player-container"
+            className={`relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-xl ${
+              isFullscreen
+                ? 'fixed inset-0 z-[9999] aspect-auto h-screen w-screen rounded-none bg-black'
+                : ''
+            }`}
+          >
             {currentVideo ? (
               (() => {
+                // --- LOCK CHECK LOGIC ---
+                let isUnlocked = false;
+                let unlockTime: Date | null = null;
+                if (subscription?.startDate && currentVideo) {
+                  unlockTime = getUnlockTime(
+                    subscription.startDate,
+                    currentVideo.day
+                  );
+                  isUnlocked = isAfter(now, unlockTime);
+                }
+
+                if (!isUnlocked) {
+                  // Show locked message instead of video player
+                  return (
+                    <div className="flex h-full flex-col items-center justify-center p-4 text-center text-gray-300 sm:p-8">
+                      <Lock className="mb-4 size-12 text-gray-400 sm:size-16" />
+                      <h3 className="mb-2 text-lg font-semibold text-gray-800 sm:text-xl dark:text-white">
+                        Video Locked
+                      </h3>
+                      <p className="max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
+                        This video will be available at{' '}
+                        {unlockTime &&
+                          unlockTime.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                      </p>
+                    </div>
+                  );
+                }
+
+                // --- EXISTING VIDEO PLAYER CODE ---
                 const videoStatus = videoProgress[currentVideo.id];
                 const isCompleted = videoStatus?.completed || false;
 
                 return (
                   <div className="flex h-full flex-col">
+                    {/* Overlay: LIVE badge */}
                     <div className="absolute left-2 top-2 z-[5] sm:left-4 sm:top-4">
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs text-white shadow sm:px-3 sm:py-1 ${
-                          isLiveMode
-                            ? 'animate-pulse bg-red-600'
-                            : 'bg-green-600'
-                        }`}
-                      >
-                        {isLiveMode
-                          ? 'LIVE NOW'
-                          : isCompleted
-                            ? 'COMPLETED'
-                            : 'PLAYBACK MODE'}
+                      <span className="animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white shadow">
+                        LIVE
                       </span>
                     </div>
 
-                    {isLiveMode ? (
-                      <iframe
-                        ref={playerRef}
-                        src={getEmbedUrl(currentVideo.videoUrl, true)}
-                        title={currentVideo.title}
-                        className="absolute left-0 top-0 size-full"
-                        allow="autoplay; encrypted-media; fullscreen"
-                        allowFullScreen
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                      />
-                    ) : (
-                      <iframe
-                        src={getEmbedUrl(currentVideo.videoUrl, false)}
-                        title={currentVideo.title}
-                        className="absolute left-0 top-0 size-full"
-                        allowFullScreen
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                      />
+                    {/* Video Iframe */}
+                    <iframe
+                      ref={playerRef}
+                      src={getEmbedUrl(currentVideo.videoUrl, !isCompleted)} // live mode if not completed
+                      title={currentVideo.title}
+                      className={`absolute left-0 top-0 size-full ${isFullscreen ? 'z-10' : ''}`}
+                      allow="autoplay; encrypted-media; fullscreen"
+                      allowFullScreen
+                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                      style={{ pointerEvents: 'none' }} // disables all interaction
+                    />
+
+                    {/* Overlay layer to block all controls/interactions */}
+                    {!isCompleted && (
+                      <div className="absolute inset-0 z-20 bg-transparent" />
                     )}
 
-                    {isLiveMode && !isCompleted && (
-                      <div className="absolute inset-x-0 bottom-2 text-center sm:bottom-4">
-                        <div className="inline-block animate-pulse rounded-full bg-red-600 px-2 py-0.5 text-xs text-white sm:px-3 sm:py-1 sm:text-sm">
+                    {/* Bottom overlays: aligned in a row, fullscreen at right */}
+                    {!isCompleted && (
+                      <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex items-center justify-between px-6">
+                        <div className="pointer-events-auto inline-block animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white">
                           LIVE PLAYBACK: Controls disabled during first viewing
                         </div>
+                        {!isFullscreen && (
+                          <button
+                            onClick={handleFullscreen}
+                            className="pointer-events-auto rounded-full bg-black/60 p-2 text-white transition hover:bg-black/80"
+                            title="Fullscreen"
+                            style={{
+                              minWidth: 40,
+                              minHeight: 40,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Maximize2 className="size-5" />
+                          </button>
+                        )}
                       </div>
                     )}
 
-                    {isLiveMode && (
-                      <div className="absolute bottom-2 right-2 z-10 sm:bottom-4 sm:right-4">
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          className="text-xs sm:text-sm"
-                          onClick={() => {
-                            if (
-                              confirm(
-                                'Are you sure you want to mark this video as completed? This action cannot be undone.'
-                              )
-                            ) {
-                              markVideoCompleted();
-                            }
-                          }}
-                        >
-                          Mark as Completed
-                        </Button>
+                    {/* Playback mode: show controls after completion */}
+                    {isCompleted && (
+                      <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex items-center justify-end px-6">
+                        {!isFullscreen && (
+                          <button
+                            onClick={handleFullscreen}
+                            className="pointer-events-auto rounded-full bg-black/60 p-2 text-white transition hover:bg-black/80"
+                            title="Fullscreen"
+                            style={{
+                              minWidth: 40,
+                              minHeight: 40,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            <Maximize2 className="size-5" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -501,28 +654,57 @@ export default function FourDayPlan() {
           >
             <Sparkles className="mb-4 size-8 text-blue-500 sm:size-10 dark:text-blue-400" />
             <h2 className="mb-2 text-center text-lg font-bold text-gray-800 sm:text-xl dark:text-white">
-              Continue Your Journey
+              6-Months Premium Subscription
             </h2>
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <span className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                ₹699
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-300">
+                /6 months
+              </span>
+            </div>
             <p className="mb-4 text-center text-xs text-gray-600 sm:text-sm dark:text-gray-300">
-              Unlock more premium meditation courses and live sessions with our
-              extended subscription.
+              Unlock 70+ meditations &amp; courses
             </p>
             <ul className="mb-6 w-full space-y-2 text-xs text-gray-600 sm:text-sm dark:text-gray-300">
               <li className="flex items-center gap-2">
                 <CheckCircle className="size-3 text-green-500 sm:size-4" />
-                <span>Full access to all meditation programs</span>
+                <span>Live session Every Sunday at 10 AM</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="size-3 text-green-500 sm:size-4" />
-                <span>Exclusive live sessions</span>
+                <span>Learn Shree Suktam in detail and unlock the secrets</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="size-3 text-green-500 sm:size-4" />
-                <span>Downloadable resources</span>
+                <span>
+                  Swar Vigyan - Ancient and Powerful breath techniques to
+                  control the Destiny
+                </span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle className="size-3 text-green-500 sm:size-4" />
-                <span>Priority support</span>
+                <span>
+                  Vigyan Bhairav Tantra - 70+ Ancient and powerful meditation
+                  techniques
+                </span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
+                <span>Hanuman Chalisa with Spiritual meaning</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
+                <span>Upanishad Gyan</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
+                <span>Kundalini Sadhana</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="size-3 text-green-500 sm:size-4" />
+                <span>E-books and Many more...</span>
               </li>
             </ul>
             <Button
@@ -534,6 +716,114 @@ export default function FourDayPlan() {
           </motion.div>
         </div>
       </div>
+
+      {/* --- Upcoming Webinar Section (dynamic, always visible, full width) --- */}
+      <section className="my-8 w-full rounded-lg bg-blue-50 p-6 shadow dark:bg-slate-800">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-blue-700 dark:text-blue-200">
+          <Clock className="size-5" />
+          Upcoming Webinars
+        </h2>
+        {upcomingWebinars.length === 0 ? (
+          <div className="text-gray-500 dark:text-gray-400">
+            No upcoming webinars.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px]">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                    Title
+                  </th>
+                  <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
+                    Date
+                  </th>
+                  <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
+                    Time
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {upcomingWebinars.map((webinar, index) => (
+                  <motion.tr
+                    key={webinar.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-purple-50 dark:border-slate-700"
+                    whileHover={{
+                      scale: 1.01,
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                        <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-500/20">
+                          <Video className="size-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-800 dark:text-slate-200">
+                            {webinar.webinarTitle}
+                          </span>
+                          <div className="mt-1 flex items-center gap-2 text-sm text-gray-500 sm:hidden dark:text-slate-400">
+                            <span>{webinar.webinarDate?.slice(0, 10)}</span>
+                            <span>•</span>
+                            <span>{webinar.webinarTime}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
+                      {webinar.webinarDate?.slice(0, 10)}
+                    </td>
+                    <td className="hidden px-4 py-3 sm:table-cell">
+                      <div className="flex items-center gap-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="size-4 text-purple-500 dark:text-purple-400"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-gray-600 dark:text-slate-400">
+                          {webinar.webinarTime}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
+                        <span className="mr-1 flex size-2 rounded-full bg-blue-500 dark:bg-blue-400"></span>
+                        Upcoming
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleJoinWebinar(webinar.id)}
+                        className="w-full rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-purple-600 hover:to-indigo-700 sm:w-auto dark:from-purple-600 dark:to-indigo-700 dark:hover:from-purple-700 dark:hover:to-indigo-800"
+                      >
+                        Join Now
+                      </motion.button>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
