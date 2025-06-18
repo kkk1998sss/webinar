@@ -127,9 +127,11 @@ export const SubscriptionButton = ({
         key,
         amount: order.amount,
         currency: 'INR',
-        name: 'Shree Suktam',
+        name: `${planType === 'FOUR_DAY' ? '3-Day' : '6-Months Premium'} Subscription`,
         description:
-          planType === 'FOUR_DAY' ? '3-Day Access' : '6-Month Subscription',
+          planType === 'FOUR_DAY'
+            ? '3-Day Access'
+            : '6-Months Premium Subscription',
         order_id: order.id,
         handler: async (response: RazorpayPaymentResponse) => {
           try {
@@ -147,7 +149,7 @@ export const SubscriptionButton = ({
         prefill: {
           name: session.user.name || '',
           email: session.user.email || '',
-          contact: session.user.phoneNumber || '',
+          contact: session.user.phoneNumber || session.user.mobile || '',
         },
         theme: { color: '#3B82F6' },
         modal: {

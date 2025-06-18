@@ -146,6 +146,12 @@ export default function WebinarPage1() {
               className="rounded-full bg-gradient-to-r from-red-600 to-yellow-400 px-8 py-3 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-yellow-50 hover:text-red-700 hover:shadow-xl"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                const section = document.getElementById('pricing');
+                if (section) {
+                  section.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
             >
               Start Your Journey →
             </motion.button>

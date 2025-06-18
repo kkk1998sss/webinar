@@ -125,7 +125,10 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
         key: data.key,
         amount: data.order.amount,
         currency: data.order.currency || 'INR',
-        name: 'Webinar Payment',
+        name: `${webinar.webinarTitle
+          .split(' ')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')}`,
         description: `Access for ${webinar.webinarTitle}`,
         order_id: data.order.id,
         handler: async function (response: RazorpayPaymentResponse) {
@@ -274,7 +277,8 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
                 >
                   <td className="px-4 py-3">
                     <span className="font-medium text-gray-800 dark:text-slate-200">
-                      {webinar.webinarTitle}
+                      {webinar.webinarTitle.charAt(0).toUpperCase() +
+                        webinar.webinarTitle.slice(1)}
                     </span>
                   </td>
                   <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">

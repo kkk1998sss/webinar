@@ -37,7 +37,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           const email = String(credentials.email);
           const password = String(credentials.password);
           const user = await prisma.user.findUnique({ where: { email } });
-
+          console.log('40 user', user);
           if (!user || !user.password) {
             throw new Error('Invalid email or password');
           }
@@ -56,6 +56,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 image: user.image || null,
                 isActive: user.isActive,
                 stripeCustomerId: user.stripeCustomerId ?? '',
+                phoneNumber: user.phoneNumber ?? '',
               };
             }
           } catch (error) {
@@ -70,9 +71,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                 id: user.id ?? undefined,
                 email: user.email ?? undefined,
                 name: user.name ?? undefined,
-                image: user.image || null,
+                image: user.image || '',
                 isActive: user.isActive,
                 stripeCustomerId: user.stripeCustomerId ?? '',
+                phoneNumber: user.phoneNumber ?? '',
               };
             }
           } catch (error) {
@@ -102,7 +104,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         token.email = user.email ?? undefined;
         token.image = user.image;
         token.isActive = user.isActive;
-        token.stripeCustomerId = user.stripeCustomerId ?? null;
+        token.stripeCustomerId = user.stripeCustomerId ?? '';
 
         const dbUser = await prisma.user.findUnique({
           where: { email: user.email as string },
@@ -118,10 +120,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         id: token.id ?? undefined,
         email: token.email,
         name: token.name,
-        image: token.picture || null,
+        image: token.image || '',
         stripeCustomerId: token.stripeCustomerId ?? undefined,
         isActive: token.isActive,
         isAdmin: token.isAdmin,
+        phoneNumber: token.phoneNumber ?? '',
       };
       return session;
     },

@@ -72,7 +72,7 @@ const Pricing = () => {
 
   const handleSubscribe = () => {
     if (!session) {
-      window.location.href = '/auth/login';
+      window.location.href = '/auth/register';
       return;
     }
   };

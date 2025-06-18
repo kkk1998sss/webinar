@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getSession, signOut } from 'next-auth/react';
 
 export default function WebinarKitSection() {
   return (
@@ -37,8 +38,16 @@ export default function WebinarKitSection() {
             className="mt-8 text-center md:text-left"
           >
             <Link
-              href="/masterclass"
+              href="/auth/register"
               className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-red-600 to-yellow-400 px-6 py-3 text-sm font-medium text-white shadow-md transition-all duration-300 hover:bg-yellow-50 hover:text-red-700"
+              onClick={async (event) => {
+                event.preventDefault();
+                const session = await getSession();
+                if (session) {
+                  await signOut({ redirect: false });
+                }
+                window.location.href = '/auth/register';
+              }}
             >
               Register for the masterclass now!
               <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />

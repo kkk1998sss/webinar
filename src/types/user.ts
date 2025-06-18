@@ -5,6 +5,9 @@ export type TUser = {
   email: string;
   name: string;
   image: string;
+  isActive?: boolean;
+  stripeCustomerId?: string | null;
+  phoneNumber?: string | null;
 };
 
 // types/webinar.ts
