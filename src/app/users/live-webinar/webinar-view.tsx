@@ -28,6 +28,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { LiveWebinarSection } from '@/components/webinar-list/LiveWebinarSection';
+import { PaidWebinarSection } from '@/components/webinar-list/PaidWebinarSection';
+import { PastWebinarSection } from '@/components/webinar-list/PastWebinarSection';
+import { UpcomingWebinarSection } from '@/components/webinar-list/UpcomingWebinarSection';
 import { Webinar } from '@/types/user';
 
 interface Session {
@@ -734,487 +738,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                   )}
                 </motion.div>
               </div>
-
-              {/* Tables */}
-              <div className="space-y-4 sm:space-y-6">
-                {/* Today's Webinars Table */}
-                {todaysWebinars.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.9 }}
-                    className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
-                  >
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 sm:p-4 dark:from-blue-600 dark:to-purple-700">
-                      <h3 className="text-lg font-semibold text-white sm:text-xl">
-                        📅 Live Webinars
-                      </h3>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[640px]">
-                        <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Title
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Date
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Time
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Status
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {todaysWebinars.map((webinar, index) => (
-                            <motion.tr
-                              key={webinar.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.1 * index }}
-                              className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-blue-50 dark:border-slate-700"
-                              whileHover={{
-                                scale: 1.01,
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-                              }}
-                            >
-                              <td className="px-4 py-3">
-                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                                  <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
-                                    <Video className="size-4 text-blue-600 dark:text-blue-400" />
-                                  </div>
-                                  <div>
-                                    <span className="font-medium text-gray-800 dark:text-slate-200">
-                                      {webinar.webinarTitle}
-                                    </span>
-                                    <div className="mt-1 flex items-center gap-2 text-sm text-gray-500 sm:hidden dark:text-slate-400">
-                                      <span>{webinar.webinarDate}</span>
-                                      <span>•</span>
-                                      <span>{webinar.webinarTime}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
-                                {webinar.webinarDate}
-                              </td>
-                              <td className="hidden px-4 py-3 sm:table-cell">
-                                <div className="flex items-center gap-1">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="size-4 text-blue-500 dark:text-blue-400"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                  <span className="text-gray-600 dark:text-slate-400">
-                                    {webinar.webinarTime}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-500/20 dark:text-green-300">
-                                  <span className="mr-1 flex size-2 rounded-full bg-green-500 dark:bg-green-400"></span>
-                                  Live
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => handleJoinWebinar(webinar.id)}
-                                  className="w-full rounded-md bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-blue-600 hover:to-purple-700 sm:w-auto dark:from-blue-600 dark:to-purple-700 dark:hover:from-blue-700 dark:hover:to-purple-800"
-                                >
-                                  Join Now
-                                </motion.button>
-                              </td>
-                            </motion.tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Upcoming Webinars Table */}
-                {upcomingWebinars.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.0 }}
-                    className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
-                  >
-                    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 sm:p-4 dark:from-purple-600 dark:to-indigo-700">
-                      <h3 className="text-lg font-semibold text-white sm:text-xl">
-                        🔮 Upcoming/Free Webinars
-                      </h3>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[640px]">
-                        <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Title
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Date
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Time
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Status
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {upcomingWebinars
-                            .filter(
-                              (webinar) =>
-                                !(
-                                  webinar.isPaid &&
-                                  typeof webinar.paidAmount === 'number' &&
-                                  webinar.paidAmount > 0
-                                )
-                            )
-                            .map((webinar, index) => (
-                              <motion.tr
-                                key={webinar.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 * index }}
-                                className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-purple-50 dark:border-slate-700"
-                                whileHover={{
-                                  scale: 1.01,
-                                  boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-                                }}
-                              >
-                                <td className="px-4 py-3">
-                                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                                    <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-500/20">
-                                      <Video className="size-4 text-purple-600 dark:text-purple-400" />
-                                    </div>
-                                    <div>
-                                      <span className="font-medium text-gray-800 dark:text-slate-200">
-                                        {webinar.webinarTitle}
-                                      </span>
-                                      <div className="mt-1 flex items-center gap-2 text-sm text-gray-500 sm:hidden dark:text-slate-400">
-                                        <span>{webinar.webinarDate}</span>
-                                        <span>•</span>
-                                        <span>{webinar.webinarTime}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
-                                  {webinar.webinarDate}
-                                </td>
-                                <td className="hidden px-4 py-3 sm:table-cell">
-                                  <div className="flex items-center gap-1">
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      className="size-4 text-purple-500 dark:text-purple-400"
-                                      viewBox="0 0 20 20"
-                                      fill="currentColor"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
-                                    <span className="text-gray-600 dark:text-slate-400">
-                                      {webinar.webinarTime}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
-                                    <span className="mr-1 flex size-2 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-                                    Upcoming
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() =>
-                                      handleJoinWebinar(webinar.id)
-                                    }
-                                    className="w-full rounded-md bg-gradient-to-r from-purple-500 to-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-purple-600 hover:to-indigo-700 sm:w-auto dark:from-purple-600 dark:to-indigo-700 dark:hover:from-purple-700 dark:hover:to-indigo-800"
-                                  >
-                                    Join Now
-                                  </motion.button>
-                                </td>
-                              </motion.tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </motion.div>
-                )}
-                {/* Paid Webinars Table */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1.1 }}
-                  className="overflow-hidden rounded-xl border border-yellow-200 bg-white shadow-lg dark:border-yellow-700 dark:bg-yellow-50/10"
-                >
-                  <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 sm:p-4 dark:from-yellow-600 dark:to-orange-700">
-                    <h3 className="text-lg font-semibold text-white sm:text-xl">
-                      💰 Paid Webinars
-                    </h3>
-                  </div>
-                  <div className="overflow-x-auto">
-                    {paidWebinars.length === 0 ? (
-                      <div className="p-6 text-center text-gray-500 dark:text-slate-400">
-                        No paid webinars available.
-                      </div>
-                    ) : (
-                      <table className="w-full min-w-[640px]">
-                        <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Title
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Date
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Time
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Status
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Price
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {paidWebinars.map((webinar, index) => (
-                            <motion.tr
-                              key={webinar.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.1 * index }}
-                              className="border-b border-gray-100 transition-colors duration-200 hover:bg-yellow-50 dark:border-yellow-700 dark:hover:bg-yellow-100/10"
-                              whileHover={{
-                                scale: 1.01,
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-                              }}
-                            >
-                              <td className="px-4 py-3">
-                                <span className="font-medium text-gray-800 dark:text-slate-200">
-                                  {webinar.webinarTitle}
-                                </span>
-                              </td>
-                              <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
-                                {webinar.webinarDate}
-                              </td>
-                              <td className="hidden px-4 py-3 sm:table-cell">
-                                {webinar.webinarTime}
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
-                                  <span className="mr-1 flex size-2 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-                                  Upcoming
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 font-semibold text-yellow-700 dark:text-yellow-400">
-                                ₹{webinar?.paidAmount}
-                              </td>
-                              <td className="px-4 py-3">
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => handleJoinWebinar(webinar.id)}
-                                  className="w-full rounded-md bg-gradient-to-r from-yellow-500 to-orange-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-yellow-600 hover:to-orange-700 sm:w-auto dark:from-yellow-600 dark:to-orange-700 dark:hover:from-yellow-700 dark:hover:to-orange-800"
-                                >
-                                  Join Now
-                                </motion.button>
-                              </td>
-                            </motion.tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-                  </div>
-                </motion.div>
-                {/* Past Webinars Table */}
-                {pastWebinars.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.1 }}
-                    className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
-                  >
-                    <div className="bg-gradient-to-r from-gray-600 to-gray-700 p-3 sm:p-4 dark:from-slate-700 dark:to-slate-800">
-                      <h3 className="text-lg font-semibold text-white sm:text-xl">
-                        🕰 Past Webinars
-                      </h3>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[640px]">
-                        <thead>
-                          <tr className="border-b border-gray-100 bg-gray-50 dark:border-slate-600 dark:bg-slate-700">
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Title
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Date
-                            </th>
-                            <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                              Time
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Status
-                            </th>
-                            <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pastWebinars.map((webinar, index) => (
-                            <motion.tr
-                              key={webinar.id}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.1 * index }}
-                              className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50 dark:border-slate-700"
-                              whileHover={{
-                                scale: 1.01,
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-                              }}
-                            >
-                              <td className="px-4 py-3">
-                                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                                  <div className="flex size-8 items-center justify-center rounded-full bg-gray-100 dark:bg-slate-600/30">
-                                    <Video className="size-4 text-gray-600 dark:text-slate-400" />
-                                  </div>
-                                  <div>
-                                    <span className="font-medium text-gray-800 dark:text-slate-200">
-                                      {webinar.webinarTitle}
-                                    </span>
-                                    <div className="mt-1 flex items-center gap-2 text-sm text-gray-500 sm:hidden dark:text-slate-400">
-                                      <span>{webinar.webinarDate}</span>
-                                      <span>•</span>
-                                      <span>{webinar.webinarTime}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
-                                {webinar.webinarDate}
-                              </td>
-                              <td className="hidden px-4 py-3 sm:table-cell">
-                                <div className="flex items-center gap-1">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="size-4 text-gray-500 dark:text-slate-500"
-                                    viewBox="0 0 20 20"
-                                    fill="currentColor"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
-                                  <span className="text-gray-600 dark:text-slate-400">
-                                    {webinar.webinarTime}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="px-4 py-3">
-                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800 dark:bg-slate-600/30 dark:text-slate-400">
-                                  <span className="mr-1 flex size-2 rounded-full bg-gray-500 dark:bg-slate-500"></span>
-                                  Completed
-                                </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <motion.button
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.95 }}
-                                  onClick={() => handleJoinWebinar(webinar.id)}
-                                  className="w-full rounded-md bg-gradient-to-r from-gray-600 to-gray-700 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-gray-700 hover:to-gray-800 sm:w-auto dark:from-slate-600 dark:to-slate-700 dark:hover:from-slate-700 dark:hover:to-slate-800"
-                                >
-                                  View Recording
-                                </motion.button>
-                              </td>
-                            </motion.tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
             </motion.div>
           ))}
       </main>
-
-      <motion.footer
-        className="mt-6 border-t border-gray-100 py-4 text-center text-sm text-gray-500 sm:mt-8 sm:py-6 dark:border-slate-700 dark:text-slate-400"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 1 }}
-      >
-        <div className="mb-2 flex flex-wrap justify-center gap-2 sm:gap-4">
-          <motion.a
-            href="/Terms&services"
-            className="transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Terms of Service
-          </motion.a>
-          <span className="hidden sm:inline">|</span>
-          <motion.a
-            href="/Privacy"
-            className="transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Privacy Policy
-          </motion.a>
-          <span className="hidden sm:inline">|</span>
-          <motion.a
-            href="/copyright"
-            className="transition-colors duration-300 hover:text-blue-600 dark:hover:text-blue-400"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            DMCA & Copyright Policy
-          </motion.a>
-        </div>
-        <motion.p
-          className="mt-2 dark:text-slate-500"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          &copy; 2025 RSA Tech Software. All rights reserved.
-        </motion.p>
-      </motion.footer>
 
       {/* Add ScheduleModal */}
       <ScheduleModal
@@ -1224,6 +750,39 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           selectedWebinarType as 'Automated Webinar' | 'Webinar Series'
         }
       />
+
+      {/* New Structure - Sections for different webinar types */}
+      <div className="mt-8 space-y-6 px-8 ">
+        <LiveWebinarSection
+          webinars={todaysWebinars}
+          countdowns={countdowns}
+          getCountdown={getCountdown}
+          handleJoinWebinar={handleJoinWebinar}
+          theme={theme ?? 'theme'}
+        />
+
+        <UpcomingWebinarSection
+          webinars={upcomingWebinars.filter(
+            (webinar) =>
+              !(
+                webinar.isPaid &&
+                typeof webinar.paidAmount === 'number' &&
+                webinar.paidAmount > 0
+              )
+          )}
+          handleJoinWebinar={handleJoinWebinar}
+        />
+
+        <PaidWebinarSection
+          webinars={paidWebinars}
+          handleJoinWebinar={handleJoinWebinar}
+        />
+
+        <PastWebinarSection
+          webinars={pastWebinars}
+          handleJoinWebinar={handleJoinWebinar}
+        />
+      </div>
     </motion.div>
   );
 }

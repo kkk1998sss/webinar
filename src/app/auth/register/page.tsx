@@ -225,9 +225,17 @@ export default function RegisterPage() {
                   <Input
                     id="phoneNumber"
                     type="tel"
-                    placeholder="Enter your phone number"
+                    placeholder="Enter 10-digit phone number"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                      if (value.length <= 10) {
+                        // Limit to 10 digits
+                        setPhoneNumber(value);
+                      }
+                    }}
+                    pattern="[0-9]{10}"
+                    title="Please enter a 10-digit phone number"
                     required
                     className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-red-500 focus:ring-2 focus:ring-red-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-red-400 dark:focus:ring-red-400"
                   />

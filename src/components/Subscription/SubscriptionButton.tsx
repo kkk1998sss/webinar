@@ -129,7 +129,7 @@ export const SubscriptionButton = ({
         currency: 'INR',
         name: 'Shree Suktam',
         description:
-          planType === 'FOUR_DAY' ? '4-Day Access' : '6-Month Subscription',
+          planType === 'FOUR_DAY' ? '3-Day Access' : '6-Month Subscription',
         order_id: order.id,
         handler: async (response: RazorpayPaymentResponse) => {
           try {

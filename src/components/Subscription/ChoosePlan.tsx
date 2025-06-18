@@ -57,15 +57,14 @@ export const ChoosePlan = ({ webinarId }: ChoosePlanProps) => {
 
   const plans = [
     {
-      title: '4-Day Access Plan',
+      title: '3-Day Access Plan',
       price: '₹199',
-      duration: '/4 days',
-      description: 'Get access to 4 exclusive webinars',
+      duration: '/3 days',
+      description: 'Learn Shree Suktam Sadhana in 3 days',
       features: [
-        'Daily meditation sessions',
-        'Expert-led webinars',
-        'Progress tracking',
-        '24/7 support',
+        'Day-1: Learn Shree Suktam chanting',
+        'Day-2: Learn Shree Yantra (Maha Meru) pooja',
+        'Day-3: Learn guided meditation of Shree Suktam with jagrit mantra',
       ],
       planType: 'FOUR_DAY' as const,
       amount: 199,
@@ -171,7 +170,7 @@ export const ChoosePlan = ({ webinarId }: ChoosePlanProps) => {
                 </div>
               ) : plan.planType === 'FOUR_DAY' && hasActiveFourDayPlan ? (
                 <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">
-                  You already have an active 4-Day plan
+                  You already have an active 3-Day plan
                 </div>
               ) : plan.planType === 'SIX_MONTH' && hasActiveSixMonthPlan ? (
                 <div className="rounded-md bg-green-50 p-3 text-sm text-green-700">

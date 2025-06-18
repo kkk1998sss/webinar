@@ -28,7 +28,7 @@ export default function LoginPage() {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
-  // Track 4-day plan state for modal
+  // Track 3-day plan state for modal
   const [hasActiveFourDayPlan, setHasActiveFourDayPlan] = useState(false);
 
   useEffect(() => {
@@ -134,7 +134,7 @@ export default function LoginPage() {
             }
 
             if (hasActiveFourDay || hasExpiredFourDay) {
-              // User already has a 4-day plan (active or expired)
+              // User already has a 3-day plan (active or expired)
               router.push('/dashboard');
               return;
             }
@@ -415,11 +415,11 @@ export default function LoginPage() {
                 transition={{ delay: 0.4 }}
                 className="grid grow grid-cols-1 gap-6 md:grid-cols-2"
               >
-                {/* 4-Day Plan */}
+                {/* 3-Day Plan */}
                 <div className="border-primary dark:border-primary-dark flex h-full flex-col rounded-xl border bg-white p-4 shadow-lg dark:bg-gray-800">
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      4-Day Access Plan
+                      3-Day Access Plan
                     </h3>
                   </div>
 
@@ -428,16 +428,15 @@ export default function LoginPage() {
                       ₹199
                     </span>
                     <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                      /4 days
+                      /3 days
                     </span>
                   </div>
 
                   <ul className="mb-6 grow space-y-2">
                     {[
-                      'Daily meditation sessions',
-                      'Expert-led webinars',
-                      'Progress tracking',
-                      '24/7 support',
+                      'Day-1: Learn Shree Suktam chanting',
+                      'Day-2: Learn Shree Yantra (Maha Meru) pooja',
+                      'Day-3: Learn guided meditation of Shree Suktam with jagrit mantra',
                     ].map((feature, index) => (
                       <motion.li
                         key={index}
@@ -465,7 +464,7 @@ export default function LoginPage() {
                   <div className="mt-auto">
                     {hasActiveFourDayPlan ? (
                       <div className="rounded-md bg-green-100 p-2 text-center text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
-                        You have an active 4-Day plan
+                        You have an active 3-Day plan
                       </div>
                     ) : (
                       <SubscriptionButton planType="FOUR_DAY" amount={199} />

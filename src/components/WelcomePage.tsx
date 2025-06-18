@@ -81,7 +81,7 @@ export default function WelcomePage() {
             Welcome to Your Meditation Journey!
           </h1>
           <p className="text-gray-600">
-            Your 4-day access has been activated. Start exploring the content
+            Your 3-day access has been activated. Start exploring the content
             below.
           </p>
         </motion.div>

@@ -131,15 +131,14 @@ const Pricing = () => {
     // Commenting out 199 plan temporarily
 
     {
-      title: '4-Day Access Plan',
+      title: '3-Day Access Plan',
       price: '₹199',
-      duration: '/4 days',
-      description: 'Get access to 4 exclusive webinars',
+      duration: '/3 days',
+      description: 'Learn Shree Suktam Sadhana in 3 days',
       features: [
-        'Daily meditation sessions',
-        'Expert-led webinars',
-        'Progress tracking',
-        '24/7 support',
+        'Day-1: Learn Shree Suktam chanting',
+        'Day-2: Learn Shree Yantra (Maha Meru) pooja',
+        'Day-3: Learn guided meditation of Shree Suktam with jagrit mantra',
       ],
       planType: 'FOUR_DAY',
       amount: 199,
@@ -281,17 +280,17 @@ const Pricing = () => {
                           onClick={handleSubscribe}
                           className="w-full rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-4 py-1.5 text-center text-sm font-medium text-white hover:bg-gradient-to-br focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800"
                         >
-                          Login to Subscribe
+                          Register to subscribe
                         </button>
                       </motion.div>
                     ) : plan.planType === 'FOUR_DAY' && hasActiveFourDayPlan ? (
                       <div className="rounded-md bg-green-100 p-2 text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
-                        You have an active 4-Day plan
+                        You have an active 3-Day plan
                       </div>
                     ) : plan.planType === 'FOUR_DAY' &&
                       hasExpiredFourDayPlan ? (
                       <div className="rounded-md bg-green-100 p-2 text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
-                        You have purchased the 4-Day plan
+                        You have purchased the 3-Day plan
                       </div>
                     ) : plan.planType === 'SIX_MONTH' &&
                       hasActiveSixMonthPlan ? (
