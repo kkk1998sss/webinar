@@ -239,7 +239,7 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
       >
         <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 sm:p-4 dark:from-yellow-600 dark:to-orange-700">
           <h3 className="text-lg font-semibold text-white sm:text-xl">
-            💰 Paid Webinars
+            💰 Upcoming paid events
           </h3>
         </div>
         <div className="overflow-x-auto">
