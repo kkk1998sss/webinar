@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { PaidWebinarSection } from '../webinar-list/PaidWebinarSection';
+import { PaidWebinarFourday } from '../webinar-list/PaidWebinarFourday';
 
 import { Button } from '@/components/ui/button';
 import { Webinar } from '@/types/user';
@@ -717,8 +717,8 @@ export default function FourDayPlan() {
       </div>
 
       {/* --- Paid Webinar Section --- */}
-      <section className="my-8 w-full rounded-lg bg-blue-50 p-6 shadow dark:bg-slate-800">
-        <PaidWebinarSection
+      <section className="my-8 w-full">
+        <PaidWebinarFourday
           webinars={upcomingWebinars}
           handleJoinWebinar={handleJoinWebinar}
         />

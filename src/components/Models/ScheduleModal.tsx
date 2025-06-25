@@ -46,7 +46,8 @@ interface WebinarData {
 interface ScheduleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  webinarType: 'Automated Webinar' | 'Webinar Series';
+  webinarType: 'Automated Webinar' | 'Paid Webinar' | 'Paid Webinar';
+  onSuccess?: () => void;
 }
 
 // Add API functions
@@ -69,6 +70,7 @@ export function ScheduleModal({
   open,
   onOpenChange,
   webinarType,
+  onSuccess,
 }: ScheduleModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -206,6 +208,9 @@ export function ScheduleModal({
 
       await createWebinar(webinarData);
       toast.success('Webinar scheduled successfully');
+      if (onSuccess) {
+        onSuccess();
+      }
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving webinar:', error);
@@ -404,22 +409,27 @@ export function ScheduleModal({
         </div>
 
         {/* Toggle Switches */}
-        <div className="space-y-4">
-          <div
-            role="button"
-            tabIndex={0}
-            aria-pressed={isPaid}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isPaid ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
-            onClick={() => setIsPaid(!isPaid)}
-            onKeyDown={(e) => handleToggleKeyDown(e, () => setIsPaid(!isPaid))}
-          >
-            <motion.span
-              className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${isPaid ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-            <div className="ml-14 text-white">
-              <Label>Paid Webinar</Label>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={isPaid}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isPaid ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
+                onClick={() => setIsPaid(!isPaid)}
+                onKeyDown={(e) =>
+                  handleToggleKeyDown(e, () => setIsPaid(!isPaid))
+                }
+              >
+                <motion.span
+                  className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${isPaid ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </div>
+              <Label className="cursor-pointer text-white">Paid Webinar</Label>
             </div>
           </div>
+
           {isPaid && (
             <div>
               <Label htmlFor="paidAmount" className="text-white">
@@ -436,81 +446,99 @@ export function ScheduleModal({
             </div>
           )}
 
-          <div
-            role="button"
-            tabIndex={0}
-            aria-pressed={attendeeSignIn}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${attendeeSignIn ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
-            onClick={() => setAttendeeSignIn(!attendeeSignIn)}
-            onKeyDown={(e) =>
-              handleToggleKeyDown(e, () => setAttendeeSignIn(!attendeeSignIn))
-            }
-          >
-            <motion.span
-              className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${attendeeSignIn ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-            <div className="ml-14 text-white">
-              <Label>Require Attendee Sign In</Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={attendeeSignIn}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${attendeeSignIn ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
+                onClick={() => setAttendeeSignIn(!attendeeSignIn)}
+                onKeyDown={(e) =>
+                  handleToggleKeyDown(e, () =>
+                    setAttendeeSignIn(!attendeeSignIn)
+                  )
+                }
+              >
+                <motion.span
+                  className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${attendeeSignIn ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </div>
+              <Label className="cursor-pointer text-white">
+                Require Attendee Sign In
+              </Label>
             </div>
           </div>
 
-          <div
-            role="button"
-            tabIndex={0}
-            aria-pressed={passwordProtected}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${passwordProtected ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
-            onClick={() => setPasswordProtected(!passwordProtected)}
-            onKeyDown={(e) =>
-              handleToggleKeyDown(e, () =>
-                setPasswordProtected(!passwordProtected)
-              )
-            }
-          >
-            <motion.span
-              className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${passwordProtected ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-            <div className="ml-14 text-white">
-              <Label>Password Protected</Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={passwordProtected}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${passwordProtected ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
+                onClick={() => setPasswordProtected(!passwordProtected)}
+                onKeyDown={(e) =>
+                  handleToggleKeyDown(e, () =>
+                    setPasswordProtected(!passwordProtected)
+                  )
+                }
+              >
+                <motion.span
+                  className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${passwordProtected ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </div>
+              <Label className="cursor-pointer text-white">
+                Password Protected
+              </Label>
             </div>
           </div>
 
-          <div
-            role="button"
-            tabIndex={0}
-            aria-pressed={instantWatchEnabled}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${instantWatchEnabled ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
-            onClick={() => setInstantWatchEnabled(!instantWatchEnabled)}
-            onKeyDown={(e) =>
-              handleToggleKeyDown(e, () =>
-                setInstantWatchEnabled(!instantWatchEnabled)
-              )
-            }
-          >
-            <motion.span
-              className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${instantWatchEnabled ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-            <div className="ml-14 text-white">
-              <Label>Enable Instant Watch</Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={instantWatchEnabled}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${instantWatchEnabled ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
+                onClick={() => setInstantWatchEnabled(!instantWatchEnabled)}
+                onKeyDown={(e) =>
+                  handleToggleKeyDown(e, () =>
+                    setInstantWatchEnabled(!instantWatchEnabled)
+                  )
+                }
+              >
+                <motion.span
+                  className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${instantWatchEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </div>
+              <Label className="cursor-pointer text-white">
+                Enable Instant Watch
+              </Label>
             </div>
           </div>
 
-          <div
-            role="button"
-            tabIndex={0}
-            aria-pressed={justInTimeEnabled}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${justInTimeEnabled ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
-            onClick={() => setJustInTimeEnabled(!justInTimeEnabled)}
-            onKeyDown={(e) =>
-              handleToggleKeyDown(e, () =>
-                setJustInTimeEnabled(!justInTimeEnabled)
-              )
-            }
-          >
-            <motion.span
-              className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${justInTimeEnabled ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-            <div className="ml-14 text-white">
-              <Label>Enable Just In Time</Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={justInTimeEnabled}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${justInTimeEnabled ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
+                onClick={() => setJustInTimeEnabled(!justInTimeEnabled)}
+                onKeyDown={(e) =>
+                  handleToggleKeyDown(e, () =>
+                    setJustInTimeEnabled(!justInTimeEnabled)
+                  )
+                }
+              >
+                <motion.span
+                  className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${justInTimeEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+                />
+              </div>
+              <Label className="cursor-pointer text-white">
+                Enable Just In Time
+              </Label>
             </div>
           </div>
         </div>

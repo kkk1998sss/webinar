@@ -361,7 +361,7 @@ export default function WebinarPage1() {
                 src="/assets/599.jpg"
                 layout="fill"
                 objectFit="cover"
-                alt="599 Plan Details"
+                alt="699 Plan Details"
                 className="transition-transform duration-700 hover:scale-105"
               />
               {/* Gradient Overlay */}

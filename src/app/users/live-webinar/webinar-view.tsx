@@ -32,6 +32,7 @@ import { LiveWebinarSection } from '@/components/webinar-list/LiveWebinarSection
 import { PaidWebinarSection } from '@/components/webinar-list/PaidWebinarSection';
 import { PastWebinarSection } from '@/components/webinar-list/PastWebinarSection';
 import { UpcomingWebinarSection } from '@/components/webinar-list/UpcomingWebinarSection';
+import { useMounted } from '@/hooks/use-mounted';
 import { Webinar } from '@/types/user';
 
 interface Session {
@@ -61,6 +62,22 @@ export default function WebinarDashboard({ session }: { session: Session }) {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const router = useRouter();
   const { theme } = useTheme();
+  const mounted = useMounted();
+
+  const fetchWebinars = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/webinar');
+      const data = await res.json();
+      if (data.success) {
+        setWebinars(data.webinars);
+      }
+    } catch (error) {
+      console.error('Error fetching webinars:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     // Simulate page load animation
@@ -71,22 +88,8 @@ export default function WebinarDashboard({ session }: { session: Session }) {
   }, []);
 
   useEffect(() => {
-    const fetchWebinars = async () => {
-      try {
-        const res = await fetch('/api/webinar');
-        const data = await res.json();
-        if (data.success) {
-          setWebinars(data.webinars);
-        }
-      } catch (error) {
-        console.error('Error fetching webinars:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchWebinars();
-  }, []);
+  }, [fetchWebinars]);
 
   const handleNewWebinar = (type: string) => {
     setSelectedWebinarType(type);
@@ -270,28 +273,31 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     },
   };
 
-  const cardVariants = {
-    hidden: { scale: 0.9, opacity: 0 },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      transition: {
-        type: 'spring',
-        stiffness: 100,
-        damping: 10,
+  const cardVariants = useMemo(
+    () => ({
+      hidden: { scale: 0.9, opacity: 0 },
+      visible: {
+        scale: 1,
+        opacity: 1,
+        transition: {
+          type: 'spring',
+          stiffness: 100,
+          damping: 10,
+        },
       },
-    },
-    hover: {
-      scale: 1.03,
-      boxShadow:
-        theme === 'dark'
-          ? '0 10px 25px rgba(0,0,0,0.3)'
-          : '0 10px 25px rgba(0,0,0,0.1)',
-      transition: {
-        duration: 0.2,
+      hover: {
+        scale: 1.03,
+        boxShadow:
+          mounted && theme === 'dark'
+            ? '0 10px 25px rgba(0,0,0,0.3)'
+            : '0 10px 25px rgba(0,0,0,0.1)',
+        transition: {
+          duration: 0.2,
+        },
       },
-    },
-  };
+    }),
+    [mounted, theme]
+  );
 
   if (!isPageLoaded) {
     return (
@@ -401,12 +407,12 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                     New Automated Webinar
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => handleNewWebinar('Webinar Series')}
+                    onClick={() => handleNewWebinar('Paid Webinar')}
                     className="cursor-pointer px-4 py-3 transition-colors duration-200 hover:bg-blue-50 dark:text-slate-300 dark:hover:bg-slate-700"
                     disabled={openWebinars.length > 0}
                   >
                     <Video className="mr-2 size-4 text-purple-500 dark:text-purple-400" />
-                    New Webinar Series
+                    Create Paid Webinar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -616,7 +622,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
                     >
-                      {format(new Date(), 'eeee')}
+                      {mounted && format(new Date(), 'eeee')}
                     </motion.h2>
                     <motion.h3
                       className="text-5xl font-bold sm:text-6xl dark:text-slate-100"
@@ -624,7 +630,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.7 }}
                     >
-                      {format(new Date(), 'do')}
+                      {mounted && format(new Date(), 'do')}
                     </motion.h3>
                     <motion.p
                       className="text-lg sm:text-xl dark:text-slate-300"
@@ -632,7 +638,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.8 }}
                     >
-                      {format(new Date(), 'MMMM yyyy')}
+                      {mounted && format(new Date(), 'MMMM yyyy')}
                     </motion.p>
                   </div>
                 </motion.div>
@@ -746,8 +752,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       <ScheduleModal
         open={showScheduleModal}
         onOpenChange={setShowScheduleModal}
+        onSuccess={fetchWebinars}
         webinarType={
-          selectedWebinarType as 'Automated Webinar' | 'Webinar Series'
+          selectedWebinarType as 'Automated Webinar' | 'Paid Webinar'
         }
       />
 

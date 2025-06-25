@@ -329,7 +329,7 @@ export default function AdminDashboard() {
               <FaUsers className="size-6 text-indigo-600" />
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">₹599 Plan</p>
+              <p className="text-sm text-gray-500">₹699 Plan</p>
               <p className="text-2xl font-bold">
                 {isLoading ? '...' : stats.plan599Count.toLocaleString()}
               </p>
