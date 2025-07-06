@@ -41,66 +41,82 @@ export const POST = async (req: Request) => {
       include: { user: true },
     });
 
-    // Base subscription data
-    const subscriptionBaseData = {
-      userId: payment.userId,
-      paymentId: payment.id,
-      type:
-        planType === 'FOUR_DAY'
-          ? SubscriptionType.FOUR_DAY
-          : SubscriptionType.SIX_MONTH,
-      startDate: new Date(),
-      endDate: new Date(),
-      isActive: true,
-    };
+    // Handle different plan types
+    console.log('Processing payment with planType:', planType);
 
-    // If upgrading to SIX_MONTH, deactivate any existing FOUR_DAY subscriptions
-    if (planType === 'SIX_MONTH') {
-      await prisma.subscription.updateMany({
-        where: {
-          userId: payment.userId,
-          type: SubscriptionType.FOUR_DAY,
-          isActive: true,
-        },
-        data: {
-          isActive: false,
-        },
+    if (planType === 'PAID_WEBINAR') {
+      // For individual webinar purchases, we don't create subscriptions
+      // The user will have access to the specific webinar they purchased
+      console.log('Paid webinar purchase successful:', {
+        paymentId: payment.id,
+        webinarId,
+        userId: payment.userId,
+      });
+    } else {
+      // Handle subscription plans (FOUR_DAY, SIX_MONTH)
+      // Base subscription data
+      const subscriptionBaseData = {
+        userId: payment.userId,
+        paymentId: payment.id,
+        type:
+          planType === 'FOUR_DAY'
+            ? SubscriptionType.FOUR_DAY
+            : planType === 'SIX_MONTH'
+              ? SubscriptionType.SIX_MONTH
+              : SubscriptionType.FOUR_DAY, // fallback
+        startDate: new Date(),
+        endDate: new Date(),
+        isActive: true,
+      };
+
+      // If upgrading to SIX_MONTH, deactivate any existing FOUR_DAY subscriptions
+      if (planType === 'SIX_MONTH') {
+        await prisma.subscription.updateMany({
+          where: {
+            userId: payment.userId,
+            type: SubscriptionType.FOUR_DAY,
+            isActive: true,
+          },
+          data: {
+            isActive: false,
+          },
+        });
+      }
+
+      // Additional data for FOUR_DAY plan
+      const fourDayData =
+        planType === 'FOUR_DAY'
+          ? {
+              unlockedContent: {
+                currentDay: 1,
+                unlockedVideos: [1],
+                expiryDates: {
+                  video1: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                  video2: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                  video3: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+                  video4: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+                },
+              },
+            }
+          : {};
+
+      // Final subscription data
+      const subscriptionData = {
+        ...subscriptionBaseData,
+        ...(planType === 'FOUR_DAY'
+          ? {
+              endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+              ...fourDayData,
+            }
+          : {
+              endDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 6 months
+            }),
+      };
+
+      await prisma.subscription.create({
+        data: subscriptionData,
       });
     }
-
-    // Additional data for FOUR_DAY plan
-    const fourDayData =
-      planType === 'FOUR_DAY'
-        ? {
-            unlockedContent: {
-              currentDay: 1,
-              unlockedVideos: [1],
-              expiryDates: {
-                video1: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                video2: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                video3: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-                video4: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
-              },
-            },
-          }
-        : {};
-
-    // Final subscription data
-    const subscriptionData = {
-      ...subscriptionBaseData,
-      ...(planType === 'FOUR_DAY'
-        ? {
-            endDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-            ...fourDayData,
-          }
-        : {
-            endDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000), // 6 months
-          }),
-    };
-
-    await prisma.subscription.create({
-      data: subscriptionData,
-    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

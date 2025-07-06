@@ -148,6 +148,7 @@ model Payment {
 enum SubscriptionType {
   FOUR_DAY
   SIX_MONTH
+  PAID_WEBINAR
 }
 
 model Subscription {

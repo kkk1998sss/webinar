@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface Subscription {
-  type: 'FOUR_DAY' | 'SIX_MONTH';
+  type: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   isValid: boolean;
 }
 

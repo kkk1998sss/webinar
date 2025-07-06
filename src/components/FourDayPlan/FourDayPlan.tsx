@@ -67,12 +67,61 @@ export default function FourDayPlan() {
   const [videoProgress, setVideoProgress] = useState<VideoCompletionStatus>({});
   const [webinars, setWebinars] = useState<Webinar[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [sessionElapsed, setSessionElapsed] = useState<string>('');
+  const [videoMetadata, setVideoMetadata] = useState<{
+    duration: number;
+    title: string;
+  } | null>(null);
   const playerRef = useRef<HTMLIFrameElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
 
   // Dummy session object for handleJoinWebinar (replace with real session if available)
   const session = { user: { isAdmin: false } };
+
+  // Set current time on client side only to avoid hydration issues
+  useEffect(() => {
+    setCurrentTime(new Date());
+  }, []);
+
+  // Update session elapsed time every second when in live mode
+  useEffect(() => {
+    if (isLiveMode && currentVideo && subscription?.startDate) {
+      const unlockTime = getUnlockTime(
+        subscription.startDate,
+        currentVideo.day
+      );
+
+      // Set initial session elapsed
+      setSessionElapsed(calculateSessionElapsed(unlockTime));
+
+      // Clear any existing timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+
+      // Start new timer that only updates the display, not the video logic
+      timerRef.current = setInterval(() => {
+        const now = new Date();
+        setSessionElapsed(calculateSessionElapsedWithTime(unlockTime, now));
+      }, 1000);
+
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      };
+    } else {
+      setSessionElapsed('');
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+  }, [isLiveMode, currentVideo, subscription]);
 
   // Load saved video progress from localStorage
   useEffect(() => {
@@ -151,34 +200,86 @@ export default function FourDayPlan() {
     return webinars
       .filter(
         (webinar) =>
-          isFuture(parseISO(webinar.webinarDate)) &&
-          webinar.paidAmount &&
-          webinar.paidAmount > 0
+          isFuture(parseISO(webinar.webinarDate)) && webinar.isPaid === true
       )
       .sort((a, b) =>
         compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
       );
   }, [webinars]);
 
+  // Fetch video metadata when current video changes
+  useEffect(() => {
+    if (currentVideo?.videoUrl) {
+      fetchVideoMetadata(currentVideo.videoUrl).then((metadata) => {
+        if (metadata) {
+          setVideoMetadata(metadata);
+          console.log('Video metadata loaded:', metadata);
+        }
+      });
+    }
+  }, [currentVideo]);
+
   // Reset live mode when video changes
   useEffect(() => {
-    if (currentVideo) {
+    if (currentVideo && subscription?.startDate) {
       const videoStatus = videoProgress[currentVideo.id];
+      const unlockTime = getUnlockTime(
+        subscription.startDate,
+        currentVideo.day
+      );
+      const isCompleted = videoStatus?.completed || false;
+      const shouldBeLive = shouldBeInLiveMode(unlockTime, isCompleted);
+      const shouldMarkCompleted = shouldMarkAsCompleted(unlockTime);
 
-      if (videoStatus?.completed) {
+      console.log('Live mode state update:', {
+        videoId: currentVideo.id,
+        isCompleted,
+        shouldBeLive,
+        shouldMarkCompleted,
+        videoDuration: videoMetadata?.duration,
+        currentIsLiveMode: isLiveMode,
+      });
+
+      // Auto-mark as completed if enough time has passed
+      if (shouldMarkCompleted && !isCompleted) {
+        console.log('Auto-marking video as completed due to time elapsed');
+        setVideoProgress((prev) => ({
+          ...prev,
+          [currentVideo.id]: {
+            completed: true,
+            timestamp: currentTime ? currentTime.getTime() : Date.now(),
+          },
+        }));
+        setVideoCompleted(true);
+        setIsLiveMode(false);
+      } else if (isCompleted) {
         // Video already completed, show in playback mode
+        console.log('Setting to playback mode (completed)');
         setIsLiveMode(false);
         setVideoCompleted(true);
-      } else {
-        // First time viewing, start in live mode
+      } else if (shouldBeLive) {
+        // Video should be in live mode
+        console.log('Setting to live mode');
         setIsLiveMode(true);
+        setVideoCompleted(false);
+      } else {
+        // Video is not yet unlocked or past live window
+        console.log('Setting to waiting mode');
+        setIsLiveMode(false);
         setVideoCompleted(false);
       }
     }
-  }, [currentVideo, videoProgress]);
+  }, [
+    currentVideo,
+    videoProgress,
+    subscription,
+    isLiveMode,
+    currentTime,
+    videoMetadata,
+  ]);
 
   // Helper for YouTube/Vimeo embed
-  function getEmbedUrl(url: string, isLive: boolean) {
+  function getEmbedUrl(url: string, isLive: boolean, startTime: number = 0) {
     // Handle pCloud links
     if (url.includes('pcloud.link')) {
       return url; // pCloud links are already in the correct format for embedding
@@ -189,13 +290,20 @@ export default function FourDayPlan() {
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/
     );
     if (ytMatch) {
-      return `https://www.youtube.com/embed/${ytMatch[1]}?${isLive ? 'autoplay=1&controls=0&disablekb=1&modestbranding=1&rel=0' : 'controls=1&modestbranding=1&rel=0'}`;
+      const baseParams = isLive
+        ? 'autoplay=1&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=2&wmode=transparent'
+        : 'controls=1&modestbranding=1&rel=0&enablejsapi=1';
+
+      const startTimeParam = startTime > 0 ? `&start=${startTime}` : '';
+      return `https://www.youtube.com/embed/${ytMatch[1]}?${baseParams}${startTimeParam}`;
     }
 
     // Handle Vimeo links
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
-      return `https://player.vimeo.com/video/${vimeoMatch[1]}?${isLive ? 'autoplay=1&controls=0' : 'controls=1'}`;
+      const baseParams = isLive ? 'autoplay=1&controls=0' : 'controls=1';
+      const startTimeParam = startTime > 0 ? `#t=${startTime}s` : '';
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}?${baseParams}${startTimeParam}`;
     }
 
     return url;
@@ -204,35 +312,70 @@ export default function FourDayPlan() {
   // Handle video completion
   const markVideoCompleted = useCallback(() => {
     if (currentVideo) {
+      console.log('Video completed! Switching to playback mode...');
       setVideoProgress((prev) => ({
         ...prev,
         [currentVideo.id]: {
           completed: true,
-          timestamp: Date.now(),
+          timestamp: currentTime ? currentTime.getTime() : Date.now(),
         },
       }));
       setVideoCompleted(true);
       setIsLiveMode(false);
     }
-  }, [currentVideo]);
+  }, [currentVideo, currentTime]);
 
   // Check if video is still playing (for persistence across refreshes)
   const checkVideoStatus = useCallback(() => {
-    if (playerRef.current && isLiveMode && !videoCompleted) {
+    if (
+      playerRef.current &&
+      isLiveMode &&
+      !videoCompleted &&
+      videoMetadata?.duration
+    ) {
       try {
-        playerRef.current.contentWindow?.postMessage(
-          '{"event":"command","func":"getPlayerState"}',
-          '*'
-        );
+        // Calculate how much time has passed since unlock
+        const unlockTime =
+          currentVideo && subscription?.startDate
+            ? getUnlockTime(subscription.startDate, currentVideo.day)
+            : null;
+
+        if (unlockTime) {
+          const now = currentTime || new Date();
+          const timeSinceUnlock = now.getTime() - unlockTime.getTime();
+          const timeSinceUnlockSeconds = Math.floor(timeSinceUnlock / 1000);
+
+          console.log('Video status check:', {
+            timeSinceUnlock: timeSinceUnlockSeconds,
+            videoDuration: videoMetadata.duration,
+            timeRemaining: videoMetadata.duration - timeSinceUnlockSeconds,
+          });
+
+          // If we've passed the video duration, mark as completed
+          if (timeSinceUnlockSeconds >= videoMetadata.duration) {
+            console.log('Video duration exceeded - marking as completed');
+            markVideoCompleted();
+          }
+        }
       } catch (e) {
-        console.error('Error checking player state:', e);
+        console.error('Error checking video status:', e);
       }
     }
-  }, [isLiveMode, videoCompleted]);
+  }, [
+    isLiveMode,
+    videoCompleted,
+    videoMetadata,
+    currentVideo,
+    subscription,
+    currentTime,
+    markVideoCompleted,
+  ]);
 
   // Listen for player state messages
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      console.log('Received message:', event.origin, event.data);
+
       // YouTube player state responses
       if (
         event.origin === 'https://www.youtube.com' &&
@@ -240,9 +383,28 @@ export default function FourDayPlan() {
         event.data.info
       ) {
         const playerState = event.data.info.playerState;
+        const currentTime = event.data.info.currentTime;
+        const duration = event.data.info.duration;
+
+        console.log('YouTube player state:', {
+          playerState,
+          currentTime,
+          duration,
+        });
+
+        // Update video time tracking (commented out as not used)
+        // if (currentTime !== undefined) setCurrentVideoTime(currentTime);
+        // if (duration !== undefined) setVideoDuration(duration);
 
         if (playerState === 0) {
           // 0 = ended
+          console.log('YouTube video ended - marking as completed');
+          markVideoCompleted();
+        }
+
+        // Also check if video is near the end (within 5 seconds of duration)
+        if (duration && currentTime && duration - currentTime <= 5) {
+          console.log('Video near end - marking as completed');
           markVideoCompleted();
         }
       }
@@ -253,18 +415,51 @@ export default function FourDayPlan() {
         event.data &&
         event.data.event === 'ended'
       ) {
+        console.log('Vimeo video ended - marking as completed');
         markVideoCompleted();
+      }
+
+      // Handle YouTube API responses
+      if (
+        event.origin === 'https://www.youtube.com' &&
+        event.data &&
+        event.data.event === 'onStateChange'
+      ) {
+        console.log('YouTube state change:', event.data.info);
+        if (event.data.info === 0) {
+          console.log('YouTube video ended via state change');
+          markVideoCompleted();
+        }
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [currentVideo, isLiveMode, videoCompleted, markVideoCompleted]); // Add markVideoCompleted
+  }, [currentVideo, isLiveMode, videoCompleted, markVideoCompleted]);
 
   // Periodically check video status during live mode
   useEffect(() => {
     if (isLiveMode && !videoCompleted) {
-      videoCheckRef.current = setInterval(checkVideoStatus, 5000);
+      videoCheckRef.current = setInterval(checkVideoStatus, 3000); // Check every 3 seconds
+
+      // Also set a fallback timeout to mark as completed after a reasonable time
+      // This handles cases where video completion events aren't detected
+      const fallbackTimeout = setTimeout(
+        () => {
+          if (isLiveMode && !videoCompleted) {
+            console.log('Fallback: Marking video as completed after timeout');
+            markVideoCompleted();
+          }
+        },
+        30 * 60 * 1000
+      ); // 30 minutes fallback
+
+      return () => {
+        if (videoCheckRef.current) {
+          clearInterval(videoCheckRef.current);
+        }
+        clearTimeout(fallbackTimeout);
+      };
     } else if (videoCheckRef.current) {
       clearInterval(videoCheckRef.current);
       videoCheckRef.current = null;
@@ -275,7 +470,7 @@ export default function FourDayPlan() {
         clearInterval(videoCheckRef.current);
       }
     };
-  }, [isLiveMode, videoCompleted, checkVideoStatus]); // Add checkVideoStatus
+  }, [isLiveMode, videoCompleted, checkVideoStatus, markVideoCompleted]);
 
   // Handler for join button
   const handleJoinWebinar = (id: string) => {
@@ -308,13 +503,154 @@ export default function FourDayPlan() {
     return () => document.removeEventListener('fullscreenchange', exitHandler);
   }, [isFullscreen]);
 
-  // Helper: Get unlock time for a video (9:00 PM on the correct day)
+  // Helper: Get unlock time for a video (9:00 PM on the correct day) - FOR TESTING
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
-    return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00
+    return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00 (9:00 PM)
   }
 
-  const now = new Date();
+  // Helper: Check if video should be in live mode
+  function shouldBeInLiveMode(
+    unlockTime: Date | null,
+    isCompleted: boolean
+  ): boolean {
+    if (!unlockTime || isCompleted) {
+      console.log('Not in live mode:', {
+        unlockTime: !!unlockTime,
+        isCompleted,
+      });
+      return false; // If completed or no unlock time, always in playback mode
+    }
+
+    const now = currentTime || new Date();
+    const timeSinceUnlock = now.getTime() - unlockTime.getTime();
+
+    // If it's been more than 24 hours since unlock, assume it's completed
+    if (timeSinceUnlock > 24 * 60 * 60 * 1000) {
+      console.log('Live session expired (24h passed)');
+      return false;
+    }
+
+    // If it's within the first 24 hours after unlock, it's in live mode
+    const shouldBeLive = timeSinceUnlock >= 0;
+    console.log('Live mode check:', {
+      timeSinceUnlock: Math.floor(timeSinceUnlock / 1000),
+      shouldBeLive,
+    });
+    return shouldBeLive;
+  }
+
+  // Helper: Get video start time for live mode
+  function getVideoStartTime(unlockTime: Date | null): number {
+    if (!unlockTime) return 0;
+
+    const now = currentTime || new Date();
+    const timeSinceUnlock = now.getTime() - unlockTime.getTime();
+
+    // If user comes after 8:18 AM, start video from the appropriate time
+    if (timeSinceUnlock > 0) {
+      // Convert milliseconds to seconds for YouTube API
+      return Math.floor(timeSinceUnlock / 1000);
+    }
+
+    return 0; // Start from beginning if before 8:18 AM
+  }
+
+  // Helper: Check if video should be marked as completed based on actual video duration
+  function shouldMarkAsCompleted(unlockTime: Date | null): boolean {
+    if (!unlockTime) return false;
+
+    const now = currentTime || new Date();
+    const timeSinceUnlock = now.getTime() - unlockTime.getTime();
+
+    // Use actual video duration if available, otherwise fallback to 2 hours
+    const actualDuration = videoMetadata?.duration || 2 * 60 * 60 * 1000; // 2 hours fallback
+    const videoDurationMs = actualDuration * 1000; // Convert seconds to milliseconds
+
+    console.log('Completion check:', {
+      timeSinceUnlock: Math.floor(timeSinceUnlock / 1000),
+      videoDuration: actualDuration,
+      shouldComplete: timeSinceUnlock >= videoDurationMs,
+    });
+
+    return timeSinceUnlock >= videoDurationMs;
+  }
+
+  // Helper: Get video metadata (duration) from our API
+  async function fetchVideoMetadata(
+    videoUrl: string
+  ): Promise<{ duration: number; title: string } | null> {
+    try {
+      const response = await fetch('/api/video-metadata', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoUrl }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Video metadata:', data);
+        return { duration: data.duration, title: data.title };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error fetching video metadata:', error);
+      return null;
+    }
+  }
+
+  // Helper: Calculate session elapsed time (running timer)
+  function calculateSessionElapsed(unlockTime: Date | null): string {
+    if (!unlockTime) return '';
+
+    const now = currentTime || new Date();
+    const timeSinceUnlock = now.getTime() - unlockTime.getTime();
+
+    if (timeSinceUnlock <= 0) return 'Starting now';
+
+    const hours = Math.floor(timeSinceUnlock / (1000 * 60 * 60));
+    const minutes = Math.floor(
+      (timeSinceUnlock % (1000 * 60 * 60)) / (1000 * 60)
+    );
+    const seconds = Math.floor((timeSinceUnlock % (1000 * 60)) / 1000);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  }
+
+  // Helper: Calculate session elapsed time with specific time (for timer updates)
+  function calculateSessionElapsedWithTime(
+    unlockTime: Date | null,
+    now: Date
+  ): string {
+    if (!unlockTime) return '';
+
+    const timeSinceUnlock = now.getTime() - unlockTime.getTime();
+
+    if (timeSinceUnlock <= 0) return 'Starting now';
+
+    const hours = Math.floor(timeSinceUnlock / (1000 * 60 * 60));
+    const minutes = Math.floor(
+      (timeSinceUnlock % (1000 * 60 * 60)) / (1000 * 60)
+    );
+    const seconds = Math.floor((timeSinceUnlock % (1000 * 60)) / 1000);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  }
 
   if (loading) {
     return (
@@ -354,6 +690,20 @@ export default function FourDayPlan() {
             Upgrade to 699
           </Button>
         </motion.div>
+      </div>
+    );
+  }
+
+  // Don't render the main UI until we have the current time to avoid hydration issues
+  if (!currentTime) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="flex flex-col items-center">
+          <div className="size-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-lg font-medium text-gray-700">
+            Loading your content...
+          </p>
+        </div>
       </div>
     );
   }
@@ -404,7 +754,7 @@ export default function FourDayPlan() {
                 let unlockTime: Date | null = null;
                 if (subscription?.startDate) {
                   unlockTime = getUnlockTime(subscription.startDate, day);
-                  isUnlocked = isAfter(now, unlockTime);
+                  isUnlocked = isAfter(currentTime, unlockTime);
                 }
                 const isCurrent = currentVideo?.day === day;
 
@@ -469,10 +819,7 @@ export default function FourDayPlan() {
                         <span>
                           Unlocks at{' '}
                           {unlockTime &&
-                            unlockTime.toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            `${unlockTime.getHours().toString().padStart(2, '0')}:${unlockTime.getMinutes().toString().padStart(2, '0')}`}
                         </span>
                       )}
                     </div>
@@ -527,7 +874,7 @@ export default function FourDayPlan() {
                     subscription.startDate,
                     currentVideo.day
                   );
-                  isUnlocked = isAfter(now, unlockTime);
+                  isUnlocked = isAfter(currentTime, unlockTime);
                 }
 
                 if (!isUnlocked) {
@@ -541,50 +888,66 @@ export default function FourDayPlan() {
                       <p className="max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
                         This video will be available at{' '}
                         {unlockTime &&
-                          unlockTime.toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          `${unlockTime.getHours().toString().padStart(2, '0')}:${unlockTime.getMinutes().toString().padStart(2, '0')}`}
                       </p>
                     </div>
                   );
                 }
 
-                // --- EXISTING VIDEO PLAYER CODE ---
+                // --- NEW VIDEO PLAYER CODE WITH LIVE MODE LOGIC ---
                 const videoStatus = videoProgress[currentVideo.id];
                 const isCompleted = videoStatus?.completed || false;
+                const isLiveMode = shouldBeInLiveMode(unlockTime, isCompleted);
+                const videoStartTime = getVideoStartTime(unlockTime);
+
+                console.log('Video player state:', {
+                  videoId: currentVideo.id,
+                  isCompleted,
+                  isLiveMode,
+                  videoStartTime,
+                  unlockTime: unlockTime?.toISOString(),
+                });
 
                 return (
                   <div className="flex h-full flex-col">
-                    {/* Overlay: LIVE badge */}
-                    <div className="absolute left-2 top-2 z-[5] sm:left-4 sm:top-4">
-                      <span className="animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white shadow">
-                        LIVE
-                      </span>
-                    </div>
+                    {/* Overlay: LIVE badge - only show in live mode */}
+                    {isLiveMode && (
+                      <div className="absolute left-2 top-2 z-10 sm:left-4 sm:top-4">
+                        <span className="animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white shadow">
+                          LIVE
+                        </span>
+                      </div>
+                    )}
 
                     {/* Video Iframe */}
                     <iframe
                       ref={playerRef}
-                      src={getEmbedUrl(currentVideo.videoUrl, !isCompleted)} // live mode if not completed
+                      src={getEmbedUrl(
+                        currentVideo.videoUrl,
+                        isLiveMode,
+                        videoStartTime
+                      )}
                       title={currentVideo.title}
                       className={`absolute left-0 top-0 size-full ${isFullscreen ? 'z-10' : ''}`}
                       allow="autoplay; encrypted-media; fullscreen"
                       allowFullScreen
                       sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                      style={{ pointerEvents: 'none' }} // disables all interaction
+                      style={{ pointerEvents: isLiveMode ? 'none' : 'auto' }} // disable interaction only in live mode
                     />
 
-                    {/* Overlay layer to block all controls/interactions */}
-                    {!isCompleted && (
-                      <div className="absolute inset-0 z-20 bg-transparent" />
+                    {/* Overlay layer to block all controls/interactions in live mode */}
+                    {isLiveMode && (
+                      <div className="z-5 absolute inset-0 bg-transparent" />
                     )}
 
-                    {/* Bottom overlays: aligned in a row, fullscreen at right */}
-                    {!isCompleted && (
-                      <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex items-center justify-between px-6">
-                        <div className="pointer-events-auto inline-block animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white">
-                          LIVE PLAYBACK: Controls disabled during first viewing
+                    {/* Bottom overlays: live mode */}
+                    {isLiveMode && (
+                      <div className="z-5 pointer-events-none absolute inset-x-0 bottom-6 flex items-center justify-between px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="pointer-events-auto inline-block animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white">
+                            🎥 LIVE SESSION: Started at 9:00 PM - Running Live
+                            Session {sessionElapsed}
+                          </div>
                         </div>
                         {!isFullscreen && (
                           <button
@@ -605,9 +968,14 @@ export default function FourDayPlan() {
                       </div>
                     )}
 
-                    {/* Playback mode: show controls after completion */}
-                    {isCompleted && (
-                      <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex items-center justify-end px-6">
+                    {/* Bottom overlays: playback mode */}
+                    {!isLiveMode && (
+                      <div className="z-5 pointer-events-none absolute inset-x-0 bottom-10 flex items-center justify-between px-6">
+                        <div className="pointer-events-auto inline-block rounded-full bg-green-600 px-3 py-1 text-xs text-white">
+                          {isCompleted
+                            ? '✅ COMPLETED: Full playback available'
+                            : '⏸️ WAITING: Video unlocks at 9:00 PM'}
+                        </div>
                         {!isFullscreen && (
                           <button
                             onClick={handleFullscreen}

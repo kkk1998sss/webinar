@@ -159,19 +159,17 @@ export default function WebinarDashboard({ session }: { session: Session }) {
 
       filteredAndSortedWebinars.forEach((webinar) => {
         const date = parseISO(webinar.webinarDate);
+
+        // PAID LOGIC - Add to paid section if isPaid is true, regardless of date
+        if (webinar && webinar.isPaid === true) {
+          paid.push(webinar);
+        }
+
+        // Date-based categorization
         if (isToday(date)) {
           today.push(webinar);
         } else if (isFuture(date)) {
           upcoming.push(webinar);
-          // PAID LOGIC BASED ON SCHEMA
-          if (
-            webinar &&
-            webinar.isPaid &&
-            typeof webinar.paidAmount === 'number' &&
-            webinar.paidAmount > 0
-          ) {
-            paid.push(webinar);
-          }
         } else {
           past.push(webinar);
         }
@@ -769,21 +767,11 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         />
 
         <UpcomingWebinarSection
-          webinars={upcomingWebinars.filter(
-            (webinar) =>
-              !(
-                webinar.isPaid &&
-                typeof webinar.paidAmount === 'number' &&
-                webinar.paidAmount > 0
-              )
-          )}
+          webinars={upcomingWebinars.filter((webinar) => !webinar.isPaid)}
           handleJoinWebinar={handleJoinWebinar}
         />
 
-        <PaidWebinarSection
-          webinars={paidWebinars}
-          handleJoinWebinar={handleJoinWebinar}
-        />
+        <PaidWebinarSection webinars={paidWebinars} />
 
         <PastWebinarSection
           webinars={pastWebinars}

@@ -1,9 +1,16 @@
+import { useEffect, useState } from 'react';
 import { FaHeart } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export const Footer = () => {
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
+
   return (
     <footer className="relative w-full bg-[#0A1833] text-white">
       <svg
@@ -110,7 +117,7 @@ export const Footer = () => {
                 >
                   RSA Tech Software
                 </Link>{' '}
-                © {new Date().getFullYear()}
+                © {currentYear || '2024'}
               </span>
               <span>
                 Contact:{' '}

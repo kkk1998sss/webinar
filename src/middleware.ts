@@ -5,7 +5,7 @@ import { middleware as paraglide } from '@/lib/i18n';
 
 interface Subscription {
   id: string;
-  type: 'FOUR_DAY' | 'SIX_MONTH';
+  type: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   isActive: boolean;
   startDate: string;
   endDate: string;
@@ -25,10 +25,10 @@ export async function middleware(request: NextRequest) {
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      cookieName:
-        process.env.NODE_ENV === 'production'
-          ? '__Secure-authjs.session-token'
-          : 'next-auth.session-token',
+      // cookieName:
+      //   process.env.NODE_ENV === 'production'
+      //     ? '__Secure-authjs.session-token'
+      //     : 'next-auth.session-token',
     });
 
     const { pathname } = request.nextUrl;

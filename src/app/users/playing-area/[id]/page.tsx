@@ -441,7 +441,7 @@ export default function WebinarViewPage() {
   const [activeTab, setActiveTab] = useState<'video' | 'resources' | 'chat'>(
     'video'
   );
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [isWebinarStarted, setIsWebinarStarted] = useState(false);
   const [likes, setLikes] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
@@ -479,6 +479,9 @@ export default function WebinarViewPage() {
   }, [id]);
 
   useEffect(() => {
+    // Set initial time on client side to avoid hydration issues
+    setCurrentTime(new Date());
+
     const timeCheckInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -486,7 +489,7 @@ export default function WebinarViewPage() {
   }, []);
 
   useEffect(() => {
-    if (!webinars) return;
+    if (!webinars || !currentTime) return;
 
     const { hours, minutes } = safeTimeSplit(webinars.webinarTime);
     const webinarStartDate = parseISO(webinars.webinarDate);
@@ -539,14 +542,16 @@ export default function WebinarViewPage() {
     parseInt(hours),
     parseInt(minutes)
   );
-  const timeDifference = webinarStartTime.getTime() - currentTime.getTime();
+  const timeDifference = currentTime
+    ? webinarStartTime.getTime() - currentTime.getTime()
+    : 0;
   const isBeforeWebinar = timeDifference > 0;
 
   // Add null checks for video
   const videoUrl = webinars?.video?.url || '/fallback-video.mp4';
 
   // Conditional returns
-  if (loading) {
+  if (loading || !currentTime) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-b from-gray-50 to-blue-50">
         <motion.div

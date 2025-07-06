@@ -8,7 +8,7 @@ import FourDayPlan from './FourDayPlan/FourDayPlan';
 
 interface Subscription {
   id: string;
-  type: 'FOUR_DAY' | 'SIX_MONTH';
+  type: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   startDate: string;
   endDate: string;
   isActive: boolean;

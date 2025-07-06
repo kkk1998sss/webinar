@@ -7,7 +7,7 @@ import WebinarView from './webinar-view';
 
 interface Subscription {
   id: string;
-  type: 'FOUR_DAY' | 'SIX_MONTH';
+  type: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   startDate: string;
   endDate: string;
   isActive: boolean;
@@ -28,7 +28,9 @@ export default function LiveWebinarPage() {
         if (data.subscriptions?.length > 0) {
           const userSub = data.subscriptions.find(
             (sub: Subscription) =>
-              sub.type === 'FOUR_DAY' || sub.type === 'SIX_MONTH'
+              sub.type === 'FOUR_DAY' ||
+              sub.type === 'SIX_MONTH' ||
+              sub.type === 'PAID_WEBINAR'
           );
           setSubscription(userSub);
         }

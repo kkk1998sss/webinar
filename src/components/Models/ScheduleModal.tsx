@@ -2,9 +2,7 @@
 
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { ClipLoader } from 'react-spinners';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Link, Trash } from 'lucide-react';
 
 import { CustomDialog } from '../ui/custom-dialog';
 import { Textarea } from '../ui/textarea';
@@ -14,18 +12,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 // Video item type
-type VideoItem = {
-  id: string;
-  title: string;
-  url: string;
-  publicId?: string;
-};
+// type VideoItem = {
+//   id: string;
+//   title: string;
+//   url: string;
+//   publicId?: string;
+// };
 
 interface WebinarData {
   webinarName: string;
   webinarTitle: string;
   description: string;
-  webinarDate: string;
+  webinarStartDate: string;
+  webinarEndDate: string;
   webinarTime: string;
   durationHours: number;
   durationMinutes: number;
@@ -74,10 +73,11 @@ export function ScheduleModal({
 }: ScheduleModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('');
-  const [isPaid, setIsPaid] = useState(false);
+  const [isPaid, setIsPaid] = useState(true);
   const [paidAmount, setPaidAmount] = useState('');
   const [attendeeSignIn, setAttendeeSignIn] = useState(false);
   const [passwordProtected, setPasswordProtected] = useState(false);
@@ -85,102 +85,49 @@ export function ScheduleModal({
   const [justInTimeEnabled, setJustInTimeEnabled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Video states
-  const [videoUrl, setVideoUrl] = useState('');
-  const [videoTitle, setVideoTitle] = useState('');
-  const [isAddingUrl, setIsAddingUrl] = useState(false);
-  const [showUrlSuccess, setShowUrlSuccess] = useState(false);
-  const [videos, setVideos] = useState<VideoItem[]>([]);
+  // Video states (removed - not needed for paid webinars)
+  // const [videoUrl, setVideoUrl] = useState('');
+  // const [videoTitle, setVideoTitle] = useState('');
+  // const [isAddingUrl, setIsAddingUrl] = useState(false);
+  // const [showUrlSuccess, setShowUrlSuccess] = useState(false);
+  // const [videos, setVideos] = useState<VideoItem[]>([]);
 
-  const handleAddUrl = async () => {
-    if (!videoUrl || !videoTitle) {
-      toast.error('Please provide both video title and URL');
-      return;
-    }
-    setIsAddingUrl(true);
-    try {
-      const response = await fetch('/api/videos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: videoTitle,
-          url: videoUrl,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add video URL');
-      }
-
-      const data = await response.json();
-      if (data.video) {
-        setVideos((prev) => [
-          ...prev,
-          {
-            id: data.video.id,
-            title: data.video.title,
-            url: data.video.url,
-          },
-        ]);
-        setShowUrlSuccess(true);
-        setTimeout(() => {
-          setShowUrlSuccess(false);
-          setVideoTitle('');
-          setVideoUrl('');
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Error adding video URL:', error);
-      toast.error('Failed to add video URL');
-    } finally {
-      setIsAddingUrl(false);
-    }
-  };
-
-  const handleDelete = async (index: number) => {
-    const video = videos[index];
-    try {
-      const res = await fetch('/api/videos', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: video.id }),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to delete video');
-      }
-
-      setVideos((prev) => prev.filter((_, i) => i !== index));
-      toast.success('Video deleted successfully');
-    } catch (error) {
-      console.error('Delete failed:', error);
-      toast.error('Failed to delete video');
-    }
-  };
+  // Video functions removed - not needed for paid webinars
+  // const handleAddUrl = async () => { ... };
+  // const handleDelete = async (index: number) => { ... };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      if (!title || !description || !date || !time || !duration) {
+      if (
+        !title ||
+        !description ||
+        !startDate ||
+        !endDate ||
+        !time ||
+        !duration
+      ) {
         toast.error('Please fill in all required fields');
         return;
       }
 
-      if (videos.length === 0) {
-        toast.error('Please add at least one video');
+      // Video validation removed - not needed for paid webinars
+      // if (videos.length === 0) {
+      //   toast.error('Please add at least one video');
+      //   return;
+      // }
+
+      // Validate the dates
+      if (isNaN(startDate!.getTime()) || isNaN(endDate!.getTime())) {
+        toast.error('Invalid date');
         return;
       }
 
-      // Create a valid date object by combining date and time
-      const [hours, minutes] = time.split(':').map(Number);
-      const dateTime = new Date(date);
-      dateTime.setHours(hours, minutes, 0, 0);
-
-      // Validate the date
-      if (isNaN(dateTime.getTime())) {
-        toast.error('Invalid date or time');
+      // Check if end date is after start date
+      if (endDate! <= startDate!) {
+        toast.error('End date must be after start date');
         return;
       }
 
@@ -188,7 +135,8 @@ export function ScheduleModal({
         webinarName: title,
         webinarTitle: title,
         description,
-        webinarDate: dateTime.toISOString(),
+        webinarStartDate: startDate!.toISOString(),
+        webinarEndDate: endDate!.toISOString(),
         webinarTime: time,
         durationHours: Math.floor(parseInt(duration) / 60),
         durationMinutes: parseInt(duration) % 60,
@@ -199,11 +147,7 @@ export function ScheduleModal({
         justInTimeEnabled,
         isPaid,
         paidAmount: isPaid ? parseFloat(paidAmount) : 0,
-        videoUploads: videos.map((video) => ({
-          title: video.title,
-          url: video.url,
-          publicId: video.publicId || '',
-        })),
+        videoUploads: [], // No videos needed for paid webinars
       };
 
       await createWebinar(webinarData);
@@ -266,16 +210,29 @@ export function ScheduleModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="date" className="text-white">
-                Date
+              <Label htmlFor="startDate" className="text-white">
+                Start Date
               </Label>
               <Input
-                id="date"
+                id="startDate"
                 type="date"
-                value={date ? date.toISOString().split('T')[0] : ''}
-                onChange={(e) => setDate(new Date(e.target.value))}
+                value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => setStartDate(new Date(e.target.value))}
+                className="border-slate-700 bg-slate-800 text-white"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="endDate" className="text-white">
+                End Date
+              </Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={endDate ? endDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => setEndDate(new Date(e.target.value))}
                 className="border-slate-700 bg-slate-800 text-white"
               />
             </div>
@@ -309,104 +266,7 @@ export function ScheduleModal({
           </div>
         </div>
 
-        {/* Video Section */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-white">Videos</h3>
-
-          {/* Uploaded Videos Display */}
-          {videos.length > 0 && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {videos.map((video, index) => (
-                <div
-                  key={index}
-                  className="group relative overflow-hidden rounded-xl bg-slate-800 p-4 shadow-lg"
-                >
-                  <div className="relative aspect-video overflow-hidden rounded-lg bg-slate-700">
-                    <div className="flex size-full items-center justify-center bg-slate-700 p-4">
-                      <a
-                        href={video.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline"
-                      >
-                        {video.title} (External Link)
-                      </a>
-                    </div>
-                  </div>
-                  <div className="mt-3">
-                    <h3 className="truncate text-lg font-semibold text-white">
-                      {video.title}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(index)}
-                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-red-800/50 px-4 py-2 text-sm font-medium text-red-200 transition-all duration-300 hover:bg-red-800"
-                    >
-                      <Trash className="size-4" />
-                      <span>Delete Video</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* URL Input Section */}
-          <div className="mt-6 space-y-4 rounded-xl bg-slate-800 p-6">
-            <h3 className="text-lg font-semibold text-white">Add Video URL</h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="videoTitle" className="text-white">
-                  Video Title
-                </Label>
-                <Input
-                  id="videoTitle"
-                  type="text"
-                  value={videoTitle}
-                  onChange={(e) => setVideoTitle(e.target.value)}
-                  className="border-slate-600 bg-slate-700 text-white"
-                  placeholder="Enter video title"
-                />
-              </div>
-              <div>
-                <Label htmlFor="videoUrl" className="text-white">
-                  Video URL
-                </Label>
-                <Input
-                  id="videoUrl"
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  className="border-slate-600 bg-slate-700 text-white"
-                  placeholder="Enter video URL (YouTube, Vimeo, etc.)"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleAddUrl}
-                disabled={!videoUrl || !videoTitle || isAddingUrl}
-                className="relative flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-600 disabled:to-gray-700"
-              >
-                {isAddingUrl ? (
-                  <>
-                    <ClipLoader size={16} color="#fff" />
-                    <span>Adding URL...</span>
-                  </>
-                ) : showUrlSuccess ? (
-                  <>
-                    <CheckCircle2 className="size-4" />
-                    <span>URL Added Successfully!</span>
-                  </>
-                ) : (
-                  <>
-                    <Link className="size-4" />
-                    <span>Add Video URL</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* Video Section removed - not needed for paid webinars */}
 
         {/* Toggle Switches */}
         <div className="space-y-6">
@@ -433,16 +293,21 @@ export function ScheduleModal({
           {isPaid && (
             <div>
               <Label htmlFor="paidAmount" className="text-white">
-                Amount
+                Amount (₹)
               </Label>
-              <Input
-                id="paidAmount"
-                type="number"
-                value={paidAmount}
-                onChange={(e) => setPaidAmount(e.target.value)}
-                placeholder="Enter amount"
-                className="border-slate-700 bg-slate-800 text-white"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
+                  ₹
+                </span>
+                <Input
+                  id="paidAmount"
+                  type="number"
+                  value={paidAmount}
+                  onChange={(e) => setPaidAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className="border-slate-700 bg-slate-800 pl-8 text-white"
+                />
+              </div>
             </div>
           )}
 

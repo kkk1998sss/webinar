@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, IndianRupee, MapPin } from 'lucide-react';
 import Image from 'next/image';
@@ -49,12 +49,56 @@ interface RazorpayPaymentResponse {
   razorpay_signature: string;
 }
 
-export function PaidWebinarFourday({ webinars, handleJoinWebinar }: Props) {
+export function PaidWebinarFourday({ webinars }: Props) {
   const [paidWebinarIds, setPaidWebinarIds] = useState<string[]>([]);
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   const [loadingWebinarId, setLoadingWebinarId] = useState<string | null>(null);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true);
   const router = useRouter();
   const { data: session } = useSession();
+
+  // Check user's payment history on component mount
+  useEffect(() => {
+    const checkPaymentHistory = async () => {
+      if (!session?.user) {
+        setIsLoadingPayments(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/razorpay/payments/user-payments', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const paidIds = data.payments
+            .filter(
+              (payment: {
+                status: string;
+                planType: string;
+                webinarId: string;
+              }) =>
+                payment.status === 'captured' &&
+                payment.planType === 'PAID_WEBINAR' &&
+                payment.webinarId
+            )
+            .map((payment: { webinarId: string }) => payment.webinarId);
+
+          setPaidWebinarIds(paidIds);
+        }
+      } catch (error) {
+        console.error('Error fetching payment history:', error);
+      } finally {
+        setIsLoadingPayments(false);
+      }
+    };
+
+    checkPaymentHistory();
+  }, [session?.user]);
 
   // Razorpay script loader
   const RazorpayScript = () => (
@@ -71,15 +115,21 @@ export function PaidWebinarFourday({ webinars, handleJoinWebinar }: Props) {
     />
   );
 
-  const getPlanType = (webinar: Webinar): 'FOUR_DAY' | 'SIX_MONTH' => {
-    if (webinar.paidAmount && webinar.paidAmount >= 1000) return 'SIX_MONTH';
-    return 'FOUR_DAY';
+  // For paid webinar page, always use PAID_WEBINAR plan type
+  const getPlanType = (): 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR' => {
+    return 'PAID_WEBINAR';
   };
 
   const handlePaymentSuccess = (id: string) => {
     setPaidWebinarIds((prev) => [...prev, id]);
     toast.success('Payment successful!');
-    router.refresh();
+    // Redirect to thank you page instead of refreshing
+    router.push('/thank-you');
+  };
+
+  const handleAlreadyPaid = () => {
+    toast.success('Redirecting to thank you page...');
+    router.push('/thank-you');
   };
 
   const handlePayment = async (webinar: Webinar) => {
@@ -95,7 +145,15 @@ export function PaidWebinarFourday({ webinars, handleJoinWebinar }: Props) {
     }
 
     setLoadingWebinarId(webinar.id);
-    const planType = getPlanType(webinar);
+    const planType = getPlanType();
+
+    // Debug logging
+    console.log('Payment request data:', {
+      planType,
+      amount: webinar.paidAmount,
+      webinarId: webinar.id,
+      webinarTitle: webinar.webinarTitle,
+    });
 
     try {
       // Create order on backend
@@ -113,7 +171,14 @@ export function PaidWebinarFourday({ webinars, handleJoinWebinar }: Props) {
 
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.message || 'Failed to create order');
+        console.error('Payment API error:', {
+          status: res.status,
+          statusText: res.statusText,
+          error: error,
+        });
+        throw new Error(
+          error.error || error.message || 'Failed to create order'
+        );
       }
 
       const data = await res.json();
@@ -271,10 +336,70 @@ export function PaidWebinarFourday({ webinars, handleJoinWebinar }: Props) {
                       <Calendar className="size-4 text-yellow-300" />
                       <span className="font-semibold">Date:</span>
                       <span>
-                        {new Date(webinar.webinarDate).toLocaleDateString(
-                          'en-US',
-                          { day: 'numeric', month: 'long', year: 'numeric' }
-                        )}
+                        {(() => {
+                          // Check if we have scheduledDates with start and end dates
+                          if (
+                            webinar.scheduledDates &&
+                            typeof webinar.scheduledDates === 'object'
+                          ) {
+                            const scheduledDates =
+                              webinar.scheduledDates as unknown as {
+                                startDate: string;
+                                endDate: string;
+                              };
+                            if (
+                              scheduledDates.startDate &&
+                              scheduledDates.endDate
+                            ) {
+                              const startDate = new Date(
+                                scheduledDates.startDate
+                              );
+                              const endDate = new Date(scheduledDates.endDate);
+
+                              // Check if it's a multi-day event
+                              if (
+                                startDate.toDateString() !==
+                                endDate.toDateString()
+                              ) {
+                                const months = [
+                                  'January',
+                                  'February',
+                                  'March',
+                                  'April',
+                                  'May',
+                                  'June',
+                                  'July',
+                                  'August',
+                                  'September',
+                                  'October',
+                                  'November',
+                                  'December',
+                                ];
+                                const startStr = `${months[startDate.getMonth()]} ${startDate.getDate()}`;
+                                const endStr = `${months[endDate.getMonth()]} ${endDate.getDate()}, ${endDate.getFullYear()}`;
+                                return `${startStr} - ${endStr}`;
+                              }
+                            }
+                          }
+
+                          // Fallback to single date
+                          const date = new Date(webinar.webinarDate);
+                          const months = [
+                            'January',
+                            'February',
+                            'March',
+                            'April',
+                            'May',
+                            'June',
+                            'July',
+                            'August',
+                            'September',
+                            'October',
+                            'November',
+                            'December',
+                          ];
+                          return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+                        })()}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -294,16 +419,31 @@ export function PaidWebinarFourday({ webinars, handleJoinWebinar }: Props) {
                         ₹{webinar.paidAmount}/-
                       </span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-yellow-300">
+                        Plan:
+                      </span>
+                      <span className="text-sm font-medium text-blue-300">
+                        Paid Webinar
+                      </span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="mt-2 flex justify-center">
-                  {paidWebinarIds.includes(webinar.id) ? (
+                  {isLoadingPayments ? (
                     <button
-                      onClick={() => handleJoinWebinar(webinar.id)}
-                      className="rounded-lg border-2 border-yellow-400 bg-gradient-to-r from-yellow-400 to-orange-400 px-6 py-2 font-semibold text-slate-900 shadow-md transition-transform duration-200 hover:scale-105 hover:from-yellow-500 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+                      disabled
+                      className="cursor-not-allowed rounded-lg border-2 border-gray-400 bg-gray-400 px-6 py-2 font-semibold text-white shadow-md"
                     >
-                      Click here to join
+                      Loading...
+                    </button>
+                  ) : paidWebinarIds.includes(webinar.id) ? (
+                    <button
+                      onClick={handleAlreadyPaid}
+                      className="rounded-lg border-2 border-green-400 bg-gradient-to-r from-green-400 to-green-500 px-6 py-2 font-semibold text-white shadow-md transition-transform duration-200 hover:scale-105 hover:from-green-500 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                    >
+                      Already Paid
                     </button>
                   ) : (
                     <button

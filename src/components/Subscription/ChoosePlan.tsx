@@ -12,7 +12,7 @@ interface ChoosePlanProps {
 
 interface Subscription {
   id: string;
-  type: 'FOUR_DAY' | 'SIX_MONTH';
+  type: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   startDate: Date;
   endDate: Date;
   isActive: boolean;

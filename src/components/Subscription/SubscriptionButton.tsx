@@ -42,7 +42,7 @@ interface RazorpayPaymentResponse {
 }
 
 interface SubscriptionButtonProps {
-  planType: 'FOUR_DAY' | 'SIX_MONTH';
+  planType: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   amount: number;
   webinarId?: string;
 }

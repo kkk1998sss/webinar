@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 
 interface Subscription {
   id: string;
-  type: 'FOUR_DAY' | 'SIX_MONTH';
+  type: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   startDate: Date;
   endDate: Date;
   isActive: boolean;
@@ -318,7 +318,12 @@ const Pricing = () => {
                         whileTap={{ scale: 0.95 }}
                       >
                         <SubscriptionButton
-                          planType={plan.planType as 'FOUR_DAY' | 'SIX_MONTH'}
+                          planType={
+                            plan.planType as
+                              | 'FOUR_DAY'
+                              | 'SIX_MONTH'
+                              | 'PAID_WEBINAR'
+                          }
                           amount={plan.amount}
                         />
                       </motion.div>

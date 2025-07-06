@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
@@ -9,7 +9,6 @@ import { Webinar } from '@/types/user';
 
 interface Props {
   webinars: Webinar[];
-  handleJoinWebinar: (id: string) => void;
 }
 
 // Razorpay types
@@ -47,12 +46,56 @@ interface RazorpayPaymentResponse {
   razorpay_signature: string;
 }
 
-export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
+export function PaidWebinarSection({ webinars }: Props) {
   const [paidWebinarIds, setPaidWebinarIds] = useState<string[]>([]);
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(true);
   const router = useRouter();
   const { data: session } = useSession();
+
+  // Check user's payment history on component mount
+  useEffect(() => {
+    const checkPaymentHistory = async () => {
+      if (!session?.user) {
+        setIsLoadingPayments(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/razorpay/payments/user-payments', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const paidIds = data.payments
+            .filter(
+              (payment: {
+                status: string;
+                planType: string;
+                webinarId: string;
+              }) =>
+                payment.status === 'captured' &&
+                payment.planType === 'PAID_WEBINAR' &&
+                payment.webinarId
+            )
+            .map((payment: { webinarId: string }) => payment.webinarId);
+
+          setPaidWebinarIds(paidIds);
+        }
+      } catch (error) {
+        console.error('Error fetching payment history:', error);
+      } finally {
+        setIsLoadingPayments(false);
+      }
+    };
+
+    checkPaymentHistory();
+  }, [session?.user]);
 
   // Razorpay script loader
   const RazorpayScript = () => (
@@ -69,15 +112,21 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
     />
   );
 
-  const getPlanType = (webinar: Webinar): 'FOUR_DAY' | 'SIX_MONTH' => {
-    if (webinar.paidAmount && webinar.paidAmount >= 1000) return 'SIX_MONTH';
-    return 'FOUR_DAY';
+  // For paid webinar section, always use PAID_WEBINAR plan type
+  const getPlanType = (): 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR' => {
+    return 'PAID_WEBINAR';
   };
 
   const handlePaymentSuccess = (id: string) => {
     setPaidWebinarIds((prev) => [...prev, id]);
     toast.success('Payment successful!');
-    router.refresh();
+    // Redirect to thank you page instead of refreshing
+    router.push('/thank-you');
+  };
+
+  const handleAlreadyPaid = () => {
+    toast.success('Redirecting to thank you page...');
+    router.push('/thank-you');
   };
 
   const handlePayment = async (webinar: Webinar) => {
@@ -93,7 +142,13 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
     }
 
     setIsLoading(true);
-    const planType = getPlanType(webinar);
+    const planType = getPlanType();
+    console.log(
+      'Processing payment with planType:',
+      planType,
+      'for webinar:',
+      webinar.webinarTitle
+    );
 
     try {
       // Create order on backend
@@ -262,6 +317,9 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
                   Price
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
+                  Plan
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
                   Action
                 </th>
               </tr>
@@ -282,7 +340,67 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
                     </span>
                   </td>
                   <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
-                    {webinar.webinarDate}
+                    {(() => {
+                      // Check if we have scheduledDates with start and end dates
+                      if (
+                        webinar.scheduledDates &&
+                        typeof webinar.scheduledDates === 'object'
+                      ) {
+                        const scheduledDates =
+                          webinar.scheduledDates as unknown as {
+                            startDate: string;
+                            endDate: string;
+                          };
+                        if (
+                          scheduledDates.startDate &&
+                          scheduledDates.endDate
+                        ) {
+                          const startDate = new Date(scheduledDates.startDate);
+                          const endDate = new Date(scheduledDates.endDate);
+
+                          // Check if it's a multi-day event
+                          if (
+                            startDate.toDateString() !== endDate.toDateString()
+                          ) {
+                            const months = [
+                              'Jan',
+                              'Feb',
+                              'Mar',
+                              'Apr',
+                              'May',
+                              'Jun',
+                              'Jul',
+                              'Aug',
+                              'Sep',
+                              'Oct',
+                              'Nov',
+                              'Dec',
+                            ];
+                            const startStr = `${startDate.getDate()} ${months[startDate.getMonth()]}`;
+                            const endStr = `${endDate.getDate()} ${months[endDate.getMonth()]}, ${endDate.getFullYear()}`;
+                            return `${startStr} - ${endStr}`;
+                          }
+                        }
+                      }
+
+                      // Fallback to single date
+                      const date = new Date(webinar.webinarDate);
+                      const months = [
+                        'Jan',
+                        'Feb',
+                        'Mar',
+                        'Apr',
+                        'May',
+                        'Jun',
+                        'Jul',
+                        'Aug',
+                        'Sep',
+                        'Oct',
+                        'Nov',
+                        'Dec',
+                      ];
+                      return `${date.getDate()} ${months[date.getMonth()]}, ${date.getFullYear()}`;
+                    })()}
                   </td>
                   <td className="hidden px-4 py-3 sm:table-cell">
                     {webinar.webinarTime}
@@ -297,12 +415,24 @@ export function PaidWebinarSection({ webinars, handleJoinWebinar }: Props) {
                     ₹{webinar?.paidAmount}
                   </td>
                   <td className="px-4 py-3">
-                    {paidWebinarIds.includes(webinar.id) ? (
+                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      Paid Webinar
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {isLoadingPayments ? (
                       <button
-                        onClick={() => handleJoinWebinar(webinar.id)}
-                        className="w-full rounded-md bg-gradient-to-r from-yellow-500 to-orange-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-yellow-600 hover:to-orange-700 sm:w-auto dark:from-yellow-600 dark:to-orange-700 dark:hover:from-yellow-700 dark:hover:to-orange-800"
+                        disabled
+                        className="w-full cursor-not-allowed rounded-md bg-gray-400 px-3 py-1.5 text-sm font-medium text-white shadow-sm sm:w-auto"
                       >
-                        Join Now
+                        Loading...
+                      </button>
+                    ) : paidWebinarIds.includes(webinar.id) ? (
+                      <button
+                        onClick={handleAlreadyPaid}
+                        className="w-full rounded-md bg-gradient-to-r from-green-500 to-green-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-green-600 hover:to-green-700 sm:w-auto dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800"
+                      >
+                        Already Paid
                       </button>
                     ) : (
                       <button

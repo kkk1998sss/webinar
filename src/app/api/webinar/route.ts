@@ -30,14 +30,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // Validate webinar date format
-    const parsedWebinarDate = new Date(body.webinarDate);
-    if (isNaN(parsedWebinarDate.getTime())) {
+    // Validate webinar date range format
+    const parsedStartDate = new Date(body.webinarStartDate);
+    const parsedEndDate = new Date(body.webinarEndDate);
+
+    if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
       return NextResponse.json(
         {
           success: false,
           error: 'Invalid date format',
-          details: 'webinarDate must be a valid ISO date string',
+          details:
+            'webinarStartDate and webinarEndDate must be valid ISO date strings',
+        },
+        { status: 400 }
+      );
+    }
+
+    if (parsedEndDate <= parsedStartDate) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid date range',
+          details: 'End date must be after start date',
         },
         { status: 400 }
       );
@@ -79,7 +93,11 @@ export async function POST(req: Request) {
         durationSeconds: body.durationSeconds || 0,
         attendeeSignIn: body.attendeeSignIn || false,
         passwordProtected: body.passwordProtected || false,
-        webinarDate: parsedWebinarDate,
+        webinarDate: parsedStartDate, // Using start date as the main webinar date
+        scheduledDates: {
+          startDate: parsedStartDate.toISOString(),
+          endDate: parsedEndDate.toISOString(),
+        },
         webinarTime: body.webinarTime || '12:00', // Default time if not provided
         selectedLanguage: body.selectedLanguage || 'en',
         instantWatchEnabled: body.instantWatchEnabled || false,
@@ -87,7 +105,7 @@ export async function POST(req: Request) {
         isPaid: body.isPaid || false,
         paidAmount: body.isPaid ? parseFloat(body.paidAmount || '0') : null,
         // Add other fields that might be missing
-        scheduledDates: body.scheduledDates || null,
+        // scheduledDates is already set above with date range
         brandImage: body.brandImage || null,
         resources: {
           // Validate and structure resources

@@ -19,6 +19,15 @@ export const POST = async (req: Request) => {
       keyId: process.env.RAZORPAY_KEY_ID?.substring(0, 8) + '...', // Log partial key for debugging
     });
 
+    // Additional validation for PAID_WEBINAR
+    if (planType === 'PAID_WEBINAR' && !webinarId) {
+      console.error('PAID_WEBINAR requires webinarId');
+      return NextResponse.json(
+        { error: 'Webinar ID is required for paid webinar purchases' },
+        { status: 400 }
+      );
+    }
+
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -52,7 +61,12 @@ export const POST = async (req: Request) => {
     }
 
     const amountInPaise = Math.round(amount * 100);
-    const receiptId = `${planType}_sub_${session.user.id}`;
+    // Create a unique receipt ID that works for all plan types
+    const timestamp = Date.now();
+    const receiptId =
+      planType === 'PAID_WEBINAR'
+        ? `webinar_${timestamp}`
+        : `${planType}_sub_${timestamp}`;
     console.log('Creating Razorpay order:', {
       amountInPaise,
       receiptId,

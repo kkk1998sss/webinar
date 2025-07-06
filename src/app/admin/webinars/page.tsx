@@ -348,12 +348,12 @@ export default function WebinarList() {
                             size={12}
                           />
                           <span className="text-gray-600 dark:text-gray-400">
-                            {new Date(
-                              `2000-01-01T${webinar.scheduledDates?.[0]?.time}`
-                            ).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {(() => {
+                              const timeStr = webinar.scheduledDates?.[0]?.time;
+                              if (!timeStr) return 'N/A';
+                              const [hours, minutes] = timeStr.split(':');
+                              return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+                            })()}
                           </span>
                         </div>
                       </td>

@@ -46,41 +46,52 @@ export async function POST(req: NextRequest) {
         });
 
         if (payment) {
-          // Determine subscription type based on amount or other criteria
-          isFourDayPlan = payment.planType === 'FOUR_DAY';
+          // Handle different plan types
+          if (payment.planType === 'PAID_WEBINAR') {
+            // For individual webinar purchases, we don't create subscriptions
+            // The user will have access to the specific webinar they purchased
+            console.log('Paid webinar purchase successful via webhook:', {
+              paymentId: payment.id,
+              webinarId: payment.webinarId,
+              userId: payment.userId,
+            });
+          } else {
+            // Handle subscription plans (FOUR_DAY, SIX_MONTH)
+            isFourDayPlan = payment.planType === 'FOUR_DAY';
 
-          subscriptionData = {
-            userId: payment.userId,
-            paymentId: payment.id,
-            type: isFourDayPlan
-              ? SubscriptionType.FOUR_DAY
-              : SubscriptionType.SIX_MONTH,
-            startDate: new Date(),
-            endDate: new Date(
-              Date.now() +
-                (isFourDayPlan
-                  ? 4 * 24 * 60 * 60 * 1000 // 4 days
-                  : 180 * 24 * 60 * 60 * 1000) // 6 months
-            ),
-            isActive: true,
-            ...(isFourDayPlan && {
-              unlockedContent: {
-                currentDay: 1,
-                unlockedVideos: [1],
-                expiryDates: {
-                  video1: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-                  video2: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
-                  video3: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-                  video4: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+            subscriptionData = {
+              userId: payment.userId,
+              paymentId: payment.id,
+              type: isFourDayPlan
+                ? SubscriptionType.FOUR_DAY
+                : SubscriptionType.SIX_MONTH,
+              startDate: new Date(),
+              endDate: new Date(
+                Date.now() +
+                  (isFourDayPlan
+                    ? 4 * 24 * 60 * 60 * 1000 // 4 days
+                    : 180 * 24 * 60 * 60 * 1000) // 6 months
+              ),
+              isActive: true,
+              ...(isFourDayPlan && {
+                unlockedContent: {
+                  currentDay: 1,
+                  unlockedVideos: [1],
+                  expiryDates: {
+                    video1: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                    video2: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000),
+                    video3: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+                    video4: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+                  },
                 },
-              },
-            }),
-          };
+              }),
+            };
 
-          // Create subscription
-          await prisma.subscription.create({
-            data: subscriptionData,
-          });
+            // Create subscription
+            await prisma.subscription.create({
+              data: subscriptionData,
+            });
+          }
 
           // Update user activation status
           await prisma.user.update({
