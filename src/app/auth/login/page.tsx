@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { EyeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getSession, signIn } from 'next-auth/react';
@@ -380,51 +379,83 @@ export default function LoginPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: 'spring', duration: 0.5 }}
-              className="relative mx-4 flex w-full max-w-6xl flex-col rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900"
+              className="relative mx-2 flex max-h-[90vh] w-full min-w-0 max-w-full flex-col overflow-y-auto rounded-2xl bg-white p-2 shadow-2xl sm:mx-4 sm:max-w-2xl sm:p-6 dark:bg-gray-900"
               onClick={(e) => e.stopPropagation()}
             >
-              <button
-                onClick={() => setShowSubscriptionModal(false)}
-                className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                <X className="size-5" />
-              </button>
-
-              <div className="text-center">
-                <motion.h2
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mb-4 text-xl font-bold text-gray-900 dark:text-white"
+              {/* Soft blurred gradient accent */}
+              <div className="pointer-events-none absolute -left-10 -top-10 z-0 size-40 rounded-full bg-gradient-to-br from-yellow-200 via-red-200 to-transparent opacity-40 blur-2xl dark:from-yellow-900 dark:via-red-900 dark:to-transparent"></div>
+              {/* Animated meditation icon */}
+              <div className="relative z-10 mb-2 flex justify-center">
+                <motion.svg
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: 0.1,
+                    type: 'spring',
+                    stiffness: 120,
+                  }}
+                  className="size-12 text-yellow-400 drop-shadow-lg"
+                  fill="none"
+                  viewBox="0 0 48 48"
+                  stroke="currentColor"
                 >
-                  Choose Your Plan
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="mb-6 text-sm text-gray-600 dark:text-gray-300"
-                >
-                  Start your mindfulness journey today
-                </motion.p>
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    strokeWidth="2"
+                    className="opacity-30"
+                  />
+                  <path
+                    d="M24 34c-4-2-8-6-8-10a8 8 0 1116 0c0 4-4 8-8 10z"
+                    strokeWidth="2"
+                  />
+                  <circle cx="24" cy="20" r="3" fill="currentColor" />
+                </motion.svg>
               </div>
-
+              <motion.h2
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mb-2 bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-center text-2xl font-extrabold text-transparent drop-shadow-sm sm:text-3xl dark:from-red-500 dark:to-yellow-400"
+              >
+                Choose Your Plan
+              </motion.h2>
+              <div className="mx-auto mb-2 h-1 w-16 rounded-full bg-gradient-to-r from-red-600 to-yellow-500 opacity-80 dark:from-red-500 dark:to-yellow-400"></div>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="mb-4 text-center text-base font-medium text-gray-600 dark:text-gray-300"
+              >
+                Unlock your spiritual journey with the perfect plan for you!
+              </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="grid grow grid-cols-1 gap-6 md:grid-cols-2"
+                className="z-10 mx-auto grid max-w-xl grow grid-cols-1 justify-center gap-6 sm:grid-cols-2 md:gap-8"
               >
                 {/* 3-Day Plan */}
-                <div className="border-primary dark:border-primary-dark flex h-full flex-col rounded-xl border bg-white p-4 shadow-lg dark:bg-gray-800">
+                <motion.div
+                  whileHover={{
+                    scale: 1.03,
+                    boxShadow: '0 8px 32px 0 rgba(255, 193, 7, 0.15)',
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className="dark:border-border relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 py-8 shadow-lg transition-all duration-200 sm:p-6 sm:py-10 dark:bg-gray-800"
+                >
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      3-Day Access Plan
+                      <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-lg font-extrabold text-transparent drop-shadow-sm sm:text-xl dark:from-red-500 dark:to-yellow-400">
+                        3-Day Access Plan
+                      </span>
                     </h3>
                   </div>
 
                   <div className="mb-6">
-                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-extrabold text-transparent drop-shadow-sm sm:text-4xl dark:from-red-500 dark:to-yellow-400">
                       ₹199
                     </span>
                     <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
@@ -432,7 +463,7 @@ export default function LoginPage() {
                     </span>
                   </div>
 
-                  <ul className="mb-6 grow space-y-2">
+                  <ul className="mb-6 grow space-y-2 text-left text-xs text-gray-700 sm:text-sm dark:text-slate-300">
                     {[
                       'Day-1: Learn Shree Suktam chanting',
                       'Day-2: Learn Shree Yantra (Maha Meru) pooja',
@@ -443,19 +474,21 @@ export default function LoginPage() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.5 + index * 0.1 }}
-                        className="flex items-center space-x-3 text-sm text-gray-700 dark:text-gray-300"
+                        className="flex items-center space-x-2"
                       >
-                        <svg
-                          className="size-5 text-yellow-500"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <span className="mr-1 inline-flex items-center justify-center rounded-full bg-yellow-100 p-1 dark:bg-yellow-900/30">
+                          <svg
+                            className="size-4 text-yellow-500 dark:text-yellow-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
                         <span>{feature}</span>
                       </motion.li>
                     ))}
@@ -463,28 +496,37 @@ export default function LoginPage() {
 
                   <div className="mt-auto">
                     {hasActiveFourDayPlan ? (
-                      <div className="rounded-md bg-green-100 p-2 text-center text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                      <div className="rounded-lg bg-green-100 p-2 text-center text-xs text-green-800 sm:text-sm dark:bg-green-700/30 dark:text-green-300">
                         You have an active 3-Day plan
                       </div>
                     ) : (
                       <SubscriptionButton planType="FOUR_DAY" amount={199} />
                     )}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* 6-Month Plan */}
-                <div className="border-primary dark:border-primary-dark flex h-full flex-col rounded-xl border-2 bg-white p-4 shadow-lg dark:bg-gray-800">
+                <motion.div
+                  whileHover={{
+                    scale: 1.03,
+                    boxShadow: '0 8px 32px 0 rgba(255, 193, 7, 0.15)',
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  className="border-primary dark:border-primary-dark ring-primary/10 relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border-2 bg-white p-4 py-8 shadow-lg ring-2 transition-all duration-200 sm:p-6 sm:py-10 dark:bg-gray-800"
+                >
+                  <div className="absolute right-0 top-0 z-10 animate-pulse rounded-bl-xl rounded-tr-2xl bg-gradient-to-r from-yellow-400 to-red-500 px-3 py-1 text-xs font-bold text-white shadow-md">
+                    POPULAR
+                  </div>
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      6-Months Premium Subscription
+                      <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-lg font-extrabold text-transparent drop-shadow-sm sm:text-xl dark:from-red-500 dark:to-yellow-400">
+                        6-Months Premium Subscription
+                      </span>
                     </h3>
-                    <span className="bg-primary/10 text-primary dark:bg-primary-dark/10 dark:text-primary-dark rounded-full px-2 py-0.5 text-xs font-medium">
-                      POPULAR
-                    </span>
                   </div>
 
                   <div className="mb-6">
-                    <span className="text-3xl font-bold text-gray-900 dark:text-white">
+                    <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-extrabold text-transparent drop-shadow-sm sm:text-4xl dark:from-red-500 dark:to-yellow-400">
                       ₹699
                     </span>
                     <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
@@ -492,7 +534,7 @@ export default function LoginPage() {
                     </span>
                   </div>
 
-                  <ul className="mb-6 grow space-y-2">
+                  <ul className="mb-6 grow space-y-2 text-left text-xs text-gray-700 sm:text-sm dark:text-slate-300">
                     {[
                       'Live session Every Sunday at 10 AM',
                       'Learn Shree Suktam in detail and unlock the secrets',
@@ -508,19 +550,21 @@ export default function LoginPage() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.5 + index * 0.1 }}
-                        className="flex items-center space-x-3 text-sm text-gray-700 dark:text-gray-300"
+                        className="flex items-center space-x-2"
                       >
-                        <svg
-                          className="size-5 text-yellow-500"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <span className="mr-1 inline-flex items-center justify-center rounded-full bg-yellow-100 p-1 dark:bg-yellow-900/30">
+                          <svg
+                            className="size-4 text-yellow-500 dark:text-yellow-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
                         <span>{feature}</span>
                       </motion.li>
                     ))}
@@ -529,7 +573,7 @@ export default function LoginPage() {
                   <div className="mt-auto">
                     <SubscriptionButton planType="SIX_MONTH" amount={699} />
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
 
               <motion.button

@@ -170,16 +170,16 @@ const Pricing = () => {
   return (
     <section
       id="pricing"
-      className="dark:to-secondary-dark/20 scroll-mt-24 bg-gradient-to-t from-white to-yellow-50 py-16 dark:from-gray-900"
+      className="dark:to-secondary-dark/20 scroll-mt-24 bg-gradient-to-t from-white to-yellow-50 px-2 py-10 sm:px-4 dark:from-gray-900"
     >
-      <div className="mx-auto max-w-screen-xl px-4 lg:px-6">
-        <div className="mx-auto mb-12 max-w-screen-md text-center">
+      <div className="mx-auto max-w-screen-xl px-0 sm:px-4 lg:px-6">
+        <div className="mx-auto mb-8 max-w-screen-md text-center">
           <motion.h2
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            className="mb-4 text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white"
+            className="mb-3 text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-white"
           >
             Choose Your Meditation Plan
           </motion.h2>
@@ -193,7 +193,7 @@ const Pricing = () => {
             Start your mindfulness journey with flexible subscription options
           </motion.p>
         </div>
-        <div className="mx-auto grid max-w-screen-xl grid-cols-1 gap-8 md:grid-cols-2">
+        <div className="mx-auto grid max-w-screen-xl grid-cols-1 gap-6 sm:grid-cols-2 md:gap-8">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -204,25 +204,25 @@ const Pricing = () => {
               className="h-full"
             >
               <Card
-                className={`dark:hover:shadow-primary/20 relative h-full overflow-hidden p-2 text-center transition-all duration-300 hover:shadow-xl ${plan.highlight ? 'border-primary dark:border-primary-dark border-2' : 'dark:border-border'}`}
+                className={`dark:border-border relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 py-8 shadow-lg transition-all duration-300 hover:shadow-2xl sm:p-6 sm:py-10 dark:bg-gray-900 ${plan.highlight ? 'border-primary dark:border-primary-dark ring-primary/10 border-2 ring-2' : ''}`}
               >
                 {plan.popular && (
-                  <div className="bg-primary text-primary-foreground dark:bg-primary-dark absolute right-0 top-0 rounded-bl-lg px-2 py-0.5 text-xs font-bold">
+                  <div className="absolute right-0 top-0 z-10 animate-pulse rounded-bl-xl rounded-tr-2xl bg-gradient-to-r from-yellow-400 to-red-500 px-3 py-1 text-xs font-bold text-white shadow-md">
                     POPULAR
                   </div>
                 )}
 
                 <div className="flex h-full flex-col">
-                  <h3 className="mb-0.5 text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="mb-1 text-lg font-semibold text-gray-900 sm:text-xl dark:text-white">
                     {plan.title}
                   </h3>
-                  <p className="mb-0.5 text-sm text-gray-600 dark:text-gray-300">
+                  <p className="mb-2 text-sm text-gray-600 dark:text-gray-300">
                     {plan.description}
                   </p>
 
                   <div className="my-2 flex items-baseline justify-center">
                     <motion.span
-                      className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-bold text-transparent dark:from-red-500 dark:to-yellow-400"
+                      className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-extrabold text-transparent drop-shadow-sm sm:text-4xl dark:from-red-500 dark:to-yellow-400"
                       initial={{ scale: 0.8 }}
                       whileInView={{ scale: 1 }}
                       transition={{
@@ -235,12 +235,12 @@ const Pricing = () => {
                     >
                       {plan.price}
                     </motion.span>
-                    <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
+                    <span className="ml-1 text-xs text-gray-500 sm:text-sm dark:text-gray-400">
                       {plan.duration}
                     </span>
                   </div>
 
-                  <ul className="mb-2 grow space-y-3 text-left text-xs text-gray-700 dark:text-slate-300">
+                  <ul className="mb-3 grow space-y-2 text-left text-xs text-gray-700 sm:text-sm dark:text-slate-300">
                     {plan.features.map((feature, idx) => (
                       <motion.li
                         key={idx}
@@ -250,60 +250,63 @@ const Pricing = () => {
                         transition={{ duration: 0.3, delay: 0.4 + idx * 0.1 }}
                         viewport={{ once: true }}
                       >
-                        <svg
-                          className="size-4 text-yellow-500 dark:text-yellow-400"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                        <span className="mr-1 inline-flex items-center justify-center rounded-full bg-yellow-100 p-1 dark:bg-yellow-900/30">
+                          <svg
+                            className="size-4 text-yellow-500 dark:text-yellow-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
                         <span>{feature}</span>
                       </motion.li>
                     ))}
                   </ul>
 
-                  <div className="mt-auto">
+                  <div className="mt-auto w-full">
                     {loading ? (
-                      <div className="flex h-10 items-center justify-center">
-                        <div className="border-primary dark:border-primary-dark size-6 animate-spin rounded-full border-b-2"></div>
+                      <div className="flex h-12 items-center justify-center">
+                        <div className="border-primary dark:border-primary-dark size-7 animate-spin rounded-full border-b-2"></div>
                       </div>
                     ) : !session ? (
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        className="w-full"
                       >
                         <button
                           onClick={handleSubscribe}
-                          className="w-full rounded-lg bg-gradient-to-r from-red-600 to-yellow-500 px-4 py-1.5 text-center text-sm font-medium text-white hover:bg-gradient-to-br focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800"
+                          className="w-full rounded-xl bg-gradient-to-r from-red-600 to-yellow-500 px-4 py-2 text-center text-base font-semibold text-white shadow-md transition-all hover:bg-gradient-to-br focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800"
                         >
                           Register to subscribe
                         </button>
                       </motion.div>
                     ) : plan.planType === 'FOUR_DAY' && hasActiveFourDayPlan ? (
-                      <div className="rounded-md bg-green-100 p-2 text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                      <div className="rounded-lg bg-green-100 p-2 text-center text-xs text-green-800 sm:text-sm dark:bg-green-700/30 dark:text-green-300">
                         You have an active 3-Day plan
                       </div>
                     ) : plan.planType === 'FOUR_DAY' &&
                       hasExpiredFourDayPlan ? (
-                      <div className="rounded-md bg-green-100 p-2 text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                      <div className="rounded-lg bg-green-100 p-2 text-center text-xs text-green-800 sm:text-sm dark:bg-green-700/30 dark:text-green-300">
                         You have purchased the 3-Day plan
                       </div>
                     ) : plan.planType === 'SIX_MONTH' &&
                       hasActiveSixMonthPlan ? (
-                      <div className="rounded-md bg-green-100 p-2 text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                      <div className="rounded-lg bg-green-100 p-2 text-center text-xs text-green-800 sm:text-sm dark:bg-green-700/30 dark:text-green-300">
                         You have an active 6-Month plan
                       </div>
                     ) : plan.planType === 'SIX_MONTH' &&
                       hasExpiredSixMonthPlan ? (
-                      <div className="rounded-md bg-green-100 p-2 text-xs text-green-800 dark:bg-green-700/30 dark:text-green-300">
+                      <div className="rounded-lg bg-green-100 p-2 text-center text-xs text-green-800 sm:text-sm dark:bg-green-700/30 dark:text-green-300">
                         You have purchased the 6-Month plan
                       </div>
                     ) : isRestrictedUser && plan.planType === 'SIX_MONTH' ? (
-                      <div className="rounded-md bg-gray-100 p-2 text-xs text-gray-800 dark:bg-gray-700/30 dark:text-gray-300">
+                      <div className="rounded-lg bg-gray-100 p-2 text-center text-xs text-gray-800 sm:text-sm dark:bg-gray-700/30 dark:text-gray-300">
                         This plan is not available for your account please{' '}
                         <button
                           onClick={handleRegister}
@@ -316,6 +319,7 @@ const Pricing = () => {
                       <motion.div
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
+                        className="w-full"
                       >
                         <SubscriptionButton
                           planType={
