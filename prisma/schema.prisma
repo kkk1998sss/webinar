@@ -101,6 +101,8 @@ model WebinarDetails {
   payments            Payment[] @relation("WebinarPayments")
   isPaid              Boolean @default(false)
   paidAmount          Float?
+  discountPercentage  Float?  @default(0) // Discount percentage (0-100)
+  discountAmount      Float?  @default(0) // Discount amount in currency
 }
 
 model WebinarSettings {

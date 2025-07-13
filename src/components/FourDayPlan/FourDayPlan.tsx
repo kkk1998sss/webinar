@@ -18,6 +18,7 @@ import {
   Clock,
   Lock,
   Maximize2,
+  MessageCircle,
   Play,
   Sparkles,
 } from 'lucide-react';
@@ -711,6 +712,24 @@ export default function FourDayPlan() {
   // --- UI ---
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      {/* WhatsApp Floating Button */}
+      <motion.div
+        className="fixed bottom-20 right-5 z-50"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.5, duration: 0.3 }}
+      >
+        <a
+          href="https://chat.whatsapp.com/F4RlvrkkyBLAz2FzjxBa4b?mode=r_t"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex size-14 items-center justify-center rounded-full bg-green-500 shadow-lg transition-all duration-300 hover:scale-110 hover:bg-green-600 hover:shadow-xl"
+          title="Join our WhatsApp group"
+        >
+          <MessageCircle className="size-7 text-white" />
+        </a>
+      </motion.div>
+
       {/* Day selection bar */}
       <div className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
         <div className="mx-auto max-w-7xl px-4 pb-4">

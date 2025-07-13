@@ -104,6 +104,14 @@ export async function POST(req: Request) {
         justInTimeEnabled: body.justInTimeEnabled || false,
         isPaid: body.isPaid || false,
         paidAmount: body.isPaid ? parseFloat(body.paidAmount || '0') : null,
+        discountPercentage:
+          body.isPaid && body.discountPercentage
+            ? parseFloat(body.discountPercentage)
+            : null,
+        discountAmount:
+          body.isPaid && body.discountAmount
+            ? parseFloat(body.discountAmount)
+            : null,
         // Add other fields that might be missing
         // scheduledDates is already set above with date range
         brandImage: body.brandImage || null,

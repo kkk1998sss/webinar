@@ -26,6 +26,10 @@ type WebinarData = {
   passwordProtected: boolean;
   webinarTime?: string;
   selectedLanguage?: string;
+  isPaid?: boolean;
+  paidAmount?: number | null;
+  discountPercentage?: number | null;
+  discountAmount?: number | null;
 };
 
 export default function EditWebinar() {
@@ -77,6 +81,16 @@ export default function EditWebinar() {
       attendeeSignIn: formData.get('attendeeSignIn') === 'on',
       passwordProtected: formData.get('passwordProtected') === 'on',
       selectedLanguage: formData.get('selectedLanguage'),
+      isPaid: formData.get('isPaid') === 'on',
+      paidAmount: formData.get('paidAmount')
+        ? parseFloat(formData.get('paidAmount') as string)
+        : null,
+      discountPercentage: formData.get('discountPercentage')
+        ? parseFloat(formData.get('discountPercentage') as string)
+        : null,
+      discountAmount: formData.get('discountAmount')
+        ? parseFloat(formData.get('discountAmount') as string)
+        : null,
     };
 
     try {
@@ -350,6 +364,107 @@ export default function EditWebinar() {
                   placeholder="Enter language"
                 />
               </motion.div>
+            </div>
+
+            {/* Pricing Section */}
+            <div className="space-y-4 rounded-lg border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Pricing & Discounts
+              </h3>
+
+              <div className="flex items-center">
+                <input
+                  id="isPaid"
+                  name="isPaid"
+                  type="checkbox"
+                  defaultChecked={webinar?.isPaid}
+                  className="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label
+                  htmlFor="isPaid"
+                  className="ml-2 block text-sm text-gray-700"
+                >
+                  This is a paid webinar
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="paidAmount"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    Original Price (₹)
+                  </label>
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <input
+                      id="paidAmount"
+                      name="paidAmount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      defaultValue={webinar?.paidAmount || ''}
+                      className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      placeholder="0.00"
+                    />
+                  </motion.div>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="discountPercentage"
+                    className="mb-1 block text-sm font-medium text-gray-700"
+                  >
+                    Discount Percentage (%)
+                  </label>
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <input
+                      id="discountPercentage"
+                      name="discountPercentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      defaultValue={webinar?.discountPercentage || ''}
+                      className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      placeholder="0"
+                    />
+                  </motion.div>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="discountAmount"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
+                  Discount Amount (₹)
+                </label>
+                <motion.div
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                  <input
+                    id="discountAmount"
+                    name="discountAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={webinar?.discountAmount || ''}
+                    className="w-full rounded-lg border border-gray-300 p-3 outline-none transition-all duration-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    placeholder="0.00"
+                  />
+                </motion.div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Leave empty to calculate automatically from percentage
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">

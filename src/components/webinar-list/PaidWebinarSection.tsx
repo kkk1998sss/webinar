@@ -157,7 +157,10 @@ export function PaidWebinarSection({ webinars }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planType,
-          amount: webinar.paidAmount,
+          amount:
+            webinar.paidAmount && webinar.discountAmount
+              ? webinar.paidAmount - webinar.discountAmount
+              : webinar.paidAmount || 0,
           webinarId: webinar.id,
           name: session.user.name,
           email: session.user.email,
@@ -197,7 +200,10 @@ export function PaidWebinarSection({ webinars }: Props) {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
                 planType,
-                amount: webinar.paidAmount,
+                amount:
+                  webinar.paidAmount && webinar.discountAmount
+                    ? webinar.paidAmount - webinar.discountAmount
+                    : webinar.paidAmount || 0,
                 webinarId: webinar.id,
               }),
             });
@@ -411,8 +417,37 @@ export function PaidWebinarSection({ webinars }: Props) {
                       Upcoming
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-yellow-700 dark:text-yellow-400">
-                    ₹{webinar?.paidAmount}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      {webinar.discountPercentage &&
+                      webinar.discountPercentage > 0 ? (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-400 line-through">
+                              ₹{webinar.paidAmount}
+                            </span>
+                            <span className="font-semibold text-yellow-700 dark:text-yellow-400">
+                              ₹
+                              {webinar.paidAmount && webinar.discountAmount
+                                ? (
+                                    webinar.paidAmount - webinar.discountAmount
+                                  ).toFixed(0)
+                                : webinar.paidAmount}
+                            </span>
+                            <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">
+                              -{webinar.discountPercentage.toFixed(0)}% OFF
+                            </span>
+                          </div>
+                          <span className="text-xs font-semibold text-red-500">
+                            ⚡ Limited time offer
+                          </span>
+                        </>
+                      ) : (
+                        <span className="font-semibold text-yellow-700 dark:text-yellow-400">
+                          ₹{webinar.paidAmount}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm font-medium text-blue-600 dark:text-blue-400">

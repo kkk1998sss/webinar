@@ -85,6 +85,8 @@ export interface Webinar {
   passwordProtected: boolean;
   isPaid: boolean;
   paidAmount: number | null;
+  discountPercentage: number | null;
+  discountAmount: number | null;
   description?: string;
   scheduledDates: {
     date: string;

@@ -35,6 +35,8 @@ interface WebinarData {
   justInTimeEnabled: boolean;
   isPaid: boolean;
   paidAmount: number;
+  discountPercentage?: number;
+  discountAmount?: number;
   videoUploads: {
     title: string;
     url: string;
@@ -79,6 +81,8 @@ export function ScheduleModal({
   const [duration, setDuration] = useState('');
   const [isPaid, setIsPaid] = useState(true);
   const [paidAmount, setPaidAmount] = useState('');
+  const [discountPercentage, setDiscountPercentage] = useState('');
+  const [discountAmount, setDiscountAmount] = useState('');
   const [attendeeSignIn, setAttendeeSignIn] = useState(false);
   const [passwordProtected, setPasswordProtected] = useState(false);
   const [instantWatchEnabled, setInstantWatchEnabled] = useState(false);
@@ -147,6 +151,12 @@ export function ScheduleModal({
         justInTimeEnabled,
         isPaid,
         paidAmount: isPaid ? parseFloat(paidAmount) : 0,
+        discountPercentage:
+          isPaid && discountPercentage
+            ? parseFloat(discountPercentage)
+            : undefined,
+        discountAmount:
+          isPaid && discountAmount ? parseFloat(discountAmount) : undefined,
         videoUploads: [], // No videos needed for paid webinars
       };
 
@@ -291,22 +301,125 @@ export function ScheduleModal({
           </div>
 
           {isPaid && (
-            <div>
-              <Label htmlFor="paidAmount" className="text-white">
-                Amount (₹)
-              </Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
-                  ₹
-                </span>
-                <Input
-                  id="paidAmount"
-                  type="number"
-                  value={paidAmount}
-                  onChange={(e) => setPaidAmount(e.target.value)}
-                  placeholder="Enter amount"
-                  className="border-slate-700 bg-slate-800 pl-8 text-white"
-                />
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="paidAmount" className="text-white">
+                  Original Amount (₹)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white">
+                    ₹
+                  </span>
+                  <Input
+                    id="paidAmount"
+                    type="number"
+                    value={paidAmount}
+                    onChange={(e) => setPaidAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="border-slate-700 bg-slate-800 pl-8 text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Discount Section */}
+              <div className="rounded-lg border border-slate-600 bg-slate-800/50 p-4">
+                <h4 className="mb-3 text-sm font-medium text-white">
+                  Discount Options
+                </h4>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label
+                      htmlFor="discountPercentage"
+                      className="text-sm text-white"
+                    >
+                      Discount Percentage (%)
+                    </Label>
+                    <Input
+                      id="discountPercentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.01"
+                      value={discountPercentage}
+                      onChange={(e) => {
+                        setDiscountPercentage(e.target.value);
+                        // Auto-calculate discount amount if original price is set
+                        if (e.target.value && paidAmount) {
+                          const percentage = parseFloat(e.target.value);
+                          const originalPrice = parseFloat(paidAmount);
+                          const calculatedAmount =
+                            (originalPrice * percentage) / 100;
+                          setDiscountAmount(calculatedAmount.toFixed(2));
+                        }
+                      }}
+                      placeholder="0"
+                      className="border-slate-700 bg-slate-800 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <Label
+                      htmlFor="discountAmount"
+                      className="text-sm text-white"
+                    >
+                      Discount Amount (₹)
+                    </Label>
+                    <Input
+                      id="discountAmount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={discountAmount}
+                      onChange={(e) => {
+                        setDiscountAmount(e.target.value);
+                        // Auto-calculate discount percentage if original price is set
+                        if (e.target.value && paidAmount) {
+                          const amount = parseFloat(e.target.value);
+                          const originalPrice = parseFloat(paidAmount);
+                          const calculatedPercentage =
+                            (amount / originalPrice) * 100;
+                          setDiscountPercentage(
+                            calculatedPercentage.toFixed(2)
+                          );
+                        }
+                      }}
+                      placeholder="0.00"
+                      className="border-slate-700 bg-slate-800 text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Final Price Display */}
+                {paidAmount && (discountPercentage || discountAmount) && (
+                  <div className="mt-3 rounded-lg border border-green-600/30 bg-green-900/30 p-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-300">Original Price:</span>
+                      <span className="text-slate-300 line-through">
+                        ₹{paidAmount}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-green-400">Final Price:</span>
+                      <span className="font-bold text-green-400">
+                        ₹
+                        {(() => {
+                          const original = parseFloat(paidAmount);
+                          const discount = parseFloat(discountAmount) || 0;
+                          return Math.max(0, original - discount).toFixed(0);
+                        })()}
+                      </span>
+                    </div>
+                    {discountPercentage && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-red-400">Discount:</span>
+                        <span className="font-bold text-red-400">
+                          -{discountPercentage}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
