@@ -504,7 +504,7 @@ export default function FourDayPlan() {
     return () => document.removeEventListener('fullscreenchange', exitHandler);
   }, [isFullscreen]);
 
-  // Helper: Get unlock time for a video (9:00 PM on the correct day) - FOR TESTING
+  // Helper: Get unlock time for a video (10:33 PM on the correct day) - FOR TESTING
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
     return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00 (9:00 PM)
@@ -651,6 +651,88 @@ export default function FourDayPlan() {
     } else {
       return `${seconds}s`;
     }
+  }
+
+  // Countdown Timer Component for locked videos
+  function VideoCountdownTimer({ unlockTime }: { unlockTime: Date }) {
+    const [timeLeft, setTimeLeft] = useState({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
+    const hasRefreshed = useRef(false);
+
+    useEffect(() => {
+      const calculateTimeLeft = () => {
+        const now = new Date();
+        const difference = unlockTime.getTime() - now.getTime();
+
+        if (difference > 0) {
+          setTimeLeft({
+            days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+            hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+            minutes: Math.floor((difference / 1000 / 60) % 60),
+            seconds: Math.floor((difference / 1000) % 60),
+          });
+        } else {
+          setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+          if (!hasRefreshed.current) {
+            hasRefreshed.current = true;
+            setTimeout(() => window.location.reload(), 500); // slight delay for UI
+          }
+        }
+      };
+
+      calculateTimeLeft();
+      const timer = setInterval(calculateTimeLeft, 1000);
+
+      return () => clearInterval(timer);
+    }, [unlockTime]);
+
+    return (
+      <div className="mt-4 w-full">
+        <div className="text-center">
+          <div className="mb-2 text-xs font-bold text-blue-900">UNLOCKS IN</div>
+          <div className="flex justify-center gap-2">
+            {timeLeft.days > 0 && (
+              <div className="flex flex-col items-center">
+                <div className="flex size-8 items-center justify-center rounded-md bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-bold text-white shadow-md md:size-10 md:text-base">
+                  {timeLeft.days}
+                </div>
+                <span className="mt-1 text-xs font-medium text-blue-900">
+                  DAYS
+                </span>
+              </div>
+            )}
+            <div className="flex flex-col items-center">
+              <div className="flex size-8 items-center justify-center rounded-md bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-bold text-white shadow-md md:size-10 md:text-base">
+                {timeLeft.hours.toString().padStart(2, '0')}
+              </div>
+              <span className="mt-1 text-xs font-medium text-blue-900">
+                HOURS
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="flex size-8 items-center justify-center rounded-md bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-bold text-white shadow-md md:size-10 md:text-base">
+                {timeLeft.minutes.toString().padStart(2, '0')}
+              </div>
+              <span className="mt-1 text-xs font-medium text-blue-900">
+                MINUTES
+              </span>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="flex size-8 items-center justify-center rounded-md bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-bold text-white shadow-md md:size-10 md:text-base">
+                {timeLeft.seconds.toString().padStart(2, '0')}
+              </div>
+              <span className="mt-1 text-xs font-medium text-blue-900">
+                SECONDS
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (loading) {
@@ -909,6 +991,7 @@ export default function FourDayPlan() {
                         {unlockTime &&
                           `${unlockTime.getHours().toString().padStart(2, '0')}:${unlockTime.getMinutes().toString().padStart(2, '0')}`}
                       </p>
+                      <VideoCountdownTimer unlockTime={unlockTime!} />
                     </div>
                   );
                 }
