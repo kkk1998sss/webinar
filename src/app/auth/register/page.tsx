@@ -124,7 +124,7 @@ export default function RegisterPage() {
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              Join our community of webinar creators
+              Start your Shree Suktam Journey today at 9PM
             </motion.p>
           </div>
 
