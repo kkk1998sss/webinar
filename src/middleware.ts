@@ -16,6 +16,7 @@ interface User {
   email: string;
   name: string;
   subscriptions: Subscription[];
+  pending: boolean;
 }
 
 export async function middleware(request: NextRequest) {
@@ -71,6 +72,11 @@ export async function middleware(request: NextRequest) {
         if (response.ok) {
           const userData = await response.json();
           const user = userData.find((u: User) => u.email === token.email);
+
+          // Block access if user is pending (has not purchased)
+          if (user && user.pending === false) {
+            return NextResponse.redirect(new URL('/pricing', request.url));
+          }
 
           if (
             !user ||

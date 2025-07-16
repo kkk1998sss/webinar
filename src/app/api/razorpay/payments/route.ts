@@ -96,12 +96,16 @@ export const POST = async (req: Request) => {
       console.log('Razorpay order created:', order);
 
       // Create payment record
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+      });
       const paymentData = {
         razorpayOrderId: order.id,
         amount: amount,
         currency: 'INR',
         planType: planType,
         user: { connect: { id: session.user.id } },
+        name: user?.name,
       };
 
       // Only add webinar relation if webinarId exists and is valid

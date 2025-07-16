@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 
 import { Footer } from '@/components/footer';
 import BusinessTypes from '@/components/landing/BusinessTypes';
@@ -15,18 +17,43 @@ import WebinarkitSectionPlatform from '@/components/landing/WebinarkitSectionPla
 import WebinarPage1 from '@/components/landing/WebinarPage1';
 import { Button } from '@/components/ui/button';
 
+// Add User type for type safety
+interface User {
+  email: string;
+  pending?: boolean;
+  [key: string]: string | number | boolean | undefined;
+}
+
 const Home = () => {
   const { data: session, status } = useSession();
   const [hasSubscription, setHasSubscription] = useState(false);
   const [loadingSub, setLoadingSub] = useState(true);
   const userName = session?.user?.name || '';
+  const router = useRouter();
 
   useEffect(() => {
     const checkSubscription = async () => {
       if (status === 'authenticated') {
         try {
+          // Check pending status first and redirect immediately if false
+          const userRes = await fetch('/api/register');
+          const users: User[] = await userRes.json();
+          const user = users.find((u) => u.email === session.user.email);
+          if (user && user.pending === false) {
+            router.replace('/auth/login?subscribe=1');
+            return;
+          }
+          // Only check subscription if user is not pending
           const res = await fetch('/api/subscription');
           const data = await res.json();
+          if (
+            Array.isArray(data.subscriptions) &&
+            data.subscriptions.length === 0
+          ) {
+            await signOut({ redirect: false });
+            router.replace('/auth/login?subscribe=1');
+            return;
+          }
           setHasSubscription(data.subscriptions?.length > 0);
         } catch (error) {
           console.error('Subscription check failed:', error);
@@ -41,7 +68,7 @@ const Home = () => {
     if (status !== 'loading') {
       checkSubscription();
     }
-  }, [status]);
+  }, [status, session, router]);
 
   if (status === 'loading' || loadingSub) {
     return (

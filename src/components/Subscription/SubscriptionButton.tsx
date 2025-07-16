@@ -45,12 +45,14 @@ interface SubscriptionButtonProps {
   planType: 'FOUR_DAY' | 'SIX_MONTH' | 'PAID_WEBINAR';
   amount: number;
   webinarId?: string;
+  onSuccess?: () => void; // NEW: optional callback for payment success
 }
 
 export const SubscriptionButton = ({
   planType,
   amount,
   webinarId,
+  onSuccess,
 }: SubscriptionButtonProps) => {
   const router = useRouter();
   const { data: session } = useSession();
@@ -140,7 +142,11 @@ export const SubscriptionButton = ({
             setIsRedirecting(true);
             // Wait for 2 seconds to show the success state
             await new Promise((resolve) => setTimeout(resolve, 2000));
-            router.push('/dashboard');
+            if (onSuccess) {
+              onSuccess();
+            } else {
+              router.push('/dashboard');
+            }
           } catch (error) {
             console.error('Payment verification failed:', error);
             toast.error('Payment verification failed');

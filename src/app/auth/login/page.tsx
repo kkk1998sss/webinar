@@ -5,7 +5,8 @@ import { EyeClosedIcon, EyeOpenIcon } from '@radix-ui/react-icons';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getSession, signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
+import { getSession, signIn, signOut, useSession } from 'next-auth/react';
 
 import { SubscriptionButton } from '@/components/Subscription/SubscriptionButton';
 import { Button } from '@/components/ui/button';
@@ -17,8 +18,18 @@ interface Subscription {
   isValid: boolean;
 }
 
+// Add User type for type safety
+interface User {
+  email: string;
+  pending?: boolean;
+  [key: string]: string | number | boolean | undefined;
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const subscribeMsg = searchParams.get('subscribe');
+  const { data: session, status } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +37,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [mustSubscribe, setMustSubscribe] = useState(false); // NEW: block login until payment
 
   // Track 3-day plan state for modal
   const [hasActiveFourDayPlan, setHasActiveFourDayPlan] = useState(false);
@@ -35,15 +47,65 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    console.log('Subscription modal state changed:', showSubscriptionModal);
-  }, [showSubscriptionModal]);
+    if (mustSubscribe) {
+      setShowSubscriptionModal(true);
+    }
+  }, [mustSubscribe]);
+
+  useEffect(() => {
+    let logoutTimer: NodeJS.Timeout | null = null;
+    const checkAndAutoLogout = async () => {
+      if (status === 'authenticated' && session?.user?.email) {
+        try {
+          const res = await fetch('/api/subscription');
+          const data = await res.json();
+          if (
+            Array.isArray(data.subscriptions) &&
+            data.subscriptions.length === 0
+          ) {
+            // Set a 1-minute timer to auto-logout
+            logoutTimer = setTimeout(async () => {
+              await signOut({ redirect: false });
+              router.replace('/auth/login?subscribe=1');
+            }, 60000);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    checkAndAutoLogout();
+    return () => {
+      if (logoutTimer) clearTimeout(logoutTimer);
+    };
+  }, [status, session, router, showSubscriptionModal]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
+    if (mustSubscribe) {
+      setError('You must purchase a plan to log in.');
+      setIsLoading(false);
+      return;
+    }
     try {
+      // Pre-check user pending status before calling signIn
+      let user: User | null = null;
+      try {
+        const userRes = await fetch('/api/register');
+        const users: User[] = await userRes.json();
+        user = users.find((u) => u.email === email) || null;
+      } catch {
+        // ignore, user may not exist yet
+      }
+      if (user && user.pending === false) {
+        setMustSubscribe(true);
+        setShowSubscriptionModal(true);
+        setIsLoading(false);
+        return;
+      }
+      // Only call signIn if user is not pending or does not exist
       const result = await signIn('credentials', {
         email,
         password,
@@ -90,26 +152,36 @@ export default function LoginPage() {
 
         // Get session directly after successful login
         const session = await getSession();
-        console.log('session', session);
-
         if (session?.user?.isAdmin) {
-          // Force a page reload to ensure session is properly set
           window.location.href = '/admin/users';
           return;
         }
-
         // Check if user is restricted
         if (email === 'user@gmail.com') {
           router.push('/dashboard');
           return;
         }
-
+        // Fetch user profile to check 'pending' status
+        try {
+          const userRes = await fetch('/api/register');
+          const users: User[] = await userRes.json();
+          const user = users.find((u) => u.email === email);
+          if (user && user.pending === false) {
+            setMustSubscribe(true); // Block further login attempts
+            setShowSubscriptionModal(true);
+            setIsLoading(false);
+            return;
+          }
+        } catch {
+          setMustSubscribe(true);
+          setShowSubscriptionModal(true);
+          setIsLoading(false);
+          return;
+        }
         // Check subscription status
         try {
           const response = await fetch('/api/subscription');
           const data = await response.json();
-          console.log('Subscription check response:', data);
-
           if (data.subscriptions && Array.isArray(data.subscriptions)) {
             const hasActiveSixMonthPlan = data.subscriptions.some(
               (sub: Subscription) => sub.type === 'SIX_MONTH' && sub.isValid
@@ -123,42 +195,58 @@ export default function LoginPage() {
             const hasExpiredFourDay = data.subscriptions.some(
               (sub: Subscription) => sub.type === 'FOUR_DAY' && !sub.isValid
             );
-
             setHasActiveFourDayPlan(hasActiveFourDay);
-
             if (hasActiveSixMonthPlan || hasExpiredSixMonthPlan) {
-              // User already has a 6-month plan (active or expired)
               router.push('/dashboard');
               return;
             }
-
             if (hasActiveFourDay || hasExpiredFourDay) {
-              // User already has a 3-day plan (active or expired)
               router.push('/dashboard');
               return;
             }
           }
-
-          // If no subscription or not 6-month plan, show subscription modal
           setShowSubscriptionModal(true);
-        } catch (error) {
-          console.error('Error checking subscription:', error);
-          // If there's an error checking subscription, show the modal anyway
+        } catch {
           setShowSubscriptionModal(true);
         }
       }
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // const handleSubscriptionComplete = () => {
-  //   setShowSubscriptionModal(false);
-  //   router.push('/dashboard');
-  // };
+  // Payment success callback
+  const handlePaymentSuccess = async () => {
+    // Re-fetch user and check pending
+    const userRes = await fetch('/api/register');
+    const users: User[] = await userRes.json();
+    const user = users.find((u) => u.email === email);
+    if (user && user.pending === true) {
+      setMustSubscribe(false);
+      setShowSubscriptionModal(false);
+      setError('');
+      // Re-login to refresh session
+      await signIn('credentials', {
+        email,
+        password,
+        redirect: true,
+        callbackUrl: '/dashboard',
+      });
+    } else {
+      setError(
+        'Payment was successful, but your access is not yet active. Please contact support.'
+      );
+    }
+  };
+
+  // Payment modal close/cancel handler
+  const handleModalClose = () => {
+    setShowSubscriptionModal(false);
+    setError('You must purchase a plan to log in.');
+    setMustSubscribe(true);
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-red-50 to-white px-4 py-12 sm:px-6 lg:px-8 dark:from-gray-800 dark:to-gray-900">
@@ -191,6 +279,11 @@ export default function LoginPage() {
             >
               Sign in to your account
             </motion.p>
+            {(subscribeMsg === '1' || error === 'Subscribe to get access.') && (
+              <div className="mt-4 rounded bg-yellow-100 p-2 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                Subscribe to get access.
+              </div>
+            )}
           </div>
 
           <div className="p-6">
@@ -372,7 +465,7 @@ export default function LoginPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowSubscriptionModal(false)}
+            onClick={handleModalClose}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -500,93 +593,16 @@ export default function LoginPage() {
                         You have an active 3-Day plan
                       </div>
                     ) : (
-                      <SubscriptionButton planType="FOUR_DAY" amount={199} />
+                      <SubscriptionButton
+                        planType="FOUR_DAY"
+                        amount={199}
+                        onSuccess={handlePaymentSuccess}
+                      />
                     )}
                   </div>
                 </motion.div>
-
-                {/* 6-Month Plan */}
-                <motion.div
-                  whileHover={{
-                    scale: 1.03,
-                    boxShadow: '0 8px 32px 0 rgba(255, 193, 7, 0.15)',
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  className="border-primary dark:border-primary-dark ring-primary/10 relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border-2 bg-white p-4 py-8 shadow-lg ring-2 transition-all duration-200 sm:p-6 sm:py-10 dark:bg-gray-800"
-                >
-                  <div className="absolute right-0 top-0 z-10 animate-pulse rounded-bl-xl rounded-tr-2xl bg-gradient-to-r from-yellow-400 to-red-500 px-3 py-1 text-xs font-bold text-white shadow-md">
-                    POPULAR
-                  </div>
-                  <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-lg font-extrabold text-transparent drop-shadow-sm sm:text-xl dark:from-red-500 dark:to-yellow-400">
-                        6-Months Premium Subscription
-                      </span>
-                    </h3>
-                  </div>
-
-                  <div className="mb-6">
-                    <span className="bg-gradient-to-r from-red-600 to-yellow-500 bg-clip-text text-3xl font-extrabold text-transparent drop-shadow-sm sm:text-4xl dark:from-red-500 dark:to-yellow-400">
-                      ₹699
-                    </span>
-                    <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">
-                      /6 months
-                    </span>
-                  </div>
-
-                  <ul className="mb-6 grow space-y-2 text-left text-xs text-gray-700 sm:text-sm dark:text-slate-300">
-                    {[
-                      'Live session Every Sunday at 10 AM',
-                      'Learn Shree Suktam in detail and unlock the secrets',
-                      'Swar Vigyan - Ancient and Powerful breath techniques to control the Destiny',
-                      'Vigyan Bhairav Tantra - 70+ Ancient and powerful meditation techniques',
-                      'Hanuman Chalisa with Spiritual meaning',
-                      'Upanishad Gyan',
-                      'Kundalini Sadhana',
-                      'E-books and Many more...',
-                    ].map((feature, index) => (
-                      <motion.li
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5 + index * 0.1 }}
-                        className="flex items-center space-x-2"
-                      >
-                        <span className="mr-1 inline-flex items-center justify-center rounded-full bg-yellow-100 p-1 dark:bg-yellow-900/30">
-                          <svg
-                            className="size-4 text-yellow-500 dark:text-yellow-400"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </span>
-                        <span>{feature}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-auto">
-                    <SubscriptionButton planType="SIX_MONTH" amount={699} />
-                  </div>
-                </motion.div>
+                {/* Removed 6-Month Plan */}
               </motion.div>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setShowSubscriptionModal(false);
-                  router.push('/');
-                }}
-                className="mt-6 w-full rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
-              >
-                Skip for Later
-              </motion.button>
             </motion.div>
           </motion.div>
         )}

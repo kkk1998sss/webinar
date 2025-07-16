@@ -35,6 +35,7 @@ export async function POST(req: Request) {
         phoneNumber,
         password: encryptedPassword,
         isActive: false,
+        pending: false, // User is not pending until they purchase
       },
     });
 

@@ -66,7 +66,7 @@ type ViewType = 'dashboard' | 'fourDay' | 'webinar';
 export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]); // Store all active subscriptions
   const [loading, setLoading] = useState(true);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'unlocked' | 'locked'>('unlocked');
@@ -107,25 +107,6 @@ export default function Dashboard() {
     },
   ];
 
-  const contentItems: ContentItem[] = [
-    {
-      id: '1',
-      title: '3-4 Days Webinar',
-      description: 'Access all webinar recordings and teachings',
-      type: 'video',
-      gradient: 'from-green-400 via-emerald-500 to-teal-500',
-      icon: <Play className="size-6" />,
-    },
-    {
-      id: '2',
-      title: 'E-Books Collection',
-      description: 'Access your collection of meditation e-books',
-      type: 'ebook',
-      gradient: 'from-amber-400 via-orange-500 to-red-500',
-      icon: <Book className="size-6" />,
-    },
-  ];
-
   // Add page load effect
   useEffect(() => {
     setIsPageLoaded(true);
@@ -142,62 +123,25 @@ export default function Dashboard() {
       try {
         const response = await fetch('/api/subscription');
         const data = await response.json();
-
         if (data.subscriptions?.length > 0) {
           // Sort subscriptions by startDate to get the latest first
           const sortedSubs = [...data.subscriptions].sort(
             (a, b) =>
               new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
           );
-
-          // First try to find an active SIX_MONTH subscription
-          const sixMonthSub = sortedSubs.find(
-            (sub) => sub.type === 'SIX_MONTH' && sub.isActive
-          );
-
-          if (sixMonthSub) {
-            setSubscription(sixMonthSub);
-            return;
-          }
-
-          // If no active SIX_MONTH, find the latest active FOUR_DAY subscription
-          const fourDaySub = sortedSubs.find(
-            (sub) => sub.type === 'FOUR_DAY' && sub.isActive
-          );
-
-          if (fourDaySub) {
-            // Add shouldShowFourDayPlan flag based on multiple conditions
-            const shouldShowFourDayPlan =
-              fourDaySub.unlockedContent?.currentDay === 1 &&
-              new Date(fourDaySub.startDate).getTime() >
-                Date.now() - 48 * 60 * 60 * 1000;
-
-            console.log('FourDayPlan Debug:', {
-              subscriptionType: fourDaySub.type,
-              isActive: fourDaySub.isActive,
-              currentDay: fourDaySub.unlockedContent?.currentDay,
-              startDate: new Date(fourDaySub.startDate),
-              timeWindow: new Date(Date.now() - 48 * 60 * 60 * 1000),
-              shouldShowFourDayPlan,
-            });
-
-            setSubscription({
-              ...fourDaySub,
-              shouldShowFourDayPlan,
-            });
-            return;
-          }
-
-          // If no active subscriptions found, set the latest subscription
-          setSubscription(sortedSubs[0]);
+          // Filter active subscriptions
+          const activeSubs = sortedSubs.filter((sub) => sub.isActive);
+          setSubscriptions(activeSubs);
+        } else {
+          setSubscriptions([]);
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
+        setSubscriptions([]);
       } finally {
         setLoading(false);
       }
     };
-
     if (status === 'authenticated') {
       fetchSubscription();
     }
@@ -223,16 +167,16 @@ export default function Dashboard() {
   }, [status, router]);
 
   useEffect(() => {
-    if (!loading && !subscription) {
+    if (!loading && subscriptions.length === 0) {
       router.push('/');
     }
-  }, [loading, subscription, router]);
+  }, [loading, subscriptions, router]);
 
   useEffect(() => {
-    if (subscription && !subscription.isActive) {
+    if (subscriptions.length > 0 && !subscriptions[0].isActive) {
       router.push('/');
     }
-  }, [subscription, router]);
+  }, [subscriptions, router]);
 
   useEffect(() => {
     if (session?.user?.isAdmin) {
@@ -244,9 +188,12 @@ export default function Dashboard() {
     return <LoadingScreen />;
   }
 
-  if (status === 'unauthenticated' || !subscription || !subscription.isActive) {
+  if (status === 'unauthenticated' || subscriptions.length === 0) {
     return null;
   }
+
+  const hasFourDay = subscriptions.some((sub) => sub.type === 'FOUR_DAY');
+  const hasSixMonth = subscriptions.some((sub) => sub.type === 'SIX_MONTH');
 
   // Check if user is admin
   if (session?.user?.isAdmin) {
@@ -254,27 +201,30 @@ export default function Dashboard() {
   }
 
   // For FOUR_DAY subscribers, check if they should see the welcome page
-  if (subscription.type === 'FOUR_DAY' && subscription.shouldShowFourDayPlan) {
+  if (
+    subscriptions[0].type === 'FOUR_DAY' &&
+    subscriptions[0].shouldShowFourDayPlan
+  ) {
     return <FourDayPlan />;
   }
 
   // Function to check if content is accessible based on subscription
-  const isContentAccessible = (item: ContentItem) => {
-    // Allow access to basic content for all subscribers
-    if (item.title === '3-4 Days Webinar' || item.type === 'ebook') {
-      return true;
-    }
+  // const isContentAccessible = (item: ContentItem) => {
+  //   // Allow access to basic content for all subscribers
+  //   if (item.title === '3-4 Days Webinar' || item.type === 'ebook') {
+  //     return true;
+  //   }
 
-    // For premium content, check subscription type
-    if (subscription?.type === 'SIX_MONTH') {
-      return true;
-    }
+  //   // For premium content, check subscription type
+  //   if (subscriptions[0]?.type === 'SIX_MONTH') {
+  //     return true;
+  //   }
 
-    return false;
-  };
+  //   return false;
+  // };
 
   const handleStartLearning = (item: ContentItem) => {
-    if (subscription.type === 'FOUR_DAY') {
+    if (subscriptions[0].type === 'FOUR_DAY') {
       if (item.title === '3-4 Days Webinar') {
         setCurrentView('fourDay');
         return;
@@ -287,7 +237,7 @@ export default function Dashboard() {
       return;
     }
 
-    if (subscription.type === 'SIX_MONTH') {
+    if (subscriptions[0].type === 'SIX_MONTH') {
       if (item.title === '3-4 Days Webinar') {
         setCurrentView('webinar');
         return;
@@ -298,27 +248,6 @@ export default function Dashboard() {
       }
       setCurrentView('webinar');
     }
-  };
-
-  // Add this helper function at the top level of the component
-  const getLatestActiveSubscription = () => {
-    if (!subscription) return null;
-
-    // Sort by startDate in descending order to get latest first
-    const sortedSubs = [subscription].sort(
-      (a, b) =>
-        new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-    );
-
-    // First try to find an active SIX_MONTH subscription
-    const sixMonthSub = sortedSubs.find(
-      (sub) => sub.type === 'SIX_MONTH' && sub.isActive
-    );
-
-    if (sixMonthSub) return sixMonthSub;
-
-    // If no active SIX_MONTH, return the latest FOUR_DAY subscription
-    return sortedSubs.find((sub) => sub.type === 'FOUR_DAY' && sub.isActive);
   };
 
   // Render different views based on currentView state
@@ -367,9 +296,13 @@ export default function Dashboard() {
               Your Spiritual Dashboard
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300">
-              {subscription.type === 'FOUR_DAY'
-                ? '✨ Access to 3-4 Days Webinar'
-                : '🌟 Full access to all spiritual content'}
+              {hasFourDay && hasSixMonth
+                ? '✨ Access to 3-4 Days Webinar & Premium Content'
+                : hasFourDay
+                  ? '✨ Access to 3-4 Days Webinar'
+                  : hasSixMonth
+                    ? '🌟 Full access to all spiritual content'
+                    : ''}
             </p>
           </div>
 
@@ -382,89 +315,109 @@ export default function Dashboard() {
           >
             <Zap className="size-5" />
             <span className="font-semibold">
-              {subscription.type === 'FOUR_DAY'
+              {subscriptions[0]?.type === 'FOUR_DAY'
                 ? 'Basic Plan Active'
                 : 'Premium Plan Active'}
             </span>
           </motion.div>
         </motion.div>
 
-        {/* Tabs */}
-        {getLatestActiveSubscription()?.type === 'FOUR_DAY' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mb-10 flex justify-center gap-4"
+        {/* Switcher Tabs */}
+        <div className="mb-10 flex justify-center gap-4">
+          <button
+            onClick={() => setActiveTab('unlocked')}
+            className={`group relative overflow-hidden rounded-xl px-8 py-4 font-semibold transition-all duration-300 ${
+              activeTab === 'unlocked'
+                ? 'scale-105 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl'
+                : 'bg-white/80 text-gray-700 backdrop-blur-sm hover:bg-white hover:shadow-lg'
+            }`}
           >
-            <button
-              onClick={() => setActiveTab('unlocked')}
-              className={`group relative overflow-hidden rounded-xl px-8 py-4 font-semibold transition-all duration-300 ${
-                activeTab === 'unlocked'
-                  ? 'scale-105 bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl'
-                  : 'bg-white/80 text-gray-700 backdrop-blur-sm hover:bg-white hover:shadow-lg'
-              }`}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <Heart className="size-5" />
-                Unlocked Content
-              </span>
-              {activeTab === 'unlocked' && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('locked')}
-              className={`group relative overflow-hidden rounded-xl px-8 py-4 font-semibold transition-all duration-300 ${
-                activeTab === 'locked'
-                  ? 'scale-105 bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl'
-                  : 'bg-white/80 text-gray-700 backdrop-blur-sm hover:bg-white hover:shadow-lg'
-              }`}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                <Crown className="size-5" />
-                Premium Content
-              </span>
-              {activeTab === 'locked' && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-600"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              )}
-            </button>
-          </motion.div>
-        )}
+            <span className="relative z-10 flex items-center gap-2">
+              <Heart className="size-5" />
+              3-4 Days Webinar
+            </span>
+          </button>
+          <button
+            onClick={() => hasSixMonth && setActiveTab('locked')}
+            disabled={!hasSixMonth}
+            className={`group relative overflow-hidden rounded-xl px-8 py-4 font-semibold transition-all duration-300 ${
+              activeTab === 'locked' && hasSixMonth
+                ? 'scale-105 bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl'
+                : 'cursor-not-allowed bg-white/80 text-gray-700 opacity-60 backdrop-blur-sm hover:bg-white hover:shadow-lg'
+            }`}
+          >
+            <span className="relative z-10 flex items-center gap-2">
+              <Crown className="size-5" />
+              Premium Content
+            </span>
+          </button>
+        </div>
 
-        {/* Content Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="grid gap-8 md:grid-cols-2"
-        >
-          {getLatestActiveSubscription()?.type === 'FOUR_DAY'
-            ? activeTab === 'unlocked'
-              ? // Show 3-4 Days Webinar in unlocked content for 199 plan
-                contentItems.map((item, index) => (
+        {/* Content */}
+        {activeTab === 'unlocked' && <FourDayPlan />}
+        {activeTab === 'locked' &&
+          (hasSixMonth ? (
+            <div className="grid gap-8 md:grid-cols-2">
+              {premiumContentItems.map((item, index) => {
+                if (item.title === 'Live Sunday Sessions') {
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                      onClick={() =>
+                        window.open(
+                          'https://shreemahavidyashaktipeeth.com/subscription/',
+                          '_blank'
+                        )
+                      }
+                    >
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
+                      ></div>
+                      <div className="relative z-10">
+                        <div className="mb-6 flex items-center gap-4">
+                          <div
+                            className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
+                          >
+                            {item.icon}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                              {item.title}
+                            </h3>
+                            <p className="leading-relaxed text-gray-600">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                        >
+                          <span className="relative z-10 flex items-center justify-center gap-3">
+                            <Play className="size-5" />
+                            Join Live Session
+                          </span>
+                          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                }
+                return (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 30, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{ delay: 0.8 + index * 0.1 }}
-                    className="hover:shadow-3xl group relative overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                    className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                    onClick={() => handleStartLearning(item)}
                   >
-                    {/* Gradient Background */}
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
                     ></div>
-
                     <div className="relative z-10">
                       <div className="mb-6 flex items-center gap-4">
                         <div
@@ -481,123 +434,7 @@ export default function Dashboard() {
                           </p>
                         </div>
                       </div>
-
-                      {isContentAccessible(item) ? (
-                        <button
-                          onClick={() => handleStartLearning(item)}
-                          className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
-                        >
-                          <span className="relative z-10 flex items-center justify-center gap-3">
-                            <Play className="size-5" />
-                            Start Learning
-                          </span>
-                          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => router.push('/')}
-                          className="group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                        >
-                          <span className="relative z-10 flex items-center justify-center gap-3">
-                            <Sparkles className="size-5" />
-                            Upgrade to Unlock
-                          </span>
-                          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                ))
-              : // Show premium content for 199 plan
-                premiumContentItems.map((item, index) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                    className="hover:shadow-3xl group relative overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
-                  >
-                    {/* Gradient Background */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
-                    ></div>
-
-                    <div className="relative z-10">
-                      <div className="mb-6 flex items-center gap-4">
-                        <div className="flex size-16 items-center justify-center rounded-2xl bg-gray-200 text-gray-500 shadow-lg">
-                          {item.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                            {item.title}
-                          </h3>
-                          <p className="leading-relaxed text-gray-600">
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-
                       <button
-                        onClick={() => router.push('/')}
-                        className="group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                      >
-                        <span className="relative z-10 flex items-center justify-center gap-3">
-                          <Sparkles className="size-5" />
-                          Upgrade to 699
-                        </span>
-                        <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
-                      </button>
-                    </div>
-                  </motion.div>
-                ))
-            : // Show all content for 699 plan
-              premiumContentItems.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.8 + index * 0.1 }}
-                  className="hover:shadow-3xl group relative overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
-                >
-                  {/* Gradient Background */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
-                  ></div>
-
-                  <div className="relative z-10">
-                    <div className="mb-6 flex items-center gap-4">
-                      <div
-                        className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
-                      >
-                        {item.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                          {item.title}
-                        </h3>
-                        <p className="leading-relaxed text-gray-600">
-                          {item.description}
-                        </p>
-                      </div>
-                    </div>
-
-                    {item.title === 'All Videos Available Here' ||
-                    item.title === 'Live Sunday Sessions' ? (
-                      <a
-                        href="https://shreemahavidyashaktipeeth.com/subscription/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`group/btn relative inline-block w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
-                      >
-                        <span className="relative z-10 flex items-center justify-center gap-3">
-                          <Play className="size-5" />
-                          Start Learning
-                        </span>
-                        <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
-                      </a>
-                    ) : (
-                      <button
-                        onClick={() => handleStartLearning(item)}
                         className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
                       >
                         <span className="relative z-10 flex items-center justify-center gap-3">
@@ -606,11 +443,29 @@ export default function Dashboard() {
                         </span>
                         <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
                       </button>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-        </motion.div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Sparkles className="mb-4 size-10 text-blue-500 dark:text-blue-400" />
+              <h2 className="mb-2 text-center text-2xl font-bold text-gray-800 dark:text-white">
+                Upgrade to Full Access
+              </h2>
+              <p className="mb-6 text-center text-gray-600 dark:text-gray-300">
+                Get unlimited access to all upcoming webinars and premium
+                content with our 6-month subscription.
+              </p>
+              <button
+                className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-3 font-semibold text-white shadow transition hover:shadow-lg"
+                onClick={() => router.push('/')}
+              >
+                Upgrade to 699
+              </button>
+            </div>
+          ))}
       </div>
     </div>
   );

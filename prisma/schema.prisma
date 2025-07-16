@@ -48,6 +48,7 @@ model User {
   stripeCustomerId   String?             @unique
   isActive           Boolean             @default(false)
   isAdmin            Boolean             @default(false) 
+  pending            Boolean             @default(false) // User must purchase to set this true
   verificationTokens VerificationToken[]
   accounts           Account[]
   sessions           Session[]
@@ -145,6 +146,7 @@ model Payment {
   webinarId           String?
   createdAt           DateTime         @default(now())
   subscription        Subscription?    @relation(name: "PaymentSubscription")
+  name                String?          // User's name for tracking
 }
 
 enum SubscriptionType {
@@ -164,6 +166,7 @@ model Subscription {
   paymentId       String           @unique
   unlockedContent Json?
   isActive        Boolean          @default(true)
+  name            String?          // User's name for tracking
 }
 
 model Content {

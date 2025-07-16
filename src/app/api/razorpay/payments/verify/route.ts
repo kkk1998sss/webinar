@@ -67,6 +67,7 @@ export const POST = async (req: Request) => {
         startDate: new Date(),
         endDate: new Date(),
         isActive: true,
+        name: payment.user?.name,
       };
 
       // If upgrading to SIX_MONTH, deactivate any existing FOUR_DAY subscriptions
