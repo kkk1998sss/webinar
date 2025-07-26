@@ -115,7 +115,7 @@ export const Navbar = () => {
                             router.push('/admin/users');
                           } else {
                             // Force a complete page reload to dashboard
-                            window.location.href = '/dashboard';
+                            window.location.href = '/dashboard-free';
                           }
                         }}
                         className="text-foreground hover:bg-secondary dark:hover:bg-secondary-dark hover:text-secondary-foreground dark:hover:text-secondary-foreground-dark group flex cursor-pointer items-center gap-2 rounded p-2 text-sm transition-colors duration-200"

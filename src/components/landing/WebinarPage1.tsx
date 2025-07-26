@@ -18,11 +18,17 @@ export default function WebinarPage1() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [hasSixMonthPlan, setHasSixMonthPlan] = useState(false);
   const [has599Plan, setHas599Plan] = useState(false);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   // const router = useRouter();
+
+  // Set current date on client side to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, []);
 
   useEffect(() => {
     const checkSubscription = async () => {
-      if (status === 'authenticated') {
+      if (status === 'authenticated' && currentDate) {
         setIsLoading(true);
         try {
           const res = await fetch('/api/subscription');
@@ -36,7 +42,7 @@ export default function WebinarPage1() {
             (sub: Subscription) =>
               sub.type === 'SIX_MONTH' &&
               sub.isActive &&
-              new Date(sub.endDate) > new Date()
+              new Date(sub.endDate) > currentDate
           );
           setHasSixMonthPlan(!!sixMonthSub);
 
@@ -45,7 +51,7 @@ export default function WebinarPage1() {
             (sub: Subscription) =>
               (sub.type === 'SIX_MONTH' || sub.type === 'FIVE_NINE_NINE') &&
               sub.isActive &&
-              new Date(sub.endDate) > new Date()
+              new Date(sub.endDate) > currentDate
           );
           setHas599Plan(!!premiumSub);
         } catch (error) {
@@ -57,10 +63,10 @@ export default function WebinarPage1() {
       }
     };
 
-    if (status !== 'loading') {
+    if (status !== 'loading' && currentDate) {
       checkSubscription();
     }
-  }, [status]);
+  }, [status, currentDate]);
 
   const handleEbookAccess = () => {
     if (!hasSubscription) {

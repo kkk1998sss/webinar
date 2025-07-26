@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import * as m from '@/paraglide/messages';
 
 export const SignInButton = () => {
+  // OLD CODE - EASILY REVERTIBLE
+  // export const SignInButton = ({ isFreeUser = false }: { isFreeUser?: boolean } = {}) => {
   const { status } = useSession();
   const router = useRouter();
 
@@ -47,7 +49,9 @@ export const SignInButton = () => {
     >
       <Button
         variant="outline"
-        onClick={() => router.push('/auth/login')}
+        onClick={() => router.push('/auth/login-free')}
+        // OLD CODE - EASILY REVERTIBLE
+        // onClick={() => router.push(isFreeUser ? '/auth/login-free' : '/auth/login')}
         className="border-secondary dark:border-secondary-dark from-secondary/50 to-accent/30 hover:border-secondary/70 dark:from-secondary-dark/50 dark:to-accent-dark/30 dark:hover:border-secondary-dark/70 group bg-gradient-to-r transition-all duration-300"
       >
         <motion.div

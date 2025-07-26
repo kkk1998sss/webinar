@@ -21,6 +21,12 @@ interface Subscription {
 export const ChoosePlan = ({ webinarId }: ChoosePlanProps) => {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
+
+  // Set current date on client side to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, []);
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
@@ -41,19 +47,23 @@ export const ChoosePlan = ({ webinarId }: ChoosePlanProps) => {
     fetchSubscriptions();
   }, []);
 
-  const hasActiveFourDayPlan = subscriptions.some(
-    (sub) =>
-      sub.type === 'FOUR_DAY' &&
-      sub.isActive &&
-      new Date(sub.endDate) > new Date()
-  );
+  const hasActiveFourDayPlan =
+    currentDate &&
+    subscriptions.some(
+      (sub) =>
+        sub.type === 'FOUR_DAY' &&
+        sub.isActive &&
+        new Date(sub.endDate) > currentDate
+    );
 
-  const hasActiveSixMonthPlan = subscriptions.some(
-    (sub) =>
-      sub.type === 'SIX_MONTH' &&
-      sub.isActive &&
-      new Date(sub.endDate) > new Date()
-  );
+  const hasActiveSixMonthPlan =
+    currentDate &&
+    subscriptions.some(
+      (sub) =>
+        sub.type === 'SIX_MONTH' &&
+        sub.isActive &&
+        new Date(sub.endDate) > currentDate
+    );
 
   const plans = [
     {

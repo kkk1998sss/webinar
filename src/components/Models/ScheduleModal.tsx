@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
@@ -75,8 +75,8 @@ export function ScheduleModal({
 }: ScheduleModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date());
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('');
   const [isPaid, setIsPaid] = useState(true);
@@ -99,6 +99,13 @@ export function ScheduleModal({
   // Video functions removed - not needed for paid webinars
   // const handleAddUrl = async () => { ... };
   // const handleDelete = async (index: number) => { ... };
+
+  // Set initial dates on client side to avoid hydration mismatch
+  useEffect(() => {
+    const now = new Date();
+    if (!startDate) setStartDate(now);
+    if (!endDate) setEndDate(now);
+  }, [startDate, endDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

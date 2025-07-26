@@ -52,7 +52,10 @@ const RootLayout = ({ children }: PropsWithChildren) => {
   return (
     <LanguageProvider>
       <html lang={languageTag()} suppressHydrationWarning>
-        <body className={cn('min-h-screen font-sans', fonts)}>
+        <body
+          className={cn('min-h-screen font-sans', fonts)}
+          suppressHydrationWarning
+        >
           <SessionProvider
             refetchInterval={0}
             refetchOnWindowFocus={false}

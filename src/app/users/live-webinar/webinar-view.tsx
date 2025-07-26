@@ -60,6 +60,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     null
   );
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const router = useRouter();
   const { theme } = useTheme();
   const mounted = useMounted();
@@ -85,6 +86,11 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       setIsPageLoaded(true);
     }, 300);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Set current date on client side only to avoid hydration mismatch
+  useEffect(() => {
+    setCurrentDate(new Date());
   }, []);
 
   useEffect(() => {
@@ -620,7 +626,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
                     >
-                      {mounted && format(new Date(), 'eeee')}
+                      {mounted && currentDate && format(currentDate, 'eeee')}
                     </motion.h2>
                     <motion.h3
                       className="text-5xl font-bold sm:text-6xl dark:text-slate-100"
@@ -628,7 +634,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.7 }}
                     >
-                      {mounted && format(new Date(), 'do')}
+                      {mounted && currentDate && format(currentDate, 'do')}
                     </motion.h3>
                     <motion.p
                       className="text-lg sm:text-xl dark:text-slate-300"
@@ -636,7 +642,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.8 }}
                     >
-                      {mounted && format(new Date(), 'MMMM yyyy')}
+                      {mounted &&
+                        currentDate &&
+                        format(currentDate, 'MMMM yyyy')}
                     </motion.p>
                   </div>
                 </motion.div>
