@@ -1,14 +1,17 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { compareAsc, format, isFuture, parseISO } from 'date-fns';
 import { motion } from 'framer-motion';
 import {
   Book,
   Calendar,
+  Clock,
   Crown,
+  ExternalLink,
   Gift,
   Play,
-  Sparkles,
   Star,
+  Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -60,7 +63,179 @@ interface ContentItem {
   icon: React.ReactNode;
 }
 
+interface Webinar {
+  id: string;
+  webinarName: string;
+  webinarTitle: string;
+  description?: string;
+  webinarDate: string;
+  webinarTime?: string;
+  durationHours: number;
+  durationMinutes: number;
+  isPaid: boolean;
+  paidAmount?: number;
+  discountPercentage?: number;
+  discountAmount?: number;
+}
+
 type ViewType = 'dashboard' | 'fourDay' | 'webinar';
+
+// Upcoming Paid Webinars Component
+function UpcomingPaidWebinars() {
+  const router = useRouter();
+  const [webinars, setWebinars] = useState<Webinar[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWebinars = async () => {
+      try {
+        const response = await fetch('/api/webinar');
+        const data = await response.json();
+        if (data.success && Array.isArray(data.webinars)) {
+          setWebinars(data.webinars);
+        }
+      } catch (error) {
+        console.error('Error fetching webinars:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWebinars();
+  }, []);
+
+  const upcomingPaidWebinars = useMemo(() => {
+    return webinars
+      .filter(
+        (webinar) =>
+          webinar.isPaid === true && isFuture(parseISO(webinar.webinarDate))
+      )
+      .sort((a, b) =>
+        compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+      )
+      .slice(0, 3); // Show only first 3 upcoming paid webinars
+  }, [webinars]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="size-8 animate-spin rounded-full border-2 border-orange-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (upcomingPaidWebinars.length === 0) {
+    return (
+      <div className="rounded-2xl bg-gradient-to-r from-orange-50 to-red-50 p-8 text-center dark:from-orange-900/20 dark:to-red-900/20">
+        <Calendar className="mx-auto mb-4 size-12 text-orange-500" />
+        <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+          No Upcoming Paid Webinars
+        </h3>
+        <p className="text-gray-600 dark:text-gray-300">
+          Check back soon for exclusive spiritual sessions!
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {upcomingPaidWebinars.map((webinar, index) => (
+        <motion.div
+          key={webinar.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: index * 0.1 }}
+          className="group relative overflow-hidden rounded-2xl bg-white/90 p-6 shadow-xl backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl dark:bg-gray-800/90"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-red-500/5 transition-opacity duration-300 group-hover:opacity-100"></div>
+
+          <div className="relative z-10">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-red-500 text-white">
+                  <Calendar className="size-5" />
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                    Paid Webinar
+                  </span>
+                </div>
+              </div>
+              {webinar.discountPercentage && (
+                <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  {webinar.discountPercentage}% OFF
+                </span>
+              )}
+            </div>
+
+            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
+              {webinar.webinarTitle}
+            </h3>
+
+            {webinar.description && (
+              <p className="mb-4 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">
+                {webinar.description}
+              </p>
+            )}
+
+            <div className="mb-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Clock className="size-4" />
+                <span>
+                  {format(parseISO(webinar.webinarDate), 'MMM dd, yyyy')}
+                  {webinar.webinarTime && ` at ${webinar.webinarTime}`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Users className="size-4" />
+                <span>
+                  Duration: {webinar.durationHours}h {webinar.durationMinutes}m
+                </span>
+              </div>
+            </div>
+
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-center">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  Price
+                </span>
+                <div className="flex items-center gap-2">
+                  {webinar.discountAmount && webinar.paidAmount ? (
+                    <>
+                      <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                        ₹{webinar.paidAmount - webinar.discountAmount}
+                      </span>
+                      <span className="text-sm text-gray-400 line-through">
+                        ₹{webinar.paidAmount}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                      ₹{webinar.paidAmount || 0}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => router.push('/')}
+              className="group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-orange-600 hover:to-red-600 hover:shadow-xl"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <ExternalLink className="size-4" />
+                Register Now
+              </span>
+              <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
+            </button>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
 
 export default function DashboardFree() {
   const router = useRouter();
@@ -90,8 +265,8 @@ export default function DashboardFree() {
     },
     {
       id: '3',
-      title: 'Basic Meditation Videos',
-      description: 'Introduction to meditation and basic techniques',
+      title: '10 Bonus Audios',
+      description: 'Exclusive spiritual audio content and guided sessions',
       type: 'video',
       gradient: 'from-purple-400 via-pink-500 to-rose-500',
       icon: <Play className="size-6" />,
@@ -215,7 +390,12 @@ export default function DashboardFree() {
       router.push('/users/ebook199');
       return;
     }
+    if (item.title === '10 Bonus Audios') {
+      router.push('/audio/simple');
+      return;
+    }
     // For now, redirect free users to upgrade
+    // router.push('/');
     router.push('/');
   };
 
@@ -262,11 +442,11 @@ export default function DashboardFree() {
               <Gift className="size-10 text-white" />
             </motion.div>
             <h1 className="mb-3 bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-5xl font-bold text-transparent">
-              Your Free Spiritual Dashboard
+              Welcome to Shree Mahavidya Shaktipeeth
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300">
               {hasFreeAccess
-                ? '🎁 Free Access - Explore Basic Spiritual Content'
+                ? 'Awaken Abundance. Embrace the Divine.'
                 : '✨ Welcome to Your Spiritual Journey'}
             </p>
           </div>
@@ -412,26 +592,24 @@ export default function DashboardFree() {
           </div>
         )}
 
-        {/* Upgrade CTA */}
+        {/* Upcoming Paid Webinars */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2 }}
-          className="mt-16 text-center"
+          className="mt-16"
         >
-          <div className="mx-auto max-w-2xl rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 p-8 text-white shadow-2xl">
-            <Sparkles className="mx-auto mb-4 size-16" />
-            <h2 className="mb-4 text-3xl font-bold">Ready for More?</h2>
-            <p className="mb-6 text-lg opacity-90">
-              Upgrade to premium and unlock our complete spiritual library with
-              advanced teachings, live sessions, and exclusive content.
-            </p>
-            <button
-              className="rounded-xl bg-white px-8 py-4 font-bold text-orange-600 shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-              onClick={() => router.push('/')}
-            >
-              Upgrade to Premium - ₹699
-            </button>
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-8 text-center">
+              <h2 className="mb-4 bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-3xl font-bold text-transparent">
+                🎯 Upcoming Paid Webinars
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-300">
+                Join exclusive spiritual sessions with advanced teachings
+              </p>
+            </div>
+
+            <UpcomingPaidWebinars />
           </div>
         </motion.div>
       </div>

@@ -468,7 +468,7 @@ export default function FourDayPlanFree() {
     if (ytMatch) {
       const baseParams = isLive
         ? 'autoplay=1&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=2&wmode=transparent'
-        : 'controls=1&modestbranding=1&rel=0&enablejsapi=1';
+        : 'controls=1&modestbranding=1&rel=0&enablejsapi=1&playsinline=1';
 
       const startTimeParam = startTime > 0 ? `&start=${startTime}` : '';
       return `https://www.youtube.com/embed/${ytMatch[1]}?${baseParams}${startTimeParam}`;
@@ -477,7 +477,9 @@ export default function FourDayPlanFree() {
     // Handle Vimeo links
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
-      const baseParams = isLive ? 'autoplay=1&controls=0' : 'controls=1';
+      const baseParams = isLive
+        ? 'autoplay=1&controls=0&playsinline=1'
+        : 'controls=1&playsinline=1';
       const startTimeParam = startTime > 0 ? `#t=${startTime}s` : '';
       return `https://player.vimeo.com/video/${vimeoMatch[1]}?${baseParams}${startTimeParam}`;
     }
@@ -820,23 +822,52 @@ export default function FourDayPlanFree() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-green-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* WhatsApp Floating Button */}
-      <motion.div
-        className="fixed bottom-20 right-5 z-50"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5, duration: 0.3 }}
-      >
-        <a
-          href="https://chat.whatsapp.com/F4RlvrkkyBLAz2FzjxBa4b?mode=r_t"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex size-14 items-center justify-center rounded-full bg-green-500 shadow-lg transition-all duration-300 hover:scale-110 hover:bg-green-600 hover:shadow-xl"
-          title="Join our WhatsApp group"
-        >
-          <MessageCircle className="size-7 text-white" />
-        </a>
-      </motion.div>
+      {/* WhatsApp Community Icon - Fixed Design */}
+      <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
+        {/* Mobile Version - Always visible */}
+        <div className="sm:hidden">
+          <a
+            href="https://chat.whatsapp.com/F4RlvrkkyBLAz2FzjxBa4b?mode=r_t"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 px-3 py-2 shadow-2xl"
+          >
+            <div className="flex items-center justify-center rounded-full bg-white/20 p-2">
+              <MessageCircle className="size-5 text-white" />
+            </div>
+            <div className="ml-2 flex flex-col">
+              <span className="text-xs font-bold text-white">
+                Join Community
+              </span>
+              <span className="text-[10px] text-green-100">WhatsApp</span>
+            </div>
+          </a>
+        </div>
+
+        {/* Desktop Version - Hover to expand */}
+        <div className="group hidden sm:block">
+          <a
+            href="https://chat.whatsapp.com/F4RlvrkkyBLAz2FzjxBa4b?mode=r_t"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center rounded-full bg-gradient-to-r from-green-500 to-emerald-600 py-2 pl-2 pr-0 shadow-2xl transition-all duration-300 hover:shadow-green-500/25 group-hover:px-4 group-hover:pr-6"
+          >
+            <div className="flex items-center justify-center rounded-full bg-white/20 p-2">
+              <MessageCircle className="size-6 text-white" />
+            </div>
+            <div className="ml-2 max-w-0 overflow-hidden transition-all duration-300 ease-in-out group-hover:max-w-[240px]">
+              <div className="flex flex-col whitespace-nowrap">
+                <span className="text-sm font-bold text-white">
+                  Join our WhatsApp Community
+                </span>
+                <span className="text-xs text-green-100">
+                  Get daily spiritual updates & guidance
+                </span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
 
       {/* Day selection bar */}
       <div className="sticky top-0 z-20 bg-white shadow-sm dark:bg-gray-800">
@@ -996,6 +1027,10 @@ export default function FourDayPlanFree() {
                 ? 'fixed inset-0 z-[9999] aspect-auto h-screen w-screen rounded-none bg-black'
                 : ''
             }`}
+            style={{
+              minHeight: '200px',
+              maxHeight: '100vh',
+            }}
           >
             {currentVideo ? (
               (() => {
@@ -1065,10 +1100,16 @@ export default function FourDayPlanFree() {
                       )}
                       title={currentVideo.title}
                       className={`absolute left-0 top-0 size-full ${isFullscreen ? 'z-10' : ''}`}
-                      allow="autoplay; encrypted-media; fullscreen"
+                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                       allowFullScreen
-                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                      style={{ pointerEvents: isLiveMode ? 'none' : 'auto' }} // disable interaction only in live mode
+                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
+                      style={{
+                        pointerEvents: isLiveMode ? 'none' : 'auto',
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                      }}
+                      loading="lazy"
                     />
 
                     {/* Overlay layer to block all controls/interactions in live mode */}
