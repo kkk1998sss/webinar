@@ -37,6 +37,8 @@ interface WebinarData {
   paidAmount: number;
   discountPercentage?: number;
   discountAmount?: number;
+  youtubeLink?: string;
+  showThankYouPage: boolean;
   videoUploads: {
     title: string;
     url: string;
@@ -87,6 +89,8 @@ export function ScheduleModal({
   const [passwordProtected, setPasswordProtected] = useState(false);
   const [instantWatchEnabled, setInstantWatchEnabled] = useState(false);
   const [justInTimeEnabled, setJustInTimeEnabled] = useState(false);
+  const [youtubeLink, setYoutubeLink] = useState('');
+  const [showThankYouPage, setShowThankYouPage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Video states (removed - not needed for paid webinars)
@@ -164,6 +168,8 @@ export function ScheduleModal({
             : undefined,
         discountAmount:
           isPaid && discountAmount ? parseFloat(discountAmount) : undefined,
+        youtubeLink: youtubeLink || undefined,
+        showThankYouPage,
         videoUploads: [], // No videos needed for paid webinars
       };
 
@@ -525,6 +531,74 @@ export function ScheduleModal({
                 Enable Just In Time
               </Label>
             </div>
+          </div>
+
+          {/* YouTube Link Option */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={!showThankYouPage}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${!showThankYouPage ? 'bg-blue-500 dark:bg-blue-600' : 'bg-gray-300 dark:bg-slate-600'}`}
+                  onClick={() => setShowThankYouPage(!showThankYouPage)}
+                  onKeyDown={(e) =>
+                    handleToggleKeyDown(e, () =>
+                      setShowThankYouPage(!showThankYouPage)
+                    )
+                  }
+                >
+                  <motion.span
+                    className={`absolute left-1 block size-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out dark:bg-slate-300 ${!showThankYouPage ? 'translate-x-5' : 'translate-x-0'}`}
+                  />
+                </div>
+                <Label className="cursor-pointer text-white">
+                  Show YouTube Video
+                </Label>
+              </div>
+            </div>
+
+            {!showThankYouPage && (
+              <div>
+                <Label htmlFor="youtubeLink" className="text-white">
+                  YouTube Live Stream Link
+                </Label>
+                <Input
+                  id="youtubeLink"
+                  type="url"
+                  value={youtubeLink}
+                  onChange={(e) => setYoutubeLink(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="border-slate-700 bg-slate-800 text-white"
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  Enter the YouTube live stream URL. If left empty, a default
+                  video will be shown.
+                </p>
+              </div>
+            )}
+
+            {showThankYouPage && (
+              <div className="rounded-lg border border-yellow-600/30 bg-yellow-900/30 p-3">
+                <div className="flex items-center space-x-2">
+                  <svg
+                    className="size-5 text-yellow-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span className="text-sm text-yellow-400">
+                    Thank you page will be displayed instead of video
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

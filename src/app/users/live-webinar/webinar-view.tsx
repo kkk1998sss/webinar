@@ -71,6 +71,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       const res = await fetch('/api/webinar');
       const data = await res.json();
       if (data.success) {
+        console.log('Fetched webinars:', data.webinars);
         setWebinars(data.webinars);
       }
     } catch (error) {
@@ -166,18 +167,38 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       filteredAndSortedWebinars.forEach((webinar) => {
         const date = parseISO(webinar.webinarDate);
 
+        console.log('Processing webinar:', {
+          id: webinar.id,
+          title: webinar.webinarTitle,
+          isPaid: webinar.isPaid,
+          date: webinar.webinarDate,
+          parsedDate: date,
+          isToday: isToday(date),
+          isFuture: isFuture(date),
+        });
+
         // PAID LOGIC - Add to paid section if isPaid is true, regardless of date
         if (webinar && webinar.isPaid === true) {
+          console.log('Adding to paid section:', webinar.webinarTitle);
           paid.push(webinar);
         }
 
-        // Date-based categorization
+        // Date-based categorization (excluding paid webinars from other sections)
         if (isToday(date)) {
-          today.push(webinar);
+          // Only add to today if it's not a paid webinar
+          if (!webinar.isPaid) {
+            today.push(webinar);
+          }
         } else if (isFuture(date)) {
-          upcoming.push(webinar);
+          // Only add to upcoming if it's not a paid webinar
+          if (!webinar.isPaid) {
+            upcoming.push(webinar);
+          }
         } else {
-          past.push(webinar);
+          // Only add to past if it's not a paid webinar
+          if (!webinar.isPaid) {
+            past.push(webinar);
+          }
         }
       });
 
@@ -193,6 +214,19 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       paid.sort((a, b) =>
         compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
       );
+
+      console.log('Categorized webinars:', {
+        today: today.length,
+        upcoming: upcoming.length,
+        past: past.length,
+        paid: paid.length,
+        paidWebinars: paid.map((w) => ({
+          id: w.id,
+          title: w.webinarTitle,
+          isPaid: w.isPaid,
+          date: w.webinarDate,
+        })),
+      });
 
       return [today, upcoming, past, paid];
     }, [filteredAndSortedWebinars]);

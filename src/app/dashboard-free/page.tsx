@@ -6,10 +6,12 @@ import {
   Book,
   Calendar,
   Clock,
+  Cloud,
   Crown,
   ExternalLink,
   Gift,
   Play,
+  Sparkles,
   Star,
   Users,
 } from 'lucide-react';
@@ -33,10 +35,10 @@ const LoadingScreen = () => {
         </div>
         <div className="text-center">
           <p className="bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-xl font-bold text-transparent">
-            Loading Your Free Dashboard
+            Loading Your Dashboard
           </p>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Preparing your free spiritual journey...
+            Preparing your spiritual journey...
           </p>
         </div>
       </div>
@@ -58,7 +60,7 @@ interface ContentItem {
   id: string;
   title: string;
   description: string;
-  type: 'course' | 'video' | 'meditation' | 'ebook' | 'live';
+  type: 'course' | 'video' | 'meditation' | 'ebook' | 'live' | 'cloud';
   gradient: string;
   icon: React.ReactNode;
 }
@@ -249,8 +251,8 @@ export default function DashboardFree() {
   const freeContentItems: ContentItem[] = [
     {
       id: '1',
-      title: '3-Day Free Spiritual Content',
-      description: 'Access free spiritual teachings and meditation guides',
+      title: '3-Day Spiritual Content',
+      description: 'Access spiritual teachings and meditation guides',
       type: 'course',
       gradient: 'from-green-400 via-blue-500 to-purple-500',
       icon: <Star className="size-6" />,
@@ -297,6 +299,15 @@ export default function DashboardFree() {
       type: 'video',
       gradient: 'from-indigo-400 via-purple-500 to-pink-500',
       icon: <Play className="size-6" />,
+    },
+    {
+      id: '7',
+      title: 'Access to Direct Cloud Content',
+      description:
+        'Direct access to cloud-stored spiritual content and resources',
+      type: 'cloud',
+      gradient: 'from-cyan-400 via-blue-500 to-indigo-500',
+      icon: <Cloud className="size-6" />,
     },
   ];
 
@@ -376,27 +387,49 @@ export default function DashboardFree() {
 
   const hasFreeAccess = subscriptions.some((sub) => sub.isFree && sub.isValid);
 
+  // Check if user has active 6-month plan for premium content access
+  const hasActiveSixMonthPlan = subscriptions.some(
+    (sub) => sub.type === 'SIX_MONTH' && sub.isActive && sub.isValid
+  );
+
   // Check if user is admin
   if (session?.user?.isAdmin) {
     return <WebinarView session={session} />;
   }
 
   const handleStartLearning = (item: ContentItem) => {
-    if (item.title === '3-Day Free Spiritual Content') {
+    // 3-Day Spiritual Content should always go to FourDayPlanFree regardless of plan
+    if (item.title === '3-Day Spiritual Content') {
       setCurrentView('fourDay');
       return;
     }
-    if (item.type === 'ebook') {
-      router.push('/users/ebook199');
-      return;
-    }
+
+    // 10 Bonus Audios should always go to audio page regardless of plan
     if (item.title === '10 Bonus Audios') {
       router.push('/audio/simple');
       return;
     }
-    // For now, redirect free users to upgrade
-    // router.push('/');
-    router.push('/');
+
+    // Free E-books Collection should always go to ebook199 page regardless of plan
+    if (item.type === 'ebook') {
+      router.push('/users/ebook199');
+      return;
+    }
+
+    if (hasActiveSixMonthPlan) {
+      // For users with active 6-month plan
+      if (item.title === 'Live Sunday Sessions') {
+        setCurrentView('webinar');
+        return;
+      }
+      // For premium content like "All Premium Videos", redirect to webinar view
+      setCurrentView('webinar');
+      return;
+    } else {
+      // For now, redirect free users to upgrade
+      // router.push('/');
+      router.push('/');
+    }
   };
 
   // Render different views based on currentView state
@@ -450,17 +483,6 @@ export default function DashboardFree() {
                 : '✨ Welcome to Your Spiritual Journey'}
             </p>
           </div>
-
-          {/* Free Access Badge */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-green-400 to-blue-500 px-6 py-3 text-white shadow-lg"
-          >
-            <Gift className="size-5" />
-            <span className="font-semibold">Free Access - 30 Days</span>
-          </motion.div>
         </motion.div>
 
         {/* Switcher Tabs */}
@@ -475,7 +497,7 @@ export default function DashboardFree() {
           >
             <span className="relative z-10 flex items-center gap-2">
               <Gift className="size-5" />
-              Free Content
+              Access Content
             </span>
           </button>
           <button
@@ -529,7 +551,7 @@ export default function DashboardFree() {
                   >
                     <span className="relative z-10 flex items-center justify-center gap-3">
                       <Play className="size-5" />
-                      Start Free Learning
+                      Start Learning
                     </span>
                     <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
                   </button>
@@ -539,58 +561,164 @@ export default function DashboardFree() {
           </div>
         )}
 
-        {activeTab === 'locked' && (
-          <div className="grid gap-8 md:grid-cols-3">
-            {premiumContentItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: 0.8 + index * 0.1 }}
-                className="group relative overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500"
-              >
-                {/* Lock overlay */}
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm">
-                  <div className="text-center text-white">
-                    <Crown className="mx-auto mb-4 size-12" />
-                    <h4 className="mb-2 text-xl font-bold">Premium Content</h4>
-                    <p className="text-sm opacity-80">Upgrade to unlock</p>
-                  </div>
-                </div>
-
-                <div
-                  className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5`}
-                ></div>
-                <div className="relative z-10">
-                  <div className="mb-6 flex items-center gap-4">
-                    <div
-                      className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
+        {activeTab === 'locked' &&
+          (hasActiveSixMonthPlan ? (
+            <div className="grid gap-8 md:grid-cols-2">
+              {premiumContentItems.map((item, index) => {
+                if (item.title === 'Live Sunday Sessions') {
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                      onClick={() =>
+                        window.open(
+                          'https://shreemahavidyashaktipeeth.com/subscription/',
+                          '_blank'
+                        )
+                      }
                     >
-                      {item.icon}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                        {item.title}
-                      </h3>
-                      <p className="leading-relaxed text-gray-600">
-                        {item.description}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    className={`relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg`}
-                    onClick={() => router.push('/')}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
+                      ></div>
+                      <div className="relative z-10">
+                        <div className="mb-6 flex items-center gap-4">
+                          <div
+                            className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
+                          >
+                            {item.icon}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                              {item.title}
+                            </h3>
+                            <p className="leading-relaxed text-gray-600">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                        >
+                          <span className="relative z-10 flex items-center justify-center gap-3">
+                            <Play className="size-5" />
+                            Join Live Session
+                          </span>
+                          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                }
+                if (item.title === 'Access to Direct Cloud Content') {
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: 0.8 + index * 0.1 }}
+                      className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                      onClick={() =>
+                        window.open(
+                          'https://u.pcloud.link/publink/show?code=kZkVPW5ZSUpOo2yY1t4WHD5oG7ONf8KnmtA7',
+                          '_blank'
+                        )
+                      }
+                    >
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
+                      ></div>
+                      <div className="relative z-10">
+                        <div className="mb-6 flex items-center gap-4">
+                          <div
+                            className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
+                          >
+                            {item.icon}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                              {item.title}
+                            </h3>
+                            <p className="leading-relaxed text-gray-600">
+                              {item.description}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-br ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                        >
+                          <span className="relative z-10 flex items-center justify-center gap-3">
+                            <Cloud className="size-5" />
+                            Access Cloud Content
+                          </span>
+                          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                }
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                    onClick={() => handleStartLearning(item)}
                   >
-                    <span className="relative z-10 flex items-center justify-center gap-3">
-                      <Crown className="size-5" />
-                      Upgrade to Access
-                    </span>
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
+                    ></div>
+                    <div className="relative z-10">
+                      <div className="mb-6 flex items-center gap-4">
+                        <div
+                          className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
+                        >
+                          {item.icon}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                            {item.title}
+                          </h3>
+                          <p className="leading-relaxed text-gray-600">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-br ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                      >
+                        <span className="relative z-10 flex items-center justify-center gap-3">
+                          <Play className="size-5" />
+                          Start Learning
+                        </span>
+                        <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Sparkles className="mb-4 size-10 text-blue-500 dark:text-blue-400" />
+              <h2 className="mb-2 text-center text-2xl font-bold text-gray-800 dark:text-white">
+                Upgrade to Full Access
+              </h2>
+              <p className="mb-6 text-center text-gray-600 dark:text-gray-300">
+                Get unlimited access to all upcoming webinars and premium
+                content with our 6-month subscription.
+              </p>
+              <button
+                className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-3 font-semibold text-white shadow transition hover:shadow-lg"
+                onClick={() => router.push('/')}
+              >
+                Upgrade to 699
+              </button>
+            </div>
+          ))}
 
         {/* Upcoming Paid Webinars */}
         <motion.div

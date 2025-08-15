@@ -87,6 +87,8 @@ export interface Webinar {
   paidAmount: number | null;
   discountPercentage: number | null;
   discountAmount: number | null;
+  youtubeLink?: string | null;
+  showThankYouPage: boolean;
   description?: string;
   scheduledDates: {
     date: string;

@@ -4,7 +4,6 @@ import {
   addDays,
   compareAsc,
   isAfter,
-  isFuture,
   parseISO,
   setHours,
   setMinutes,
@@ -183,7 +182,7 @@ export default function FourDayPlan() {
     fetchData();
   }, []);
 
-  // Fetch webinars for upcoming section
+  // Fetch webinars for paid section
   useEffect(() => {
     fetch('/api/webinar')
       .then((res) => res.json())
@@ -196,16 +195,37 @@ export default function FourDayPlan() {
       .catch(() => setWebinars([]));
   }, []);
 
-  // Memoize upcoming webinars
-  const upcomingWebinars = useMemo(() => {
-    return webinars
-      .filter(
-        (webinar) =>
-          isFuture(parseISO(webinar.webinarDate)) && webinar.isPaid === true
-      )
-      .sort((a, b) =>
-        compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
-      );
+  // Memoize paid webinars - same logic as webinar-view.tsx
+  const paidWebinars = useMemo(() => {
+    const paid: Webinar[] = [];
+
+    webinars.forEach((webinar) => {
+      // PAID LOGIC - Add to paid section if isPaid is true, regardless of date
+      if (webinar && webinar.isPaid === true) {
+        console.log(
+          'FourDayPlan: Adding to paid section:',
+          webinar.webinarTitle
+        );
+        paid.push(webinar);
+      }
+    });
+
+    // Sort by date (ascending)
+    paid.sort((a, b) =>
+      compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+    );
+
+    console.log('FourDayPlan: Paid webinars:', {
+      total: paid.length,
+      webinars: paid.map((w) => ({
+        id: w.id,
+        title: w.webinarTitle,
+        isPaid: w.isPaid,
+        date: w.webinarDate,
+      })),
+    });
+
+    return paid;
   }, [webinars]);
 
   // Fetch video metadata when current video changes
@@ -1189,7 +1209,7 @@ export default function FourDayPlan() {
       {/* --- Paid Webinar Section --- */}
       <section className="my-8 w-full">
         <PaidWebinarFourday
-          webinars={upcomingWebinars}
+          webinars={paidWebinars}
           handleJoinWebinar={handleJoinWebinar}
         />
       </section>

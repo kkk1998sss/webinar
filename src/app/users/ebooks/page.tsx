@@ -327,7 +327,7 @@ export default function EBooksPage() {
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex items-center gap-4">
               <motion.button
-                onClick={() => (window.location.href = '/dashboard')}
+                onClick={() => (window.location.href = '/dashboard-free')}
                 className="group flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

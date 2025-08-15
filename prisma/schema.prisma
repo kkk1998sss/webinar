@@ -104,6 +104,8 @@ model WebinarDetails {
   paidAmount          Float?
   discountPercentage  Float?  @default(0) // Discount percentage (0-100)
   discountAmount      Float?  @default(0) // Discount amount in currency
+  youtubeLink         String? // YouTube live stream link
+  showThankYouPage    Boolean @default(false) // Whether to show thank you page instead of video
 }
 
 model WebinarSettings {

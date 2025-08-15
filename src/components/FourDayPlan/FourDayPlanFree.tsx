@@ -4,7 +4,6 @@ import {
   addDays,
   compareAsc,
   isAfter,
-  isFuture,
   parseISO,
   setHours,
   setMinutes,
@@ -79,6 +78,9 @@ export default function FourDayPlanFree() {
     duration: number;
     title: string;
   } | null>(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [videoLoadError, setVideoLoadError] = useState(false);
   const playerRef = useRef<HTMLIFrameElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -88,11 +90,22 @@ export default function FourDayPlanFree() {
   const session = { user: { isAdmin: false } };
 
   // Set current time on client side only to avoid hydration issues
-  const [isClient, setIsClient] = useState(false);
-
   useEffect(() => {
     setIsClient(true);
     setCurrentTime(new Date());
+
+    // Detect iOS device
+    const userAgent =
+      navigator.userAgent ||
+      navigator.vendor ||
+      (window as { opera?: string }).opera ||
+      '';
+    const isIOSDevice =
+      /iPad|iPhone|iPod/.test(userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(isIOSDevice);
+
+    console.log('Device detection:', { isIOS: isIOSDevice, userAgent });
   }, []);
 
   // Update session elapsed time every second when in live mode
@@ -207,7 +220,7 @@ export default function FourDayPlanFree() {
     fetchData();
   }, []);
 
-  // Fetch webinars for upcoming section
+  // Fetch webinars for paid section
   useEffect(() => {
     fetch('/api/webinar')
       .then((res) => res.json())
@@ -218,6 +231,41 @@ export default function FourDayPlanFree() {
       .catch(() => setWebinars([]));
   }, []);
 
+  // iOS-specific video player optimization
+  const optimizeForIOS = useCallback(() => {
+    if (!isIOS || !playerRef.current) return;
+
+    try {
+      // Force iframe to be interactive on iOS
+      const iframe = playerRef.current;
+
+      // Add touch event listeners for iOS
+      iframe.addEventListener(
+        'touchstart',
+        (e) => {
+          e.stopPropagation();
+        },
+        { passive: true }
+      );
+
+      iframe.addEventListener(
+        'touchmove',
+        (e) => {
+          e.stopPropagation();
+        },
+        { passive: true }
+      );
+
+      // iOS Safari specific optimizations
+      iframe.style.webkitTransform = 'translateZ(0)';
+      iframe.style.transform = 'translateZ(0)';
+
+      console.log('iOS video player optimized');
+    } catch (error) {
+      console.error('Error optimizing for iOS:', error);
+    }
+  }, [isIOS]);
+
   // Fetch video metadata when current video changes
   useEffect(() => {
     if (currentVideo?.videoUrl) {
@@ -227,8 +275,13 @@ export default function FourDayPlanFree() {
           console.log('Video metadata loaded:', metadata);
         }
       });
+
+      // Optimize for iOS if needed
+      if (isIOS) {
+        setTimeout(optimizeForIOS, 1000); // Delay to ensure iframe is loaded
+      }
     }
-  }, [currentVideo]);
+  }, [currentVideo, isIOS, optimizeForIOS]);
 
   // Reset live mode when video changes
   useEffect(() => {
@@ -289,16 +342,37 @@ export default function FourDayPlanFree() {
     videoMetadata,
   ]);
 
-  // Memoize upcoming webinars
-  const upcomingWebinars = useMemo(() => {
-    return webinars
-      .filter(
-        (webinar) =>
-          isFuture(parseISO(webinar.webinarDate)) && webinar.isPaid === true
-      )
-      .sort((a, b) =>
-        compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
-      );
+  // Memoize paid webinars - same logic as webinar-view.tsx
+  const paidWebinars = useMemo(() => {
+    const paid: Webinar[] = [];
+
+    webinars.forEach((webinar) => {
+      // PAID LOGIC - Add to paid section if isPaid is true, regardless of date
+      if (webinar && webinar.isPaid === true) {
+        console.log(
+          'FourDayPlanFree: Adding to paid section:',
+          webinar.webinarTitle
+        );
+        paid.push(webinar);
+      }
+    });
+
+    // Sort by date (ascending)
+    paid.sort((a, b) =>
+      compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+    );
+
+    console.log('FourDayPlanFree: Paid webinars:', {
+      total: paid.length,
+      webinars: paid.map((w) => ({
+        id: w.id,
+        title: w.webinarTitle,
+        isPaid: w.isPaid,
+        date: w.webinarDate,
+      })),
+    });
+
+    return paid;
   }, [webinars]);
 
   // Helper: Get unlock time for a video (9:00 PM on the correct day based on subscription start date)
@@ -461,25 +535,26 @@ export default function FourDayPlanFree() {
       return url;
     }
 
-    // Handle YouTube links - use live mode logic
+    // Handle YouTube links - iOS compatible
     const ytMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/
     );
     if (ytMatch) {
+      // iOS Safari compatible parameters - no autoplay, full controls
       const baseParams = isLive
-        ? 'autoplay=1&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=2&wmode=transparent'
-        : 'controls=1&modestbranding=1&rel=0&enablejsapi=1&playsinline=1';
+        ? `autoplay=0&controls=1&disablekb=0&modestbranding=1&rel=0&showinfo=1&fs=1&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=0&wmode=transparent&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.origin)}`
+        : `controls=1&modestbranding=1&rel=0&enablejsapi=1&playsinline=1&fs=1&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.origin)}`;
 
       const startTimeParam = startTime > 0 ? `&start=${startTime}` : '';
       return `https://www.youtube.com/embed/${ytMatch[1]}?${baseParams}${startTimeParam}`;
     }
 
-    // Handle Vimeo links
+    // Handle Vimeo links - iOS compatible
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
       const baseParams = isLive
-        ? 'autoplay=1&controls=0&playsinline=1'
-        : 'controls=1&playsinline=1';
+        ? 'autoplay=0&controls=1&playsinline=1&dnt=1&transparent=0'
+        : 'controls=1&playsinline=1&dnt=1&transparent=0';
       const startTimeParam = startTime > 0 ? `#t=${startTime}s` : '';
       return `https://player.vimeo.com/video/${vimeoMatch[1]}?${baseParams}${startTimeParam}`;
     }
@@ -1090,6 +1165,16 @@ export default function FourDayPlanFree() {
                       </div>
                     )}
 
+                    {/* iOS-specific instructions */}
+                    {isIOS && (
+                      <div className="absolute left-2 top-12 z-10 sm:left-4 sm:top-16">
+                        <div className="rounded-lg bg-black/80 p-2 text-xs text-white">
+                          <p>📱 Tap to play on iOS</p>
+                          <p>🔊 Use device volume</p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Video Iframe */}
                     <iframe
                       ref={playerRef}
@@ -1100,21 +1185,54 @@ export default function FourDayPlanFree() {
                       )}
                       title={currentVideo.title}
                       className={`absolute left-0 top-0 size-full ${isFullscreen ? 'z-10' : ''}`}
-                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
                       allowFullScreen
-                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
+                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation allow-top-navigation"
                       style={{
                         pointerEvents: isLiveMode ? 'none' : 'auto',
                         width: '100%',
                         height: '100%',
                         border: 'none',
+                        WebkitUserSelect: 'none',
+                        WebkitTouchCallout: 'none',
                       }}
                       loading="lazy"
+                      onError={() => setVideoLoadError(true)}
+                      onLoad={() => setVideoLoadError(false)}
                     />
+
+                    {/* Video load error fallback */}
+                    {videoLoadError && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white">
+                        <div className="p-4 text-center">
+                          <p className="mb-2 text-lg font-semibold">
+                            Video Loading Issue
+                          </p>
+                          <p className="mb-4 text-sm">
+                            {isIOS
+                              ? 'On iOS devices, please try refreshing the page or check your internet connection.'
+                              : 'Please check your internet connection and try again.'}
+                          </p>
+                          <button
+                            onClick={() => window.location.reload()}
+                            className="rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700"
+                          >
+                            Refresh Page
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Overlay layer to block all controls/interactions in live mode */}
                     {isLiveMode && (
-                      <div className="z-5 absolute inset-0 bg-transparent" />
+                      <div
+                        className="z-5 absolute inset-0 bg-transparent"
+                        style={{
+                          touchAction: 'none',
+                          WebkitTouchCallout: 'none',
+                          WebkitUserSelect: 'none',
+                        }}
+                      />
                     )}
 
                     {/* Bottom overlays: live mode */}
@@ -1251,7 +1369,7 @@ export default function FourDayPlanFree() {
       {/* Paid Webinar Section */}
       <section className="my-8 w-full">
         <PaidWebinarFourday
-          webinars={upcomingWebinars}
+          webinars={paidWebinars}
           handleJoinWebinar={handleJoinWebinar}
         />
       </section>
