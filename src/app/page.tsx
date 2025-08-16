@@ -128,6 +128,70 @@ const Home = () => {
               Awaken abundance, peace, and grace through guided spiritual
               practices and sacred wisdom
             </p>
+
+            {/* Awesome Four Day Plan Button */}
+            <motion.div
+              className="mt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <motion.div
+                className="group relative"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {/* Glowing background effect */}
+                <div className="absolute -inset-1 animate-pulse rounded-2xl bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 opacity-75 blur transition duration-1000 group-hover:opacity-100 group-hover:duration-200"></div>
+
+                {/* Main button */}
+                <Button
+                  className="relative bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 px-6 py-4 text-base font-bold text-white shadow-2xl transition-all duration-300 hover:shadow-green-500/25 sm:px-12 sm:py-6 sm:text-xl dark:from-green-500 dark:via-blue-500 dark:to-purple-500"
+                  onClick={() => router.push('/users/four-day-plan-free')}
+                >
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: 'linear',
+                      }}
+                      className="size-6 sm:size-8"
+                    >
+                      ✨
+                    </motion.div>
+                    <span className="whitespace-nowrap">
+                      Continue Your Session
+                    </span>
+                    <motion.div
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                      className="size-5 sm:size-6"
+                    >
+                      🚀
+                    </motion.div>
+                  </div>
+                </Button>
+
+                {/* Floating message - Hidden until hover */}
+                <motion.div
+                  className="pointer-events-none absolute -top-16 left-1/2 max-w-xs -translate-x-1/2 rounded-lg border border-green-200 bg-white px-3 py-2 opacity-0 shadow-lg transition-opacity duration-300 group-hover:opacity-100 sm:max-w-none sm:px-4 dark:border-green-700 dark:bg-gray-800"
+                  initial={{ y: 10 }}
+                  animate={{ y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p className="text-center text-xs font-medium text-green-700 sm:text-sm dark:text-green-300">
+                    🎯 Click to continue your session!
+                  </p>
+                  <div className="absolute bottom-0 left-1/2 size-0 -translate-x-1/2 border-x-4 border-t-4 border-transparent border-t-white dark:border-t-gray-800"></div>
+                </motion.div>
+              </motion.div>
+            </motion.div>
           </motion.div>
 
           {/* Subscription upsell for authenticated users without subscription */}

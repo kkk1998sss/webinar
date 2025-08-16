@@ -93,8 +93,8 @@ export default function LoginFreePage() {
           console.log('Free subscription creation error:', error);
         }
 
-        // Redirect to free dashboard
-        router.push('/dashboard-free');
+        // Redirect to four-day plan free page for all users
+        router.push('/users/four-day-plan-free');
       }
     } catch {
       setError('An unexpected error occurred. Please try again.');
@@ -124,7 +124,7 @@ export default function LoginFreePage() {
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Welcome Back - Available Access
+              Welcome Back - Please Sign In
             </motion.h2>
             <motion.p
               className="mt-1 text-green-100"
@@ -132,7 +132,7 @@ export default function LoginFreePage() {
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              Sign in to access available content
+              Sign in to continue your journey
             </motion.p>
           </div>
 
@@ -283,7 +283,7 @@ export default function LoginFreePage() {
                       <span>Signing in...</span>
                     </div>
                   ) : (
-                    'Sign In - Available Access'
+                    'Sign In'
                   )}
                 </Button>
               </motion.div>
@@ -300,7 +300,7 @@ export default function LoginFreePage() {
                 href="/auth/register-free"
                 className="font-medium text-green-600 transition-colors hover:text-green-800 hover:underline dark:text-green-400 dark:hover:text-green-300"
               >
-                Sign up for available access
+                Sign up
               </Link>
             </motion.p>
           </div>

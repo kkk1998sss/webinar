@@ -114,8 +114,8 @@ export const Navbar = () => {
                           if (session?.user?.isAdmin === true) {
                             router.push('/admin/users');
                           } else {
-                            // Force a complete page reload to dashboard
-                            window.location.href = '/dashboard-free';
+                            // Go to four-day plan free page
+                            window.location.href = '/users/four-day-plan-free';
                           }
                         }}
                         className="text-foreground hover:bg-secondary dark:hover:bg-secondary-dark hover:text-secondary-foreground dark:hover:text-secondary-foreground-dark group flex cursor-pointer items-center gap-2 rounded p-2 text-sm transition-colors duration-200"

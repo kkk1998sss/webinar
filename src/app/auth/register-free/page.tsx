@@ -17,6 +17,8 @@ export default function RegisterFreePage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+91'); // Default to India
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -26,6 +28,24 @@ export default function RegisterFreePage() {
     setIsPageLoaded(true);
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.country-code-dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -33,13 +53,8 @@ export default function RegisterFreePage() {
 
     function formatPhoneNumber(phoneNumber: string): string {
       const cleaned = phoneNumber.replace(/\D/g, ''); // Remove non-numeric characters
-      if (cleaned.length === 10) {
-        return `+91${cleaned}`; // Add country code for India
-      }
-      if (cleaned.length > 10 && !cleaned.startsWith('+')) {
-        return `+${cleaned}`;
-      }
-      return cleaned; // Return formatted number
+      // Combine country code with phone number
+      return `${countryCode}${cleaned}`;
     }
 
     try {
@@ -75,8 +90,8 @@ export default function RegisterFreePage() {
             console.log('Free subscription creation error:', error);
           }
 
-          // Redirect to free dashboard
-          router.push('/dashboard-free');
+          // Redirect to four-day plan free page for first-time users
+          router.push('/users/four-day-plan-free');
         } else {
           setError(
             'Registration succeeded, but auto-login failed. Please try logging in.'
@@ -140,7 +155,7 @@ export default function RegisterFreePage() {
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Create Available Account
+              Join Shree Suktam Sadhana
             </motion.h2>
             <motion.p
               className="mt-1 text-green-100"
@@ -148,7 +163,7 @@ export default function RegisterFreePage() {
               animate={{ opacity: isPageLoaded ? 1 : 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
             >
-              Start your available spiritual journey today
+              Fill the details below
             </motion.p>
           </div>
 
@@ -245,31 +260,125 @@ export default function RegisterFreePage() {
                 >
                   Phone Number
                 </Label>
-                <div className="relative mt-1">
+                <div className="relative mt-1 flex gap-2">
+                  {/* Country Code Selector */}
+                  <div className="country-code-dropdown relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="w-20 rounded-lg border border-gray-300 bg-white p-2 text-sm font-medium transition-all duration-200 hover:bg-gray-50 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600 dark:focus:border-green-400 dark:focus:ring-green-400"
+                    >
+                      {countryCode === '+91' && '🇮🇳 +91'}
+                      {countryCode === '+1' && '🇺🇸 +1'}
+                      {countryCode === '+44' && '🇬🇧 +44'}
+                      {countryCode === '+61' && '🇦🇺 +61'}
+                      {countryCode === '+86' && '🇨🇳 +86'}
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {isDropdownOpen && (
+                      <div className="absolute left-0 top-full z-10 mt-1 w-32 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-slate-700">
+                        <div className="py-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCountryCode('+91');
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-slate-600 ${
+                              countryCode === '+91'
+                                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            🇮🇳 +91
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCountryCode('+1');
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-slate-600 ${
+                              countryCode === '+1'
+                                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            🇺🇸 +1
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCountryCode('+44');
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-600 ${
+                              countryCode === '+44'
+                                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            🇬🇧 +44
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCountryCode('+61');
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-600 ${
+                              countryCode === '+61'
+                                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            🇦🇺 +61
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCountryCode('+86');
+                              setIsDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-600 ${
+                              countryCode === '+86'
+                                ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            🇨🇳 +86
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Phone Number Input */}
                   <Input
                     id="phoneNumber"
                     type="tel"
-                    placeholder="Enter 10-digit phone number"
+                    placeholder="Enter phone number"
                     value={phoneNumber}
                     onChange={(e) => {
                       const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-                      if (value.length <= 10) {
-                        // Limit to 10 digits
+                      if (value.length <= 15) {
+                        // Allow longer numbers for international
                         setPhoneNumber(value);
                       }
                     }}
-                    pattern="[0-9]{10}"
-                    title="Please enter a 10-digit phone number"
                     required
-                    className="w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400"
-                  />
-                  <motion.div
-                    className="absolute bottom-0 left-0 h-0.5 bg-green-500 dark:bg-green-400"
-                    initial={{ width: 0 }}
-                    animate={{ width: phoneNumber ? '100%' : 0 }}
-                    transition={{ duration: 0.3 }}
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-green-500 focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-slate-700 dark:text-white dark:focus:border-green-400 dark:focus:ring-green-400"
                   />
                 </div>
+
+                {/* Progress bar for phone number */}
+                <motion.div
+                  className="absolute bottom-0 left-0 h-0.5 bg-green-500 dark:bg-green-400"
+                  initial={{ width: 0 }}
+                  animate={{ width: phoneNumber ? '100%' : 0 }}
+                  transition={{ duration: 0.3 }}
+                />
               </motion.div>
 
               <motion.div
@@ -282,7 +391,7 @@ export default function RegisterFreePage() {
                   htmlFor="password"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
-                  Password
+                  Create Password
                 </Label>
                 <div className="relative mt-1">
                   <Input
@@ -359,7 +468,7 @@ export default function RegisterFreePage() {
                       <span>Creating Account...</span>
                     </div>
                   ) : (
-                    'Sign Up - Available Access'
+                    'Join Shree Suktam Sadhana Now'
                   )}
                 </Button>
               </motion.div>

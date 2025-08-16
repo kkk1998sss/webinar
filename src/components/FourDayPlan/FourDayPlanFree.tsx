@@ -394,7 +394,7 @@ export default function FourDayPlanFree() {
   // Helper: Get unlock time for a video (9:00 PM on the correct day based on subscription start date)
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
-    return setSeconds(setMinutes(setHours(base, 16), 44), 0); // 16:44:00 (4:44 PM) - testing time
+    return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00 (9:00 PM)
   }
 
   // Helper: Check if video should be in live mode
@@ -435,13 +435,13 @@ export default function FourDayPlanFree() {
     const now = currentTime || new Date();
     const timeSinceUnlock = now.getTime() - unlockTime.getTime();
 
-    // If user comes after 5:44 PM, start video from the appropriate time
+    // If user comes after 9:00 PM, start video from the appropriate time
     if (timeSinceUnlock > 0) {
       // Convert milliseconds to seconds for YouTube API
       return Math.floor(timeSinceUnlock / 1000);
     }
 
-    return 0; // Start from beginning if before 5:44 PM
+    return 0; // Start from beginning if before 9:00 PM
   }
 
   // Helper: Check if video should be marked as completed based on actual video duration
@@ -985,21 +985,6 @@ export default function FourDayPlanFree() {
                   <ArrowLeft className="size-6" />
                 </Button>
               </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="sm:hidden"
-              >
-                <Button
-                  className="flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-green-600 hover:shadow-xl"
-                  onClick={() => router.push('/users/ebook199')}
-                >
-                  <BookOpen className="size-6" />
-                  <span className="text-sm">E-Books</span>
-                </Button>
-              </motion.div>
             </div>
 
             <div className="grid flex-1 grid-cols-3 gap-4">
@@ -1098,20 +1083,35 @@ export default function FourDayPlanFree() {
               })}
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="hidden sm:block"
-            >
-              <Button
-                className="flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500 px-4 py-3 font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-green-600 hover:shadow-xl"
-                onClick={() => router.push('/users/ebook199')}
+            <div className="hidden sm:flex sm:flex-col sm:gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <BookOpen className="size-6" />
-                <span className="text-sm">E-Books</span>
-              </Button>
-            </motion.div>
+                <Button
+                  className="flex h-16 w-40 animate-pulse items-center justify-center gap-3 rounded-full bg-gradient-to-r from-blue-500 to-green-500 font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-green-600 hover:shadow-xl"
+                  onClick={() => router.push('/users/ebook199')}
+                >
+                  <BookOpen className="size-7" />
+                  <span className="text-base">E-Books</span>
+                </Button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+              >
+                <Button
+                  className="flex h-16 w-40 animate-pulse items-center justify-center gap-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 font-semibold text-white shadow-lg transition-all hover:from-purple-600 hover:to-pink-600 hover:shadow-xl"
+                  onClick={() => router.push('/audio/simple')}
+                >
+                  <Play className="size-7" />
+                  <span className="text-base">Audio</span>
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -1399,6 +1399,37 @@ export default function FourDayPlanFree() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Mobile Buttons - After Video Section */}
+        <div className="flex w-full justify-center gap-4 p-4 lg:hidden">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Button
+              className="flex animate-pulse items-center gap-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500 px-6 py-4 font-semibold text-white shadow-lg transition-all hover:from-blue-600 hover:to-green-600 hover:shadow-xl"
+              onClick={() => router.push('/users/ebook199')}
+            >
+              <BookOpen className="size-6" />
+              <span className="text-sm">E-Books</span>
+            </Button>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Button
+              className="flex animate-pulse items-center gap-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 font-semibold text-white shadow-lg transition-all hover:from-purple-600 hover:to-pink-600 hover:shadow-xl"
+              onClick={() => router.push('/audio/simple')}
+            >
+              <Play className="size-6" />
+              <span className="text-sm">Audio</span>
+            </Button>
+          </motion.div>
         </div>
 
         {/* Upgrade card on the right */}
