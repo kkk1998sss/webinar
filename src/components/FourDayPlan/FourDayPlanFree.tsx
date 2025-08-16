@@ -21,6 +21,7 @@ import {
   MessageCircle,
   Play,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -106,6 +107,21 @@ export default function FourDayPlanFree() {
     setIsIOS(isIOSDevice);
 
     console.log('Device detection:', { isIOS: isIOSDevice, userAgent });
+
+    // For iOS devices, try to enable autoplay by triggering a user interaction
+    if (isIOSDevice) {
+      // Add a one-time click listener to the document to enable autoplay
+      const enableIOSAutoplay = () => {
+        console.log('iOS autoplay enabled via user interaction');
+        document.removeEventListener('click', enableIOSAutoplay);
+        document.removeEventListener('touchstart', enableIOSAutoplay);
+      };
+
+      document.addEventListener('click', enableIOSAutoplay, { once: true });
+      document.addEventListener('touchstart', enableIOSAutoplay, {
+        once: true,
+      });
+    }
   }, []);
 
   // Update session elapsed time every second when in live mode
@@ -378,7 +394,7 @@ export default function FourDayPlanFree() {
   // Helper: Get unlock time for a video (9:00 PM on the correct day based on subscription start date)
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
-    return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00 (9:00 PM)
+    return setSeconds(setMinutes(setHours(base, 16), 44), 0); // 16:44:00 (4:44 PM) - testing time
   }
 
   // Helper: Check if video should be in live mode
@@ -540,9 +556,9 @@ export default function FourDayPlanFree() {
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/
     );
     if (ytMatch) {
-      // iOS Safari compatible parameters - no autoplay, full controls
+      // iOS Safari compatible parameters - autoplay for live mode, controls for playback mode
       const baseParams = isLive
-        ? `autoplay=0&controls=1&disablekb=0&modestbranding=1&rel=0&showinfo=1&fs=1&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=0&wmode=transparent&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.origin)}`
+        ? `autoplay=1&controls=1&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=1&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=2&wmode=transparent&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.origin)}`
         : `controls=1&modestbranding=1&rel=0&enablejsapi=1&playsinline=1&fs=1&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.origin)}`;
 
       const startTimeParam = startTime > 0 ? `&start=${startTime}` : '';
@@ -553,7 +569,7 @@ export default function FourDayPlanFree() {
     const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
     if (vimeoMatch) {
       const baseParams = isLive
-        ? 'autoplay=0&controls=1&playsinline=1&dnt=1&transparent=0'
+        ? 'autoplay=1&controls=1&playsinline=1&dnt=1&transparent=0'
         : 'controls=1&playsinline=1&dnt=1&transparent=0';
       const startTimeParam = startTime > 0 ? `#t=${startTime}s` : '';
       return `https://player.vimeo.com/video/${vimeoMatch[1]}?${baseParams}${startTimeParam}`;
@@ -826,6 +842,14 @@ export default function FourDayPlanFree() {
     const playerContainer = document.getElementById('video-player-container');
     if (playerContainer && playerContainer.requestFullscreen) {
       playerContainer.requestFullscreen();
+    }
+  };
+
+  // Exit fullscreen handler
+  const exitFullscreen = () => {
+    setIsFullscreen(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
     }
   };
 
@@ -1165,16 +1189,6 @@ export default function FourDayPlanFree() {
                       </div>
                     )}
 
-                    {/* iOS-specific instructions */}
-                    {isIOS && (
-                      <div className="absolute left-2 top-12 z-10 sm:left-4 sm:top-16">
-                        <div className="rounded-lg bg-black/80 p-2 text-xs text-white">
-                          <p>📱 Tap to play on iOS</p>
-                          <p>🔊 Use device volume</p>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Video Iframe */}
                     <iframe
                       ref={playerRef}
@@ -1200,6 +1214,74 @@ export default function FourDayPlanFree() {
                       onError={() => setVideoLoadError(true)}
                       onLoad={() => setVideoLoadError(false)}
                     />
+
+                    {/* Simple iOS Play Button - Only for iOS devices in live mode */}
+                    {isIOS && isLiveMode && (
+                      <div className="absolute left-2 top-12 z-10 sm:left-4 sm:top-16">
+                        <button
+                          onClick={() => {
+                            if (playerRef.current) {
+                              // Try multiple strategies to start the video
+                              try {
+                                // Strategy 1: Force iframe reload
+                                const currentSrc = playerRef.current.src;
+                                playerRef.current.src = '';
+                                setTimeout(() => {
+                                  if (playerRef.current) {
+                                    playerRef.current.src = currentSrc;
+                                  }
+                                }, 100);
+
+                                // Strategy 2: Try to trigger autoplay via postMessage for YouTube
+                                setTimeout(() => {
+                                  try {
+                                    if (
+                                      playerRef.current &&
+                                      playerRef.current.contentWindow
+                                    ) {
+                                      playerRef.current.contentWindow.postMessage(
+                                        '{"event":"command","func":"playVideo","args":""}',
+                                        '*'
+                                      );
+                                    }
+                                  } catch (e) {
+                                    console.log(
+                                      'YouTube postMessage failed:',
+                                      e
+                                    );
+                                  }
+                                }, 500);
+                              } catch (e) {
+                                console.log('iOS play button failed:', e);
+                              }
+                            }
+                          }}
+                          className="rounded bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700"
+                        >
+                          ▶️ Play
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Exit Fullscreen Button - Always visible when in fullscreen */}
+                    {isFullscreen && (
+                      <div className="absolute right-4 top-4 z-30">
+                        <button
+                          onClick={exitFullscreen}
+                          className="rounded-full bg-black/60 p-2 text-white transition-all duration-200 hover:bg-black/80"
+                          style={{
+                            minWidth: 40,
+                            minHeight: 40,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          title="Exit Fullscreen"
+                        >
+                          <X className="size-5" />
+                        </button>
+                      </div>
+                    )}
 
                     {/* Video load error fallback */}
                     {videoLoadError && (
@@ -1244,22 +1326,28 @@ export default function FourDayPlanFree() {
                             Session {sessionElapsed}
                           </div>
                         </div>
-                        {!isFullscreen && (
-                          <button
-                            onClick={handleFullscreen}
-                            className="pointer-events-auto rounded-full bg-black/60 p-2 text-white transition hover:bg-black/80"
-                            title="Fullscreen"
-                            style={{
-                              minWidth: 40,
-                              minHeight: 40,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
+                        <button
+                          onClick={
+                            isFullscreen ? exitFullscreen : handleFullscreen
+                          }
+                          className="pointer-events-auto rounded-full bg-black/60 p-2 text-white transition hover:bg-black/80"
+                          title={
+                            isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'
+                          }
+                          style={{
+                            minWidth: 40,
+                            minHeight: 40,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {isFullscreen ? (
+                            <X className="size-5" />
+                          ) : (
                             <Maximize2 className="size-5" />
-                          </button>
-                        )}
+                          )}
+                        </button>
                       </div>
                     )}
 
@@ -1271,22 +1359,28 @@ export default function FourDayPlanFree() {
                             ? '✅ COMPLETED: Full playback available'
                             : '⏸️ WAITING: Video unlocks at 9:00 PM'}
                         </div>
-                        {!isFullscreen && (
-                          <button
-                            onClick={handleFullscreen}
-                            className="pointer-events-auto rounded-full bg-black/60 p-2 text-white transition hover:bg-black/80"
-                            title="Fullscreen"
-                            style={{
-                              minWidth: 40,
-                              minHeight: 40,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
+                        <button
+                          onClick={
+                            isFullscreen ? exitFullscreen : handleFullscreen
+                          }
+                          className="pointer-events-auto rounded-full bg-black/60 p-2 text-white transition hover:bg-black/80"
+                          title={
+                            isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'
+                          }
+                          style={{
+                            minWidth: 40,
+                            minHeight: 40,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {isFullscreen ? (
+                            <X className="size-5" />
+                          ) : (
                             <Maximize2 className="size-5" />
-                          </button>
-                        )}
+                          )}
+                        </button>
                       </div>
                     )}
                   </div>
