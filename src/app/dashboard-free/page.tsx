@@ -251,7 +251,7 @@ export default function DashboardFree() {
   const freeContentItems: ContentItem[] = [
     {
       id: '1',
-      title: '3-Day Spiritual Content',
+      title: '3-Days Shree Suktam webinar',
       description: 'Access spiritual teachings and meditation guides',
       type: 'course',
       gradient: 'from-green-400 via-blue-500 to-purple-500',
@@ -399,7 +399,7 @@ export default function DashboardFree() {
 
   const handleStartLearning = (item: ContentItem) => {
     // 3-Day Spiritual Content should always go to FourDayPlanFree regardless of plan
-    if (item.title === '3-Day Spiritual Content') {
+    if (item.title === '3-Days Shree Suktam webinar') {
       setCurrentView('fourDay');
       return;
     }

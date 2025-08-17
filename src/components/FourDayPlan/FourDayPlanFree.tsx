@@ -1,14 +1,6 @@
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  addDays,
-  compareAsc,
-  isAfter,
-  parseISO,
-  setHours,
-  setMinutes,
-  setSeconds,
-} from 'date-fns';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { addDays, isAfter, setHours, setMinutes, setSeconds } from 'date-fns';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -25,10 +17,9 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-import { PaidWebinarFourday } from '../webinar-list/PaidWebinarFourday';
-
+// import { PaidWebinarFourday } from '../webinar-list/PaidWebinarFourday';
 import { Button } from '@/components/ui/button';
-import { Webinar } from '@/types/user';
+// import { Webinar } from '@/types/user'; // Commented out - no longer used
 
 interface VideoData {
   id: string;
@@ -68,7 +59,7 @@ export default function FourDayPlanFree() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [webinars, setWebinars] = useState<Webinar[]>([]);
+  // const [webinars, setWebinars] = useState<Webinar[]>([]); // Commented out - no longer used
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(true);
   const [videoCompleted, setVideoCompleted] = useState(false);
@@ -87,8 +78,8 @@ export default function FourDayPlanFree() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
 
-  // Dummy session object for handleJoinWebinar
-  const session = { user: { isAdmin: false } };
+  // Dummy session object for handleJoinWebinar (Commented Out)
+  // const session = { user: { isAdmin: false } };
 
   // Set current time on client side only to avoid hydration issues
   useEffect(() => {
@@ -236,16 +227,16 @@ export default function FourDayPlanFree() {
     fetchData();
   }, []);
 
-  // Fetch webinars for paid section
-  useEffect(() => {
-    fetch('/api/webinar')
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data.webinars)) setWebinars(data.webinars);
-        else if (Array.isArray(data)) setWebinars(data);
-      })
-      .catch(() => setWebinars([]));
-  }, []);
+  // Fetch webinars for paid section (Commented Out)
+  // useEffect(() => {
+  //   fetch('/api/webinar')
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       if (Array.isArray(data.webinars)) setWebinars(data.webinars);
+  //       else if (Array.isArray(data)) setWebinars(data);
+  //     })
+  //     .catch(() => setWebinars([]));
+  // }, []);
 
   // iOS-specific video player optimization
   const optimizeForIOS = useCallback(() => {
@@ -358,38 +349,38 @@ export default function FourDayPlanFree() {
     videoMetadata,
   ]);
 
-  // Memoize paid webinars - same logic as webinar-view.tsx
-  const paidWebinars = useMemo(() => {
-    const paid: Webinar[] = [];
+  // Memoize paid webinars - same logic as webinar-view.tsx (Commented Out)
+  // const paidWebinars = useMemo(() => {
+  //   const paid: Webinar[] = [];
 
-    webinars.forEach((webinar) => {
-      // PAID LOGIC - Add to paid section if isPaid is true, regardless of date
-      if (webinar && webinar.isPaid === true) {
-        console.log(
-          'FourDayPlanFree: Adding to paid section:',
-          webinar.webinarTitle
-        );
-        paid.push(webinar);
-      }
-    });
+  //   webinars.forEach((webinar) => {
+  //     // PAID LOGIC - Add to paid section if isPaid is true, regardless of date
+  //     if (webinar && webinar.isPaid === true) {
+  //       console.log(
+  //         'FourDayPlanFree: Adding to paid section:',
+  //         webinar.webinarTitle
+  //       );
+  //       paid.push(webinar);
+  //     }
+  //   });
 
-    // Sort by date (ascending)
-    paid.sort((a, b) =>
-      compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
-    );
+  //   // Sort by date (ascending)
+  //   paid.sort((a, b) =>
+  //     compareAsc(parseISO(a.webinarDate), parseISO(b.webinarDate))
+  //   );
 
-    console.log('FourDayPlanFree: Paid webinars:', {
-      total: paid.length,
-      webinars: paid.map((w) => ({
-        id: w.id,
-        title: w.webinarTitle,
-        isPaid: w.isPaid,
-        date: w.webinarDate,
-      })),
-    });
+  //   console.log('FourDayPlanFree: Paid webinars:', {
+  //     total: paid.length,
+  //     webinars: paid.map((w) => ({
+  //       id: w.id,
+  //       title: w.webinarTitle,
+  //       isPaid: w.isPaid,
+  //       date: w.webinarDate,
+  //     })),
+  //   });
 
-    return paid;
-  }, [webinars]);
+  //   return paid;
+  // }, [webinars]);
 
   // Helper: Get unlock time for a video (9:00 PM on the correct day based on subscription start date)
   function getUnlockTime(startDate: string, day: number) {
@@ -462,6 +453,15 @@ export default function FourDayPlanFree() {
     });
 
     return timeSinceUnlock >= videoDurationMs;
+  }
+
+  // Helper: Format time to 12-hour format (e.g., "9:00 PM")
+  function formatTimeTo12Hour(date: Date): string {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   }
 
   // Helper: Get video metadata (duration) from our API
@@ -827,14 +827,14 @@ export default function FourDayPlanFree() {
     );
   }
 
-  // Handler for join button
-  const handleJoinWebinar = (id: string) => {
-    if (session.user?.isAdmin) {
-      router.push(`/users/playing-area/${id}`);
-      return;
-    }
-    router.push(`/users/playing-area/${id}`);
-  };
+  // Handler for join button (Commented Out)
+  // const handleJoinWebinar = (id: string) => {
+  //   if (session.user?.isAdmin) {
+  //     router.push(`/users/playing-area/${id}`);
+  //     return;
+  //   }
+  //   router.push(`/users/playing-area/${id}`);
+  // };
 
   // Fullscreen handler
   const handleFullscreen = () => {
@@ -1066,8 +1066,7 @@ export default function FourDayPlanFree() {
                       ) : (
                         <span>
                           Unlocks at{' '}
-                          {unlockTime &&
-                            `${unlockTime.getHours().toString().padStart(2, '0')}:${unlockTime.getMinutes().toString().padStart(2, '0')}`}
+                          {unlockTime && formatTimeTo12Hour(unlockTime)}
                         </span>
                       )}
                     </div>
@@ -1153,9 +1152,8 @@ export default function FourDayPlanFree() {
                         Video Locked
                       </h3>
                       <p className="max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
-                        This video will be available at{' '}
-                        {unlockTime &&
-                          `${unlockTime.getHours().toString().padStart(2, '0')}:${unlockTime.getMinutes().toString().padStart(2, '0')}`}
+                        Shree Suktam Sadhana session will starts at{' '}
+                        {unlockTime && formatTimeTo12Hour(unlockTime)}
                       </p>
                       {unlockTime && (
                         <VideoCountdownTimer unlockTime={unlockTime} />
@@ -1491,13 +1489,13 @@ export default function FourDayPlanFree() {
         </div>
       </div>
 
-      {/* Paid Webinar Section */}
-      <section className="my-8 w-full">
+      {/* Paid Webinar Section - Commented Out */}
+      {/* <section className="my-8 w-full">
         <PaidWebinarFourday
           webinars={paidWebinars}
           handleJoinWebinar={handleJoinWebinar}
         />
-      </section>
+      </section> */}
     </div>
   );
 }

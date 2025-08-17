@@ -597,6 +597,15 @@ export default function FourDayPlan() {
     return timeSinceUnlock >= videoDurationMs;
   }
 
+  // Helper: Format time to 12-hour format (e.g., "9:00 PM")
+  function formatTimeTo12Hour(date: Date): string {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+  }
+
   // Helper: Get video metadata (duration) from our API
   async function fetchVideoMetadata(
     videoUrl: string
@@ -939,8 +948,7 @@ export default function FourDayPlan() {
                       ) : (
                         <span>
                           Unlocks at{' '}
-                          {unlockTime &&
-                            `${unlockTime.getHours().toString().padStart(2, '0')}:${unlockTime.getMinutes().toString().padStart(2, '0')}`}
+                          {unlockTime && formatTimeTo12Hour(unlockTime)}
                         </span>
                       )}
                     </div>
@@ -1008,8 +1016,7 @@ export default function FourDayPlan() {
                       </h3>
                       <p className="max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
                         This video will be available at{' '}
-                        {unlockTime &&
-                          `${unlockTime.getHours().toString().padStart(2, '0')}:${unlockTime.getMinutes().toString().padStart(2, '0')}`}
+                        {unlockTime && formatTimeTo12Hour(unlockTime)}
                       </p>
                       <VideoCountdownTimer unlockTime={unlockTime!} />
                     </div>
