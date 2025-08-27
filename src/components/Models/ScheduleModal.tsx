@@ -275,17 +275,92 @@ export function ScheduleModal({
           </div>
 
           <div>
+            <Label htmlFor="youtubeLink" className="text-white">
+              YouTube Video Link
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="youtubeLink"
+                type="url"
+                value={youtubeLink}
+                onChange={(e) => setYoutubeLink(e.target.value)}
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="flex-1 border-slate-700 bg-slate-800 text-white"
+              />
+              <Button
+                type="button"
+                onClick={async () => {
+                  if (!youtubeLink) {
+                    toast.error('Please enter a YouTube link first');
+                    return;
+                  }
+
+                  try {
+                    const response = await fetch('/api/video-metadata', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ videoUrl: youtubeLink }),
+                    });
+
+                    if (response.ok) {
+                      const metadata = await response.json();
+                      if (metadata.duration) {
+                        // Convert seconds to minutes and set duration
+                        const durationInMinutes = Math.ceil(
+                          metadata.duration / 60
+                        );
+                        setDuration(durationInMinutes.toString());
+                        toast.success(
+                          `Duration auto-filled: ${Math.floor(metadata.duration / 60)}m ${metadata.duration % 60}s`
+                        );
+                      } else {
+                        toast.error('Could not fetch video duration');
+                      }
+                    } else {
+                      toast.error('Failed to fetch video metadata');
+                    }
+                  } catch (error) {
+                    console.error('Error fetching metadata:', error);
+                    toast.error('Error fetching video metadata');
+                  }
+                }}
+                className="bg-green-600 px-4 text-white hover:bg-green-700"
+                disabled={!youtubeLink.trim()}
+              >
+                📊 Fetch Duration
+              </Button>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              Enter YouTube video URL and click &quot;Fetch Duration&quot; to
+              automatically get the video length
+            </p>
+          </div>
+
+          <div>
             <Label htmlFor="duration" className="text-white">
               Duration (minutes)
             </Label>
-            <Input
-              id="duration"
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="Enter duration in minutes"
-              className="border-slate-700 bg-slate-800 text-white"
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                id="duration"
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="Enter duration in minutes"
+                className="flex-1 border-slate-700 bg-slate-800 text-white"
+              />
+              {duration && youtubeLink && (
+                <div className="flex items-center gap-1 text-xs text-green-400">
+                  <span>✅</span>
+                  <span>Auto-filled</span>
+                </div>
+              )}
+            </div>
+            {duration && youtubeLink && (
+              <p className="mt-1 text-xs text-green-400">
+                Duration automatically fetched from YouTube video
+              </p>
+            )}
           </div>
         </div>
 
@@ -533,7 +608,7 @@ export function ScheduleModal({
             </div>
           </div>
 
-          {/* YouTube Link Option */}
+          {/* YouTube Video Display Option */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -558,26 +633,6 @@ export function ScheduleModal({
                 </Label>
               </div>
             </div>
-
-            {!showThankYouPage && (
-              <div>
-                <Label htmlFor="youtubeLink" className="text-white">
-                  YouTube Live Stream Link
-                </Label>
-                <Input
-                  id="youtubeLink"
-                  type="url"
-                  value={youtubeLink}
-                  onChange={(e) => setYoutubeLink(e.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  className="border-slate-700 bg-slate-800 text-white"
-                />
-                <p className="mt-1 text-xs text-slate-400">
-                  Enter the YouTube live stream URL. If left empty, a default
-                  video will be shown.
-                </p>
-              </div>
-            )}
 
             {showThankYouPage && (
               <div className="rounded-lg border border-yellow-600/30 bg-yellow-900/30 p-3">

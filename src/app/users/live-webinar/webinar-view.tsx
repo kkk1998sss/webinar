@@ -31,6 +31,7 @@ import {
 import { LiveWebinarSection } from '@/components/webinar-list/LiveWebinarSection';
 import { PaidWebinarSection } from '@/components/webinar-list/PaidWebinarSection';
 import { PastWebinarSection } from '@/components/webinar-list/PastWebinarSection';
+import RecordedCoursesSection from '@/components/webinar-list/RecordedCoursesSection';
 import { UpcomingWebinarSection } from '@/components/webinar-list/UpcomingWebinarSection';
 import { useMounted } from '@/hooks/use-mounted';
 import { Webinar } from '@/types/user';
@@ -800,18 +801,23 @@ export default function WebinarDashboard({ session }: { session: Session }) {
 
       {/* New Structure - Sections for different webinar types */}
       <div className="mt-8 space-y-6 px-8 ">
-        <LiveWebinarSection
-          webinars={todaysWebinars}
-          countdowns={countdowns}
-          getCountdown={getCountdown}
-          handleJoinWebinar={handleJoinWebinar}
-          theme={theme ?? 'theme'}
-        />
+        {/* Desktop: Side by side layout, Mobile: Single column */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
+          <LiveWebinarSection
+            webinars={todaysWebinars}
+            countdowns={countdowns}
+            getCountdown={getCountdown}
+            handleJoinWebinar={handleJoinWebinar}
+            theme={theme ?? 'theme'}
+          />
 
-        <UpcomingWebinarSection
-          webinars={upcomingWebinars.filter((webinar) => !webinar.isPaid)}
-          handleJoinWebinar={handleJoinWebinar}
-        />
+          <UpcomingWebinarSection
+            webinars={upcomingWebinars.filter((webinar) => !webinar.isPaid)}
+            handleJoinWebinar={handleJoinWebinar}
+          />
+        </div>
+
+        <RecordedCoursesSection />
 
         <PaidWebinarSection webinars={paidWebinars} />
 

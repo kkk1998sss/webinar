@@ -17,25 +17,94 @@ export async function POST(request: NextRequest) {
     );
     if (ytMatch) {
       const videoId = ytMatch[1];
+      console.log('🎬 Processing YouTube video:', videoId);
 
-      // For YouTube, we'll use a simple approach to get duration
-      // In production, you'd use the YouTube Data API with a proper API key
-      const response = await fetch(
-        `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
-      );
+      try {
+        // Method 1: Try to get duration from video page source
+        const pageResponse = await fetch(
+          `https://www.youtube.com/watch?v=${videoId}`,
+          {
+            headers: {
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            },
+          }
+        );
 
-      if (response.ok) {
-        const data = await response.json();
+        if (pageResponse.ok) {
+          const pageHtml = await pageResponse.text();
 
-        // Since oembed doesn't provide duration, we'll estimate based on title or use a default
-        // In a real implementation, you'd use the YouTube Data API
-        const estimatedDuration = 3600; // Default 1 hour
+          // Look for duration in the page source
+          const durationMatch = pageHtml.match(/"lengthSeconds":"(\d+)"/);
+          const titleMatch = pageHtml.match(/"title":"([^"]+)"/);
 
-        return NextResponse.json({
-          duration: estimatedDuration,
-          title: data.title,
-          provider: 'youtube',
-        });
+          if (durationMatch) {
+            const duration = parseInt(durationMatch[1]);
+            const title = titleMatch
+              ? titleMatch[1].replace(/\\"/g, '"')
+              : 'YouTube Video';
+
+            console.log('✅ YouTube duration found:', {
+              videoId,
+              duration,
+              durationFormatted: `${Math.floor(duration / 60)}m ${duration % 60}s`,
+              title,
+            });
+
+            return NextResponse.json({
+              duration,
+              title,
+              provider: 'youtube',
+              method: 'page_source',
+            });
+          }
+        }
+
+        // Method 2: Fallback to oembed for title
+        console.log('⚠️ Duration not found in page source, trying oembed...');
+        const oembedResponse = await fetch(
+          `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+        );
+
+        if (oembedResponse.ok) {
+          const data = await oembedResponse.json();
+
+          // Try to extract duration from oembed response
+          const oembedHtml = await oembedResponse.text();
+          const oembedDurationMatch = oembedHtml.match(
+            /"lengthSeconds":"(\d+)"/
+          );
+
+          if (oembedDurationMatch) {
+            const duration = parseInt(oembedDurationMatch[1]);
+            console.log('✅ YouTube duration found via oembed:', {
+              videoId,
+              duration,
+              durationFormatted: `${Math.floor(duration / 60)}m ${duration % 60}s`,
+              title: data.title,
+            });
+
+            return NextResponse.json({
+              duration,
+              title: data.title,
+              provider: 'youtube',
+              method: 'oembed',
+            });
+          }
+
+          // If still no duration, return estimated duration with warning
+          console.log('⚠️ No duration found, using estimated duration');
+          return NextResponse.json({
+            duration: 3600, // Default 1 hour
+            title: data.title,
+            provider: 'youtube',
+            method: 'estimated',
+            warning:
+              'Duration not available, using estimated 1 hour. Consider using YouTube Data API for accurate duration.',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching YouTube metadata:', error);
       }
     }
 

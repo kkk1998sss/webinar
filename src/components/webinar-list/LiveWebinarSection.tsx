@@ -1,5 +1,6 @@
+import { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Video } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Video } from 'lucide-react';
 
 import { Webinar } from '@/types/user';
 
@@ -12,96 +13,179 @@ interface Props {
 }
 
 export function LiveWebinarSection({ webinars, handleJoinWebinar }: Props) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -400, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 400, behavior: 'smooth' });
+    }
+  };
+
   return (
     <motion.div
-      className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.9 }}
+      className="w-full"
     >
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-3 sm:p-4 dark:from-blue-600 dark:to-purple-700">
-        <h3 className="text-lg font-semibold text-white sm:text-xl">
-          📅 Live Webinars
-        </h3>
+      <div className="mb-8 flex justify-center">
+        <h2 className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-2 text-3xl font-bold text-white shadow-xl">
+          📅 Today&apos;s Webinars
+        </h2>
       </div>
       {webinars.length === 0 ? (
-        <div className="p-6 text-center text-gray-500 dark:text-slate-400">
-          No live webinars available.
+        <div className="flex justify-center p-12">
+          <div className="text-center text-gray-500 dark:text-slate-400">
+            <div className="mb-4 text-6xl">📅</div>
+            <h3 className="mb-2 text-xl font-semibold">
+              No live webinars available
+            </h3>
+            <p className="text-sm">
+              Check back later for live session announcements
+            </p>
+          </div>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
-            <thead>
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Title
-                </th>
-                <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                  Date
-                </th>
-                <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                  Time
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {webinars.map((webinar, index) => (
-                <motion.tr
-                  key={webinar.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="dark:hover:bg-slate-750 border-b border-gray-100 transition-colors duration-200 hover:bg-blue-50 dark:border-slate-700"
-                >
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                      <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20">
-                        <Video className="size-4 text-blue-600 dark:text-blue-400" />
+        <div className="relative">
+          {/* Left Arrow Indicator */}
+          <button
+            onClick={scrollLeft}
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110 active:scale-95"
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-blue-500/80 text-white shadow-lg backdrop-blur-sm hover:bg-blue-600/90">
+              <ChevronLeft className="size-6 animate-pulse" />
+            </div>
+          </button>
+
+          {/* Right Arrow Indicator */}
+          <button
+            onClick={scrollRight}
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110 active:scale-95"
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-blue-500/80 text-white shadow-lg backdrop-blur-sm hover:bg-blue-600/90">
+              <ChevronRight className="size-6 animate-pulse" />
+            </div>
+          </button>
+
+          <div
+            ref={scrollContainerRef}
+            className="scrollbar-hide flex snap-x snap-mandatory gap-6 overflow-x-auto p-6 px-20"
+          >
+            {webinars.map((webinar) => (
+              <motion.div
+                key={webinar.id}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: '0 6px 24px 0 rgba(59, 130, 246, 0.18)',
+                }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="group relative flex w-[90vw] shrink-0 snap-center flex-col overflow-hidden rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/40 via-purple-50/30 to-blue-100/40 shadow-md transition-all duration-300 hover:border-blue-300 hover:shadow-lg md:w-[400px]"
+                style={{ minHeight: 220 }}
+              >
+                {/* Live Badge at the top */}
+                <div className="w-full p-3">
+                  <div className="mb-3 w-full">
+                    <div className="text-center">
+                      <div className="mb-2 text-xs font-bold text-blue-800">
+                        LIVE NOW
                       </div>
-                      <div>
-                        <span className="font-medium text-gray-800 dark:text-slate-200">
-                          {webinar.webinarTitle}
-                        </span>
-                        <div className="mt-1 flex items-center gap-2 text-sm text-gray-500 sm:hidden dark:text-slate-400">
-                          <span>{webinar.webinarDate}</span>
-                          <span>•</span>
-                          <span>{webinar.webinarTime}</span>
+                      <div className="flex justify-center">
+                        <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md">
+                          <span className="text-xl">🔴</span>
                         </div>
                       </div>
                     </div>
-                  </td>
-                  <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
-                    {webinar.webinarDate}
-                  </td>
-                  <td className="hidden px-4 py-3 sm:table-cell">
-                    {webinar.webinarTime}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-500/20 dark:text-green-300">
-                      <span className="mr-1 flex size-2 rounded-full bg-green-500 dark:bg-green-400"></span>
-                      Live
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleJoinWebinar(webinar.id)}
-                      className="w-full rounded-md bg-gradient-to-r from-blue-500 to-purple-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-blue-600 hover:to-purple-700 sm:w-auto dark:from-blue-600 dark:to-purple-700 dark:hover:from-blue-700 dark:hover:to-purple-800"
-                    >
-                      Join Now
-                    </motion.button>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+
+                <div className="flex flex-col">
+                  <div className="flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-50/60 to-purple-50/60 p-3">
+                    <div className="flex size-24 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-blue-100 to-purple-100 object-cover shadow-md transition-all duration-300 group-hover:border-blue-300">
+                      <span className="text-3xl">📹</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-between p-3">
+                    <div className="grow">
+                      <div className="mb-2 flex items-center justify-center">
+                        <span className="rounded-full bg-gradient-to-r from-blue-300 to-purple-200 px-3 py-1 text-xs font-bold tracking-wide text-blue-800 shadow-sm">
+                          {webinar.webinarTitle.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div className="mb-3 grid grid-cols-1 gap-1 text-xs text-blue-800">
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500">📅</span>
+                          <span className="font-semibold">Date:</span>
+                          <span>{webinar.webinarDate}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500">⏰</span>
+                          <span className="font-semibold">Time:</span>
+                          <span>{webinar.webinarTime}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500">📍</span>
+                          <span className="font-semibold">Venue:</span>
+                          <span>Online</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500">📊</span>
+                          <span className="font-semibold">Status:</span>
+                          <span className="font-medium text-green-600">
+                            Live Now
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-blue-600">
+                            Type:
+                          </span>
+                          <span className="text-xs font-medium text-blue-500">
+                            Live Webinar
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Live Features */}
+                      <div className="mb-3 rounded-lg bg-blue-50/50 p-2 dark:bg-blue-900/20">
+                        <div className="flex items-center gap-2 text-xs font-medium text-blue-700 dark:text-blue-300">
+                          <span className="flex size-2 animate-pulse rounded-full bg-red-500"></span>
+                          <span>Live Streaming</span>
+                          <span>•</span>
+                          <span>Real-time Interaction</span>
+                          <span>•</span>
+                          <span>Q&A Session</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 flex justify-center">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleJoinWebinar(webinar.id)}
+                        className="relative overflow-hidden rounded-lg border-2 border-blue-400 bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-2 font-semibold text-white shadow-md transition-transform duration-200 hover:from-blue-600 hover:to-purple-600 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+                      >
+                        <span className="relative z-10 flex items-center gap-2">
+                          <Video className="size-3" />
+                          Join Live
+                        </span>
+                        <span className="absolute left-0 top-0 h-full w-0 bg-blue-200 opacity-20 transition-all duration-500 group-hover:w-full" />
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
     </motion.div>

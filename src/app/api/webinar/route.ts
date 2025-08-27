@@ -14,6 +14,8 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log('body', body);
+    console.log('youtubeLink from body:', body.youtubeLink);
+    console.log('showThankYouPage from body:', body.showThankYouPage);
 
     // Validate required fields
     const requiredFields = ['webinarName', 'webinarTitle'];
@@ -69,21 +71,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // Proceed with database operations
-    const createdSettings = await prisma.webinarSettings.create({
-      data: {
-        name: body.webinarTitle,
-        emailNotifications: body.emailNotifications || {},
-        textNotifications: body.textNotifications || {},
-        integration: body.integration || '',
-        sharingEnabled: body.webinarSharing?.enabled ?? false,
-        sharingName: body.webinarSharing?.name || '',
-        sharingUrl: body.webinarSharing?.url || '',
-      },
-    });
+    // Proceed with database operations using a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      const createdSettings = await tx.webinarSettings.create({
+        data: {
+          name: body.webinarTitle,
+          emailNotifications: body.emailNotifications || {},
+          textNotifications: body.textNotifications || {},
+          integration: body.integration || '',
+          sharingEnabled: body.webinarSharing?.enabled ?? false,
+          sharingName: body.webinarSharing?.name || '',
+          sharingUrl: body.webinarSharing?.url || '',
+        },
+      });
 
-    const newWebinar = await prisma.webinarDetails.create({
-      data: {
+      const webinarData = {
         webinarSettingsId: createdSettings.id,
         webinarName: body.webinarName,
         webinarTitle: body.webinarTitle,
@@ -112,47 +114,64 @@ export async function POST(req: Request) {
           body.isPaid && body.discountAmount
             ? parseFloat(body.discountAmount)
             : null,
+        // YouTube link and thank you page settings
+        youtubeLink: body.youtubeLink || null,
+        showThankYouPage: body.showThankYouPage || false,
         // Add other fields that might be missing
         // scheduledDates is already set above with date range
         brandImage: body.brandImage || null,
-        resources: {
-          // Validate and structure resources
-          create: body.resources?.map((res: ResourceInput) => ({
-            name: res.name,
-            type: res.type, // pdf/docx/jpg/etc
-            url: res.url,
-            publicId: res.publicId || null,
-          })),
-        },
-      },
-    });
-    console.log('newwebinar', newWebinar);
+        resources: body.resources
+          ? {
+              // Validate and structure resources
+              create: body.resources.map((res: ResourceInput) => ({
+                name: res.name,
+                type: res.type, // pdf/docx/jpg/etc
+                url: res.url,
+                publicId: res.publicId || null,
+              })),
+            }
+          : undefined,
+      };
 
-    // Handle video uploads
-    if (body.videoUploads?.length > 0) {
+      console.log('Creating webinar with data:', webinarData);
+
+      let newWebinar;
       try {
-        await prisma.video.create({
-          data: {
-            title: body.videoUploads[0].title || 'Untitled Video',
-            publicId: body.videoUploads[0].publicId || '',
-            url: body.videoUploads[0].url || '',
-            webinarDetails: {
-              connect: { id: newWebinar.id },
-            },
-          },
+        newWebinar = await tx.webinarDetails.create({
+          data: webinarData,
         });
-      } catch (videoError) {
-        console.error('Video upload failed:', videoError);
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Video upload failed',
-            details: 'Check video object structure',
-          },
-          { status: 400 }
-        );
+        console.log('newwebinar', newWebinar);
+        console.log('Stored youtubeLink:', newWebinar.youtubeLink);
+        console.log('Stored showThankYouPage:', newWebinar.showThankYouPage);
+      } catch (createError) {
+        console.error('Error creating webinar:', createError);
+        console.error('Webinar data that failed:', webinarData);
+        throw createError;
       }
-    }
+
+      // Handle video uploads
+      if (body.videoUploads?.length > 0) {
+        try {
+          await tx.video.create({
+            data: {
+              title: body.videoUploads[0].title || 'Untitled Video',
+              publicId: body.videoUploads[0].publicId || '',
+              url: body.videoUploads[0].url || '',
+              webinarDetails: {
+                connect: { id: newWebinar.id },
+              },
+            },
+          });
+        } catch (videoError) {
+          console.error('Video upload failed:', videoError);
+          throw new Error('Video upload failed');
+        }
+      }
+
+      return { settings: createdSettings, webinar: newWebinar };
+    });
+
+    const { settings: createdSettings, webinar: newWebinar } = result;
 
     return NextResponse.json({
       success: true,

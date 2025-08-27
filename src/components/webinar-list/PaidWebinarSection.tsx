@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import { useSession } from 'next-auth/react';
@@ -53,6 +54,19 @@ export function PaidWebinarSection({ webinars }: Props) {
   const [isLoadingPayments, setIsLoadingPayments] = useState(true);
   const router = useRouter();
   const { data: session } = useSession();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -520, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 520, behavior: 'smooth' });
+    }
+  };
 
   // Check user's payment history on component mount
   useEffect(() => {
@@ -275,15 +289,23 @@ export function PaidWebinarSection({ webinars }: Props) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 1.1 }}
-        className="overflow-hidden rounded-xl border border-yellow-200 bg-white shadow-lg dark:border-yellow-700 dark:bg-yellow-50/10"
+        className="w-full"
       >
-        <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 sm:p-4 dark:from-yellow-600 dark:to-orange-700">
-          <h3 className="text-lg font-semibold text-white sm:text-xl">
-            💰 Paid Webinars
-          </h3>
+        <div className="mb-8 flex justify-center">
+          <h2 className="rounded-lg bg-gradient-to-r from-red-500 to-yellow-500 px-8 py-2 text-3xl font-bold text-white shadow-xl">
+            Upcoming Events
+          </h2>
         </div>
-        <div className="p-6 text-center text-gray-500 dark:text-slate-400">
-          No paid webinars available.
+        <div className="flex justify-center p-12">
+          <div className="text-center text-gray-500 dark:text-slate-400">
+            <div className="mb-4 text-6xl">📭</div>
+            <h3 className="mb-2 text-xl font-semibold">
+              No paid webinars available
+            </h3>
+            <p className="text-sm">
+              Check back later for upcoming premium events
+            </p>
+          </div>
         </div>
       </motion.div>
     );
@@ -296,193 +318,338 @@ export function PaidWebinarSection({ webinars }: Props) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 1.1 }}
-        className="overflow-hidden rounded-xl border border-yellow-200 bg-white shadow-lg dark:border-yellow-700 dark:bg-yellow-50/10"
+        className="w-full"
       >
-        <div className="bg-gradient-to-r from-yellow-500 to-orange-600 p-3 sm:p-4 dark:from-yellow-600 dark:to-orange-700">
-          <h3 className="text-lg font-semibold text-white sm:text-xl">
-            💰 Upcoming paid events
-          </h3>
+        <div className="mb-8 flex justify-center">
+          <h2 className="rounded-lg bg-gradient-to-r from-red-500 to-yellow-500 px-8 py-2 text-3xl font-bold text-white shadow-xl">
+            Upcoming Paid Events
+          </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px]">
-            <thead>
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Title
-                </th>
-                <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                  Date
-                </th>
-                <th className="hidden px-4 py-3 text-left text-sm font-medium text-gray-500 sm:table-cell dark:text-slate-400">
-                  Time
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Price
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Plan
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-slate-400">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {webinars.map((webinar, index) => (
-                <motion.tr
-                  key={webinar.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="border-b border-gray-100 transition-colors duration-200 hover:bg-yellow-50 dark:border-yellow-700 dark:hover:bg-yellow-100/10"
-                >
-                  <td className="px-4 py-3">
-                    <span className="font-medium text-gray-800 dark:text-slate-200">
-                      {webinar.webinarTitle.charAt(0).toUpperCase() +
-                        webinar.webinarTitle.slice(1)}
-                    </span>
-                  </td>
-                  <td className="hidden px-4 py-3 text-gray-600 sm:table-cell dark:text-slate-400">
-                    {(() => {
-                      // Check if we have scheduledDates with start and end dates
-                      if (
-                        webinar.scheduledDates &&
-                        typeof webinar.scheduledDates === 'object'
-                      ) {
-                        const scheduledDates =
-                          webinar.scheduledDates as unknown as {
-                            startDate: string;
-                            endDate: string;
-                          };
-                        if (
-                          scheduledDates.startDate &&
-                          scheduledDates.endDate
-                        ) {
-                          const startDate = new Date(scheduledDates.startDate);
-                          const endDate = new Date(scheduledDates.endDate);
+        <div className="relative">
+          {/* Left Arrow Indicator */}
+          <button
+            onClick={scrollLeft}
+            className="absolute left-2 top-1/2 z-10 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110 active:scale-95"
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-red-500/80 text-white shadow-lg backdrop-blur-sm hover:bg-red-600/90">
+              <ChevronLeft className="size-6 animate-pulse" />
+            </div>
+          </button>
 
-                          // Check if it's a multi-day event
-                          if (
-                            startDate.toDateString() !== endDate.toDateString()
-                          ) {
-                            const months = [
-                              'Jan',
-                              'Feb',
-                              'Mar',
-                              'Apr',
-                              'May',
-                              'Jun',
-                              'Jul',
-                              'Aug',
-                              'Sep',
-                              'Oct',
-                              'Nov',
-                              'Dec',
-                            ];
-                            const startStr = `${startDate.getDate()} ${months[startDate.getMonth()]}`;
-                            const endStr = `${endDate.getDate()} ${months[endDate.getMonth()]}, ${endDate.getFullYear()}`;
-                            return `${startStr} - ${endStr}`;
-                          }
-                        }
-                      }
+          {/* Right Arrow Indicator */}
+          <button
+            onClick={scrollRight}
+            className="absolute right-2 top-1/2 z-10 -translate-y-1/2 cursor-pointer transition-transform hover:scale-110 active:scale-95"
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-red-500/80 text-white shadow-lg backdrop-blur-sm hover:bg-red-600/90">
+              <ChevronRight className="size-6 animate-pulse" />
+            </div>
+          </button>
 
-                      // Fallback to single date
-                      const date = new Date(webinar.webinarDate);
-                      const months = [
-                        'Jan',
-                        'Feb',
-                        'Mar',
-                        'Apr',
-                        'May',
-                        'Jun',
-                        'Jul',
-                        'Aug',
-                        'Sep',
-                        'Oct',
-                        'Nov',
-                        'Dec',
-                      ];
-                      return `${date.getDate()} ${months[date.getMonth()]}, ${date.getFullYear()}`;
-                    })()}
-                  </td>
-                  <td className="hidden px-4 py-3 sm:table-cell">
-                    {webinar.webinarTime}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-500/20 dark:text-blue-300">
-                      <span className="mr-1 flex size-2 rounded-full bg-blue-500 dark:bg-blue-400"></span>
-                      Upcoming
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-col">
-                      {webinar.discountPercentage &&
-                      webinar.discountPercentage > 0 ? (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-400 line-through">
-                              ₹{webinar.paidAmount}
-                            </span>
-                            <span className="font-semibold text-yellow-700 dark:text-yellow-400">
-                              ₹
-                              {webinar.paidAmount && webinar.discountAmount
-                                ? (
-                                    webinar.paidAmount - webinar.discountAmount
-                                  ).toFixed(0)
-                                : webinar.paidAmount}
-                            </span>
-                            <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white">
-                              -{webinar.discountPercentage.toFixed(0)}% OFF
-                            </span>
+          <div
+            ref={scrollContainerRef}
+            className="scrollbar-hide flex snap-x snap-mandatory gap-8 overflow-x-auto p-6 px-20"
+          >
+            {webinars.map((webinar) => (
+              <motion.div
+                key={webinar.id}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: '0 6px 24px 0 rgba(59, 130, 246, 0.18)',
+                }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+                className="group relative flex w-[90vw] shrink-0 snap-center flex-col overflow-hidden rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/40 via-indigo-50/30 to-blue-100/40 shadow-md transition-all duration-300 hover:border-blue-400 hover:shadow-lg md:w-[520px]"
+                style={{ minHeight: 260 }}
+              >
+                {/* Countdown Timer at the top */}
+                <div className="w-full p-4">
+                  <div className="mb-4 w-full">
+                    <div className="text-center">
+                      <div className="mb-2 text-xs font-bold text-blue-900">
+                        STARTS IN
+                      </div>
+                      <div className="flex justify-center gap-2">
+                        <div className="flex flex-col items-center">
+                          <div className="flex size-8 items-center justify-center rounded-md bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-bold text-white shadow-md md:size-10 md:text-base">
+                            {(() => {
+                              const now = new Date();
+                              const webinarDate = new Date(webinar.webinarDate);
+                              const [hours, minutes] = (
+                                webinar.webinarTime || '00:00'
+                              )
+                                .split(':')
+                                .map(Number);
+                              webinarDate.setHours(
+                                hours || 0,
+                                minutes || 0,
+                                0,
+                                0
+                              );
+                              const difference =
+                                webinarDate.getTime() - now.getTime();
+                              if (difference > 0) {
+                                const days = Math.floor(
+                                  difference / (1000 * 60 * 60 * 24)
+                                );
+                                return days > 0 ? days : 0;
+                              }
+                              return 0;
+                            })()}
                           </div>
-                          <span className="text-xs font-semibold text-red-500">
-                            ⚡ Limited time offer
+                          <span className="mt-1 text-xs font-medium text-blue-900">
+                            DAYS
                           </span>
-                        </>
-                      ) : (
-                        <span className="font-semibold text-yellow-700 dark:text-yellow-400">
-                          ₹{webinar.paidAmount}
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="flex size-8 items-center justify-center rounded-md bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-bold text-white shadow-md md:size-10 md:text-base">
+                            {(() => {
+                              const now = new Date();
+                              const webinarDate = new Date(webinar.webinarDate);
+                              const [hours, minutes] = (
+                                webinar.webinarTime || '00:00'
+                              )
+                                .split(':')
+                                .map(Number);
+                              webinarDate.setHours(
+                                hours || 0,
+                                minutes || 0,
+                                0,
+                                0
+                              );
+                              const difference =
+                                webinarDate.getTime() - now.getTime();
+                              if (difference > 0) {
+                                const hours = Math.floor(
+                                  (difference / (1000 * 60 * 60)) % 24
+                                );
+                                return hours.toString().padStart(2, '0');
+                              }
+                              return '00';
+                            })()}
+                          </div>
+                          <span className="mt-1 text-xs font-medium text-blue-900">
+                            HOURS
+                          </span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="flex size-8 items-center justify-center rounded-md bg-gradient-to-r from-red-500 to-yellow-500 text-sm font-bold text-white shadow-md md:size-10 md:text-base">
+                            {(() => {
+                              const now = new Date();
+                              const webinarDate = new Date(webinar.webinarDate);
+                              const [hours, minutes] = (
+                                webinar.webinarTime || '00:00'
+                              )
+                                .split(':')
+                                .map(Number);
+                              webinarDate.setHours(
+                                hours || 0,
+                                minutes || 0,
+                                0,
+                                0
+                              );
+                              const difference =
+                                webinarDate.getTime() - now.getTime();
+                              if (difference > 0) {
+                                const minutes = Math.floor(
+                                  (difference / 1000 / 60) % 60
+                                );
+                                return minutes.toString().padStart(2, '0');
+                              }
+                              return '00';
+                            })()}
+                          </div>
+                          <span className="mt-1 text-xs font-medium text-blue-900">
+                            MINUTES
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row">
+                  <div className="flex shrink-0 items-center justify-center bg-gradient-to-br from-blue-50/60 to-indigo-50/60 md:w-1/3">
+                    <div className="flex size-40 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-blue-100 to-indigo-100 object-cover shadow-md transition-all duration-300 group-hover:border-blue-400 md:size-32">
+                      <span className="text-4xl">🎯</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col justify-between p-4 md:w-2/3">
+                    <div className="grow">
+                      <div className="mb-2 flex items-center justify-center">
+                        <span className="rounded-full bg-gradient-to-r from-blue-300 to-indigo-200 px-4 py-1 text-xs font-bold tracking-wide text-blue-900 shadow-sm">
+                          {webinar.webinarTitle.toUpperCase()}
                         </span>
+                      </div>
+
+                      <div className="mb-3 grid grid-cols-1 gap-2 text-sm text-blue-900">
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500">📅</span>
+                          <span className="font-semibold">Date:</span>
+                          <span>
+                            {(() => {
+                              // Check if we have scheduledDates with start and end dates
+                              if (
+                                webinar.scheduledDates &&
+                                typeof webinar.scheduledDates === 'object'
+                              ) {
+                                const scheduledDates =
+                                  webinar.scheduledDates as unknown as {
+                                    startDate: string;
+                                    endDate: string;
+                                  };
+                                if (
+                                  scheduledDates.startDate &&
+                                  scheduledDates.endDate
+                                ) {
+                                  const startDate = new Date(
+                                    scheduledDates.startDate
+                                  );
+                                  const endDate = new Date(
+                                    scheduledDates.endDate
+                                  );
+
+                                  // Check if it's a multi-day event
+                                  if (
+                                    startDate.toDateString() !==
+                                    endDate.toDateString()
+                                  ) {
+                                    const months = [
+                                      'January',
+                                      'February',
+                                      'March',
+                                      'April',
+                                      'May',
+                                      'June',
+                                      'July',
+                                      'August',
+                                      'September',
+                                      'October',
+                                      'November',
+                                      'December',
+                                    ];
+                                    const startStr = `${months[startDate.getMonth()]} ${startDate.getDate()}`;
+                                    const endStr = `${months[endDate.getMonth()]} ${endDate.getDate()}, ${endDate.getFullYear()}`;
+                                    return `${startStr} - ${endStr}`;
+                                  }
+                                }
+                              }
+
+                              // Fallback to single date
+                              const date = new Date(webinar.webinarDate);
+                              const months = [
+                                'January',
+                                'February',
+                                'March',
+                                'April',
+                                'May',
+                                'June',
+                                'July',
+                                'August',
+                                'September',
+                                'October',
+                                'November',
+                                'December',
+                              ];
+                              return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+                            })()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500">⏰</span>
+                          <span className="font-semibold">Time:</span>
+                          <span>{webinar.webinarTime}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-500">📍</span>
+                          <span className="font-semibold">Venue:</span>
+                          <span>Online</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-green-500">💰</span>
+                          <span className="font-semibold">Price:</span>
+                          <div className="flex flex-col">
+                            {webinar.discountPercentage &&
+                            webinar.discountPercentage > 0 ? (
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm text-gray-500 line-through">
+                                    ₹{webinar.paidAmount}
+                                  </span>
+                                  <span className="text-lg font-bold text-green-600">
+                                    ₹
+                                    {webinar.paidAmount &&
+                                    webinar.discountAmount
+                                      ? (
+                                          webinar.paidAmount -
+                                          webinar.discountAmount
+                                        ).toFixed(0)
+                                      : webinar.paidAmount}
+                                  </span>
+                                  <span className="rounded-full border border-green-200 bg-gradient-to-r from-green-400 to-blue-400 px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+                                    -{webinar.discountPercentage.toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-blue-600">
+                                  <span className="flex size-1 animate-pulse rounded-full bg-blue-400"></span>
+                                  Only available to first 10 members
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-lg font-bold text-green-600">
+                                ₹{webinar.paidAmount}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-blue-600">
+                            Plan:
+                          </span>
+                          <span className="text-sm font-medium text-green-500">
+                            Paid Webinar
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 flex justify-center">
+                      {isLoadingPayments ? (
+                        <button
+                          disabled
+                          className="cursor-not-allowed rounded-lg border-2 border-gray-400 bg-gray-400 px-6 py-2 font-semibold text-white shadow-md"
+                        >
+                          Loading...
+                        </button>
+                      ) : paidWebinarIds.includes(webinar.id) ? (
+                        <button
+                          onClick={handleAlreadyPaid}
+                          className="rounded-lg border-2 border-green-400 bg-gradient-to-r from-green-400 to-green-500 px-6 py-2 font-semibold text-white shadow-md transition-transform duration-200 hover:scale-105 hover:from-green-500 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-green-400/50"
+                        >
+                          Already Paid
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handlePayment(webinar)}
+                          disabled={isLoading}
+                          className="relative overflow-hidden rounded-lg border-2 border-red-400 bg-gradient-to-r from-red-400 to-yellow-400 px-6 py-2 font-semibold text-white shadow-md transition-transform duration-200 hover:scale-105 hover:from-red-500 hover:to-yellow-500 focus:outline-none focus:ring-2 focus:ring-red-400/50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <span className="relative z-10">
+                            {isLoading
+                              ? 'Processing...'
+                              : 'Click here to register'}
+                          </span>
+                          <span className="absolute left-0 top-0 h-full w-0 bg-red-200 opacity-20 transition-all duration-500 group-hover:w-full" />
+                        </button>
                       )}
                     </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                      Paid Webinar
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {isLoadingPayments ? (
-                      <button
-                        disabled
-                        className="w-full cursor-not-allowed rounded-md bg-gray-400 px-3 py-1.5 text-sm font-medium text-white shadow-sm sm:w-auto"
-                      >
-                        Loading...
-                      </button>
-                    ) : paidWebinarIds.includes(webinar.id) ? (
-                      <button
-                        onClick={handleAlreadyPaid}
-                        className="w-full rounded-md bg-gradient-to-r from-green-500 to-green-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-green-600 hover:to-green-700 sm:w-auto dark:from-green-600 dark:to-green-700 dark:hover:from-green-700 dark:hover:to-green-800"
-                      >
-                        Already Paid
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handlePayment(webinar)}
-                        disabled={isLoading}
-                        className="w-full rounded-md bg-gradient-to-r from-yellow-500 to-orange-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:from-yellow-600 hover:to-orange-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto dark:from-yellow-600 dark:to-orange-700 dark:hover:from-yellow-700 dark:hover:to-orange-800"
-                      >
-                        {isLoading ? 'Processing...' : 'Pay Now'}
-                      </button>
-                    )}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </motion.div>
     </>
