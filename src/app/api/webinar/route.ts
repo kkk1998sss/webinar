@@ -41,23 +41,23 @@ export async function POST(req: Request) {
         {
           success: false,
           error: 'Invalid date format',
-          details:
-            'webinarStartDate and webinarEndDate must be valid ISO date strings',
+          details: 'webinarStartDate must be a valid ISO date string',
         },
         { status: 400 }
       );
     }
 
-    if (parsedEndDate <= parsedStartDate) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid date range',
-          details: 'End date must be after start date',
-        },
-        { status: 400 }
-      );
-    }
+    // Since we're using the same date for start and end, this validation is no longer needed
+    // if (parsedEndDate <= parsedStartDate) {
+    //   return NextResponse.json(
+    //     {
+    //       success: false,
+    //       error: 'Invalid date range',
+    //       details: 'End date must be after start date',
+    //     },
+    //     { status: 400 }
+    //   );
+    // }
 
     // Validate video uploads structure if present
     if (body.videoUploads && !Array.isArray(body.videoUploads)) {

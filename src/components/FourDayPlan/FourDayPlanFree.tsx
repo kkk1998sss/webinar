@@ -1442,49 +1442,69 @@ export default function FourDayPlanFree() {
             <h2 className="mb-2 text-center text-lg font-bold text-gray-800 sm:text-xl dark:text-white">
               6-Months Premium Subscription
             </h2>
-            <div className="mb-2 flex items-center justify-center gap-2">
-              <span className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                ₹699
-              </span>
-              <span className="text-sm text-gray-500 dark:text-gray-300">
-                /6 months
-              </span>
-            </div>
-            <p className="mb-4 text-center text-xs text-gray-600 sm:text-sm dark:text-gray-300">
-              Unlock 70+ premium meditations &amp; courses
-            </p>
-            <ul className="mb-6 w-full space-y-2 text-xs text-gray-600 sm:text-sm dark:text-gray-300">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="size-3 text-orange-500 sm:size-4" />
-                <span>Live session Every Sunday at 10 AM</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="size-3 text-orange-500 sm:size-4" />
-                <span>Learn Shree Suktam in detail and unlock the secrets</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="size-3 text-orange-500 sm:size-4" />
-                <span>Swar Vigyan - Ancient breath techniques</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="size-3 text-orange-500 sm:size-4" />
-                <span>Vigyan Bhairav Tantra - 70+ meditation techniques</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="size-3 text-orange-500 sm:size-4" />
-                <span>Hanuman Chalisa with Spiritual meaning</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="size-3 text-orange-500 sm:size-4" />
-                <span>E-books and Many more...</span>
-              </li>
-            </ul>
-            <Button
-              className="w-full rounded-lg bg-gradient-to-r from-orange-600 to-red-600 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg sm:py-3 sm:text-base"
-              onClick={() => router.push('/')}
-            >
-              Upgrade to Premium
-            </Button>
+
+            {/* Conditional Button Logic */}
+            {subscription && !subscription.isFree ? (
+              // User has 699 plan (premium subscription) - show access button
+              <Button
+                className="w-full rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg sm:py-3 sm:text-base"
+                onClick={() => router.push('/dashboard-premium')}
+              >
+                <Crown className="mr-2 size-4" />
+                Access Premium Content
+              </Button>
+            ) : (
+              // User doesn't have 699 plan - show the original upgrade card content
+              <>
+                <div className="mb-2 flex items-center justify-center gap-2">
+                  <span className="text-2xl font-bold text-orange-700 dark:text-orange-300">
+                    ₹699
+                  </span>
+                  <span className="text-sm text-gray-500 dark:text-gray-300">
+                    /6 months
+                  </span>
+                </div>
+                <p className="mb-4 text-center text-xs text-gray-600 sm:text-sm dark:text-gray-300">
+                  Unlock 70+ premium meditations &amp; courses
+                </p>
+                <ul className="mb-6 w-full space-y-2 text-xs text-gray-600 sm:text-sm dark:text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="size-3 text-orange-500 sm:size-4" />
+                    <span>Live session Every Sunday at 10 AM</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="size-3 text-orange-500 sm:size-4" />
+                    <span>
+                      Learn Shree Suktam in detail and unlock the secrets
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="size-3 text-orange-500 sm:size-4" />
+                    <span>Swar Vigyan - Ancient breath techniques</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="size-3 text-orange-500 sm:size-4" />
+                    <span>
+                      Vigyan Bhairav Tantra - 70+ meditation techniques
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="size-3 text-orange-500 sm:size-4" />
+                    <span>Hanuman Chalisa with Spiritual meaning</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="size-3 text-orange-500 sm:size-4" />
+                    <span>E-books and Many more...</span>
+                  </li>
+                </ul>
+                <Button
+                  className="w-full rounded-lg bg-gradient-to-r from-orange-600 to-red-600 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg sm:py-3 sm:text-base"
+                  onClick={() => router.push('/')}
+                >
+                  Upgrade to Premium
+                </Button>
+              </>
+            )}
           </motion.div>
         </div>
       </div>

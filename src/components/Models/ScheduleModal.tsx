@@ -78,7 +78,6 @@ export function ScheduleModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState('');
   const [duration, setDuration] = useState('');
   const [isPaid, setIsPaid] = useState(true);
@@ -104,26 +103,18 @@ export function ScheduleModal({
   // const handleAddUrl = async () => { ... };
   // const handleDelete = async (index: number) => { ... };
 
-  // Set initial dates on client side to avoid hydration mismatch
+  // Set initial date on client side to avoid hydration mismatch
   useEffect(() => {
     const now = new Date();
     if (!startDate) setStartDate(now);
-    if (!endDate) setEndDate(now);
-  }, [startDate, endDate]);
+  }, [startDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      if (
-        !title ||
-        !description ||
-        !startDate ||
-        !endDate ||
-        !time ||
-        !duration
-      ) {
+      if (!title || !description || !startDate || !time || !duration) {
         toast.error('Please fill in all required fields');
         return;
       }
@@ -134,15 +125,9 @@ export function ScheduleModal({
       //   return;
       // }
 
-      // Validate the dates
-      if (isNaN(startDate!.getTime()) || isNaN(endDate!.getTime())) {
+      // Validate the date
+      if (isNaN(startDate!.getTime())) {
         toast.error('Invalid date');
-        return;
-      }
-
-      // Check if end date is after start date
-      if (endDate! <= startDate!) {
-        toast.error('End date must be after start date');
         return;
       }
 
@@ -151,7 +136,7 @@ export function ScheduleModal({
         webinarTitle: title,
         description,
         webinarStartDate: startDate!.toISOString(),
-        webinarEndDate: endDate!.toISOString(),
+        webinarEndDate: startDate!.toISOString(), // Using same date for start and end
         webinarTime: time,
         durationHours: Math.floor(parseInt(duration) / 60),
         durationMinutes: parseInt(duration) % 60,
@@ -205,75 +190,8 @@ export function ScheduleModal({
       title={`Schedule ${webinarType}`}
     >
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Information */}
+        {/* YouTube Video Link - Moved to top */}
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="title" className="text-white">
-              Title
-            </Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter webinar title"
-              className="border-slate-700 bg-slate-800 text-white"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="description" className="text-white">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter webinar description"
-              className="border-slate-700 bg-slate-800 text-white"
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="startDate" className="text-white">
-                Start Date
-              </Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate ? startDate.toISOString().split('T')[0] : ''}
-                onChange={(e) => setStartDate(new Date(e.target.value))}
-                className="border-slate-700 bg-slate-800 text-white"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="endDate" className="text-white">
-                End Date
-              </Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate ? endDate.toISOString().split('T')[0] : ''}
-                onChange={(e) => setEndDate(new Date(e.target.value))}
-                className="border-slate-700 bg-slate-800 text-white"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="time" className="text-white">
-                Time
-              </Label>
-              <Input
-                id="time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="border-slate-700 bg-slate-800 text-white"
-              />
-            </div>
-          </div>
-
           <div>
             <Label htmlFor="youtubeLink" className="text-white">
               YouTube Video Link
@@ -305,40 +223,124 @@ export function ScheduleModal({
                     if (response.ok) {
                       const metadata = await response.json();
                       if (metadata.duration) {
+                        // Always auto-fill title and duration when available
+                        if (metadata.title) {
+                          setTitle(metadata.title);
+                        }
+
                         // Convert seconds to minutes and set duration
                         const durationInMinutes = Math.ceil(
                           metadata.duration / 60
                         );
                         setDuration(durationInMinutes.toString());
-                        toast.success(
-                          `Duration auto-filled: ${Math.floor(metadata.duration / 60)}m ${metadata.duration % 60}s`
-                        );
+
+                        if (metadata.warning) {
+                          toast.success(
+                            `Title and duration updated: ${Math.floor(metadata.duration / 60)}m ${metadata.duration % 60}s (${metadata.warning})`
+                          );
+                        } else {
+                          toast.success(
+                            `Title and duration updated: ${Math.floor(metadata.duration / 60)}m ${metadata.duration % 60}s`
+                          );
+                        }
                       } else {
                         toast.error('Could not fetch video duration');
                       }
                     } else {
-                      toast.error('Failed to fetch video metadata');
+                      const errorData = await response.json();
+                      toast.error(
+                        errorData.error || 'Failed to fetch video metadata'
+                      );
                     }
                   } catch (error) {
                     console.error('Error fetching metadata:', error);
-                    toast.error('Error fetching video metadata');
+                    toast.error(
+                      'Network error. Please check your connection and try again.'
+                    );
                   }
                 }}
                 className="bg-green-600 px-4 text-white hover:bg-green-700"
                 disabled={!youtubeLink.trim()}
               >
-                📊 Fetch Duration
+                📊 Update Duration & Title
               </Button>
             </div>
             <p className="mt-1 text-xs text-slate-400">
-              Enter YouTube video URL and click &quot;Fetch Duration&quot; to
-              automatically get the video length
+              Enter YouTube video URL and click &quot;Update Duration &
+              Title&quot; to refresh the video length and title (works every
+              time)
             </p>
+          </div>
+        </div>
+
+        {/* Basic Information */}
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="title" className="text-white">
+              Title <span className="text-red-400">*</span>
+            </Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter webinar title"
+              className="border-slate-700 bg-slate-800 text-white"
+              required
+            />
+            {title && youtubeLink && (
+              <p className="mt-1 text-xs text-green-400">
+                ✅ Title automatically fetched from YouTube video
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="description" className="text-white">
+              Description <span className="text-red-400">*</span>
+            </Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter webinar description"
+              className="border-slate-700 bg-slate-800 text-white"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="startDate" className="text-white">
+                Date <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                onChange={(e) => setStartDate(new Date(e.target.value))}
+                className="border-slate-700 bg-slate-800 text-white"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="time" className="text-white">
+                Time <span className="text-red-400">*</span>
+              </Label>
+              <Input
+                id="time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="border-slate-700 bg-slate-800 text-white"
+                required
+              />
+            </div>
           </div>
 
           <div>
             <Label htmlFor="duration" className="text-white">
-              Duration (minutes)
+              Duration (minutes) <span className="text-red-400">*</span>
             </Label>
             <div className="flex items-center gap-2">
               <Input
@@ -348,6 +350,7 @@ export function ScheduleModal({
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="Enter duration in minutes"
                 className="flex-1 border-slate-700 bg-slate-800 text-white"
+                required
               />
               {duration && youtubeLink && (
                 <div className="flex items-center gap-1 text-xs text-green-400">

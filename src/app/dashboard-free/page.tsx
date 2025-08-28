@@ -171,9 +171,23 @@ function UpcomingPaidWebinars() {
               )}
             </div>
 
-            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">
-              {webinar.webinarTitle}
-            </h3>
+            <div className="group relative">
+              <h3
+                className="mb-2 max-w-full truncate text-lg font-bold text-gray-900 dark:text-white"
+                title={webinar.webinarTitle}
+              >
+                {webinar.webinarTitle}
+              </h3>
+              {/* Tooltip for long titles */}
+              {webinar.webinarTitle.length > 30 && (
+                <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                  <div className="max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-sm text-white shadow-lg">
+                    {webinar.webinarTitle}
+                    <div className="absolute left-4 top-full border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {webinar.description && (
               <p className="mb-4 line-clamp-2 text-sm text-gray-600 dark:text-gray-300">

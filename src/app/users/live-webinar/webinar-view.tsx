@@ -726,9 +726,23 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                             >
                               LIVE
                             </motion.div>
-                            <h3 className="mb-3 text-lg font-semibold text-gray-800 sm:text-xl dark:text-slate-100">
-                              {webinar.webinarTitle}
-                            </h3>
+                            <div className="group relative">
+                              <h3
+                                className="mb-3 max-w-full truncate text-lg font-semibold text-gray-800 sm:text-xl dark:text-slate-100"
+                                title={webinar.webinarTitle}
+                              >
+                                {webinar.webinarTitle}
+                              </h3>
+                              {/* Tooltip for long titles */}
+                              {webinar.webinarTitle.length > 35 && (
+                                <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                                  <div className="max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-sm text-white shadow-lg">
+                                    {webinar.webinarTitle}
+                                    <div className="absolute left-4 top-full border-4 border-transparent border-t-gray-900"></div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                             <div className="mb-4 space-y-2">
                               <p className="flex items-center justify-between">
                                 <span className="text-sm font-medium text-gray-600 sm:text-base dark:text-slate-400">

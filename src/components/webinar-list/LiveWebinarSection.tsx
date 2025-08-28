@@ -116,9 +116,23 @@ export function LiveWebinarSection({ webinars, handleJoinWebinar }: Props) {
                   <div className="flex flex-col justify-between p-3">
                     <div className="grow">
                       <div className="mb-2 flex items-center justify-center">
-                        <span className="rounded-full bg-gradient-to-r from-blue-300 to-purple-200 px-3 py-1 text-xs font-bold tracking-wide text-blue-800 shadow-sm">
-                          {webinar.webinarTitle.toUpperCase()}
-                        </span>
+                        <div className="group relative">
+                          <span
+                            className="inline-block max-w-[200px] truncate rounded-full bg-gradient-to-r from-blue-300 to-purple-200 px-3 py-1 text-xs font-bold tracking-wide text-blue-800 shadow-sm"
+                            title={webinar.webinarTitle}
+                          >
+                            {webinar.webinarTitle.toUpperCase()}
+                          </span>
+                          {/* Tooltip for long titles */}
+                          {webinar.webinarTitle.length > 25 && (
+                            <div className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                              <div className="rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg">
+                                {webinar.webinarTitle}
+                                <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <div className="mb-3 grid grid-cols-1 gap-1 text-xs text-blue-800">
