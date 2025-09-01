@@ -467,12 +467,80 @@ export default function AdminDashboard() {
         </motion.div>
       </motion.div>
 
-      {/* Recent Activity */}
+      {/* Quick Actions */}
       <motion.div
         className="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-md"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
+      >
+        <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <motion.a
+            href="/admin/create-user"
+            className="flex items-center rounded-lg border border-gray-200 p-4 transition-all duration-300 hover:border-blue-300 hover:bg-blue-50 hover:shadow-md"
+            whileHover={{ y: -2 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-blue-100">
+              <FaUsers className="size-6 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <h4 className="font-medium text-gray-900">Create User</h4>
+              <p className="text-sm text-gray-600">
+                Give users direct plan access
+              </p>
+            </div>
+          </motion.a>
+
+          <motion.a
+            href="/admin/users"
+            className="flex items-center rounded-lg border border-gray-200 p-4 transition-all duration-300 hover:border-green-300 hover:bg-green-50 hover:shadow-md"
+            whileHover={{ y: -2 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-green-100">
+              <FaUsers className="size-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <h4 className="font-medium text-gray-900">Manage Users</h4>
+              <p className="text-sm text-gray-600">
+                View and manage user accounts
+              </p>
+            </div>
+          </motion.a>
+
+          <motion.a
+            href="/admin/webinars"
+            className="flex items-center rounded-lg border border-gray-200 p-4 transition-all duration-300 hover:border-purple-300 hover:bg-purple-50 hover:shadow-md"
+            whileHover={{ y: -2 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-purple-100">
+              <FaVideo className="size-6 text-purple-600" />
+            </div>
+            <div className="ml-4">
+              <h4 className="font-medium text-gray-900">Manage Webinars</h4>
+              <p className="text-sm text-gray-600">
+                Create and manage webinars
+              </p>
+            </div>
+          </motion.a>
+        </div>
+      </motion.div>
+
+      {/* Recent Activity */}
+      <motion.div
+        className="mt-6 rounded-xl border border-gray-100 bg-white p-6 shadow-md"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.9 }}
       >
         <h3 className="mb-4 text-lg font-semibold">Recent Activity</h3>
         <div className="space-y-4">
@@ -482,7 +550,7 @@ export default function AdminDashboard() {
               className="flex items-center rounded-lg p-3 transition-colors duration-300 hover:bg-gray-50"
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6 + index * 0.1 }}
+              transition={{ delay: 1.0 + index * 0.1 }}
             >
               <div
                 className={`size-10 rounded-full ${activity.color} flex items-center justify-center font-bold text-white`}

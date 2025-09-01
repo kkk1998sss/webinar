@@ -170,6 +170,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     <FaLiveVideo className="size-5" /> Webinar Manager
                   </Link>
                 </NavigationMenu.Item>
+                <NavigationMenu.Item>
+                  <Link
+                    href="/admin/create-user"
+                    className={clsx(
+                      'flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 hover:bg-gray-700/50',
+                      pathname === '/admin/create-user' &&
+                        'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md dark:from-blue-500 dark:to-purple-500'
+                    )}
+                  >
+                    <FaUsers className="size-5" /> Create User
+                  </Link>
+                </NavigationMenu.Item>
                 {/* <NavigationMenu.Item>
                   <Link
                     href="/admin/settings"
