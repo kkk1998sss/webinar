@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import { useSession } from 'next-auth/react';
@@ -52,6 +52,9 @@ export function PaidWebinarSection({ webinars }: Props) {
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingPayments, setIsLoadingPayments] = useState(true);
+  const [webinarToDelete, setWebinarToDelete] = useState<Webinar | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -131,16 +134,68 @@ export function PaidWebinarSection({ webinars }: Props) {
     return 'PAID_WEBINAR';
   };
 
-  const handlePaymentSuccess = (id: string) => {
+  const handlePaymentSuccess = (id: string, webinar?: Webinar) => {
     setPaidWebinarIds((prev) => [...prev, id]);
     toast.success('Payment successful!');
-    // Redirect to thank you page instead of refreshing
-    router.push('/thank-you');
+
+    // Check if webinar has showThankYouPage enabled
+    if (webinar?.showThankYouPage) {
+      // Show thank you page if manually enabled
+      router.push('/thank-you');
+    } else {
+      // Default behavior: redirect to playing area
+      toast.success('Redirecting to playing area...');
+      router.push(`/users/playing-area/${id}`);
+    }
   };
 
-  const handleAlreadyPaid = () => {
-    toast.success('Redirecting to thank you page...');
-    router.push('/thank-you');
+  const handleAlreadyPaid = (webinar: Webinar) => {
+    // Check if webinar has showThankYouPage enabled
+    if (webinar.showThankYouPage) {
+      toast.success('Redirecting to thank you page...');
+      router.push('/thank-you');
+    } else {
+      // Default behavior: redirect to playing area
+      toast.success('Redirecting to playing area...');
+      router.push(`/users/playing-area/${webinar.id}`);
+    }
+  };
+
+  const handleDeleteWebinar = async () => {
+    if (!webinarToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/webinar/${webinarToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Webinar deleted successfully!');
+        // Remove the webinar from the list by triggering a page refresh or updating parent state
+        window.location.reload(); // Simple approach - you could pass an onDelete callback from parent instead
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to delete webinar');
+      }
+    } catch (error) {
+      console.error('Error deleting webinar:', error);
+      toast.error('Failed to delete webinar');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setWebinarToDelete(null);
+    }
+  };
+
+  const confirmDelete = (webinar: Webinar) => {
+    setWebinarToDelete(webinar);
+    setShowDeleteConfirm(true);
+  };
+
+  const cancelDelete = () => {
+    setWebinarToDelete(null);
+    setShowDeleteConfirm(false);
   };
 
   const handlePayment = async (webinar: Webinar) => {
@@ -226,7 +281,7 @@ export function PaidWebinarSection({ webinars }: Props) {
             console.log('Verification response:', verifyData);
 
             if (verifyData.success) {
-              handlePaymentSuccess(webinar.id);
+              handlePaymentSuccess(webinar.id, webinar);
             } else {
               throw new Error(
                 verifyData.message || 'Payment verification failed'
@@ -363,6 +418,17 @@ export function PaidWebinarSection({ webinars }: Props) {
                 className="group relative flex w-[90vw] shrink-0 snap-center flex-col overflow-hidden rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/40 via-indigo-50/30 to-blue-100/40 shadow-md transition-all duration-300 hover:border-blue-400 hover:shadow-lg md:w-[520px]"
                 style={{ minHeight: 260 }}
               >
+                {/* Delete Button - Only show for admins */}
+                {session?.user?.isAdmin && (
+                  <button
+                    onClick={() => confirmDelete(webinar)}
+                    className="absolute right-2 top-2 z-10 rounded-full bg-red-500/80 p-2 text-white opacity-0 transition-all duration-200 hover:bg-red-600 group-hover:opacity-100"
+                    title="Delete webinar"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                )}
+
                 {/* Countdown Timer at the top */}
                 <div className="w-full p-4">
                   <div className="mb-4 w-full">
@@ -625,10 +691,10 @@ export function PaidWebinarSection({ webinars }: Props) {
                         </button>
                       ) : paidWebinarIds.includes(webinar.id) ? (
                         <button
-                          onClick={handleAlreadyPaid}
+                          onClick={() => handleAlreadyPaid(webinar)}
                           className="rounded-lg border-2 border-green-400 bg-gradient-to-r from-green-400 to-green-500 px-6 py-2 font-semibold text-white shadow-md transition-transform duration-200 hover:scale-105 hover:from-green-500 hover:to-green-600 focus:outline-none focus:ring-2 focus:ring-green-400/50"
                         >
-                          Already Paid
+                          Join Now
                         </button>
                       ) : (
                         <button
@@ -652,6 +718,60 @@ export function PaidWebinarSection({ webinars }: Props) {
           </div>
         </div>
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && webinarToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-slate-800"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex size-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <Trash2 className="size-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Delete Webinar
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 dark:text-slate-300">
+                Are you sure you want to delete the webinar{' '}
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  &quot;{webinarToDelete.webinarTitle}&quot;
+                </span>
+                ? This will permanently delete the webinar and all associated
+                data.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={cancelDelete}
+                className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteWebinar}
+                disabled={isDeleting}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-600 dark:hover:bg-red-700"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Webinar'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </>
   );
 }

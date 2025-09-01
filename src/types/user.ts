@@ -136,3 +136,30 @@ export type Resource = {
   url: string;
   type?: 'pdf' | 'doc' | 'ppt' | 'image'; // Optional type specifier
 };
+
+export interface SeriesVideo {
+  id: string;
+  title: string;
+  description?: string;
+  videoUrl: string;
+  thumbnail?: string;
+  duration?: number; // in seconds
+  orderIndex: number;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  seriesId: string;
+}
+
+export interface Series {
+  id: string;
+  title: string;
+  description?: string;
+  thumbnail?: string;
+  totalVideos: number;
+  totalDuration: number; // in minutes
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  videos: SeriesVideo[];
+}

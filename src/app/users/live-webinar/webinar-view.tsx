@@ -13,13 +13,22 @@ import {
   parseISO,
 } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, Play, Plus, Search, Video, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Play,
+  PlayCircle,
+  Plus,
+  Search,
+  Video,
+  X,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 
 import WebinarSetupPage from './webinarsetup1';
 
 import { ScheduleModal } from '@/components/Models/ScheduleModal';
+import { SeriesScheduleModal } from '@/components/Models/SeriesScheduleModal';
 import { SubscriptionModal } from '@/components/Models/SubscriptionModal';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +41,7 @@ import { LiveWebinarSection } from '@/components/webinar-list/LiveWebinarSection
 import { PaidWebinarSection } from '@/components/webinar-list/PaidWebinarSection';
 import { PastWebinarSection } from '@/components/webinar-list/PastWebinarSection';
 import RecordedCoursesSection from '@/components/webinar-list/RecordedCoursesSection';
+import { SeriesSection } from '@/components/webinar-list/SeriesSection';
 import { UpcomingWebinarSection } from '@/components/webinar-list/UpcomingWebinarSection';
 import { useMounted } from '@/hooks/use-mounted';
 import { Webinar } from '@/types/user';
@@ -61,6 +71,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     null
   );
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showSeriesModal, setShowSeriesModal] = useState(false);
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
   const router = useRouter();
   const { theme } = useTheme();
@@ -103,6 +114,8 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     setSelectedWebinarType(type);
     if (type === 'Automated Webinar') {
       setShowNewWebinarDialog(true);
+    } else if (type === 'Web Series') {
+      setShowSeriesModal(true);
     } else {
       setShowScheduleModal(true);
     }
@@ -452,6 +465,14 @@ export default function WebinarDashboard({ session }: { session: Session }) {
                   >
                     <Video className="mr-2 size-4 text-purple-500 dark:text-purple-400" />
                     Create Paid Webinar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleNewWebinar('Web Series')}
+                    className="cursor-pointer px-4 py-3 transition-colors duration-200 hover:bg-blue-50 dark:text-slate-300 dark:hover:bg-slate-700"
+                    disabled={openWebinars.length > 0}
+                  >
+                    <PlayCircle className="mr-2 size-4 text-green-500 dark:text-green-400" />
+                    Create Web Series
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -813,6 +834,13 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         }
       />
 
+      {/* Add SeriesScheduleModal */}
+      <SeriesScheduleModal
+        open={showSeriesModal}
+        onOpenChange={setShowSeriesModal}
+        onSuccess={fetchWebinars}
+      />
+
       {/* New Structure - Sections for different webinar types */}
       <div className="mt-8 space-y-6 px-8 ">
         {/* Desktop: Side by side layout, Mobile: Single column */}
@@ -830,11 +858,9 @@ export default function WebinarDashboard({ session }: { session: Session }) {
             handleJoinWebinar={handleJoinWebinar}
           />
         </div>
-
-        <RecordedCoursesSection />
-
+        <SeriesSection />
         <PaidWebinarSection webinars={paidWebinars} />
-
+        <RecordedCoursesSection />
         <PastWebinarSection
           webinars={pastWebinars}
           handleJoinWebinar={handleJoinWebinar}

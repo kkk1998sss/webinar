@@ -221,3 +221,33 @@ model FourDayPlanVideo {
   day         Int?
   createdAt   DateTime @default(now())
 }
+
+model Series {
+  id                  String        @id @default(uuid())
+  title               String
+  description         String?
+  thumbnail           String?
+  totalVideos         Int           @default(0)
+  totalDuration       Int           @default(0) // in minutes
+  isPublished         Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  videos              SeriesVideo[]
+}
+
+model SeriesVideo {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  videoUrl    String
+  thumbnail   String?
+  duration    Int?     // in seconds
+  orderIndex  Int      // Position in the series
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  series      Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  seriesId    String
+
+  @@index([seriesId, orderIndex])
+}
