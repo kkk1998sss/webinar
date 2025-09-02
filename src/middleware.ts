@@ -26,10 +26,10 @@ export async function middleware(request: NextRequest) {
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
-      cookieName:
-        process.env.NODE_ENV === 'production'
-          ? '__Secure-authjs.session-token'
-          : 'next-auth.session-token',
+      // cookieName:
+      //   process.env.NODE_ENV === 'production'
+      //     ? '__Secure-authjs.session-token'
+      //     : 'next-auth.session-token',
     });
 
     const { pathname } = request.nextUrl;
@@ -101,18 +101,20 @@ export async function middleware(request: NextRequest) {
             const skipFourDayPlan = request.cookies.get('skipFourDayPlan');
             if (
               skipFourDayPlan &&
-              (pathname.startsWith('/dashboard') ||
+              (pathname.startsWith('/dashboard-free') ||
                 pathname.startsWith('/users/dashboard'))
             ) {
               return NextResponse.next();
             }
             if (
               pathname.startsWith('/users/dashboard') ||
-              pathname.startsWith('/dashboard')
+              pathname.startsWith('/dashboard-free')
             ) {
               return NextResponse.next();
             }
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            return NextResponse.redirect(
+              new URL('/dashboard-free', request.url)
+            );
           }
 
           // For SIX_MONTH plan users, allow full access
@@ -168,11 +170,11 @@ export async function middleware(request: NextRequest) {
                   );
                 }
                 return NextResponse.redirect(
-                  new URL('/dashboard', request.url)
+                  new URL('/dashboard-free', request.url)
                 );
               } else if (subscription.type === 'SIX_MONTH') {
                 return NextResponse.redirect(
-                  new URL('/dashboard', request.url)
+                  new URL('/dashboard-free', request.url)
                 );
               }
             } else {

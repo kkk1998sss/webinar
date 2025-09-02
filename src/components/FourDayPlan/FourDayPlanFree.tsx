@@ -176,7 +176,7 @@ export default function FourDayPlanFree() {
       try {
         const [videoRes, subRes, userRes] = await Promise.all([
           fetch('/api/four-day'),
-          fetch('/api/subscription/free'),
+          fetch('/api/subscription'), // Changed from /api/subscription/free to /api/subscription
           fetch('/api/register'), // Get user info including registration date
         ]);
         const videoData = await videoRes.json();
@@ -195,21 +195,34 @@ export default function FourDayPlanFree() {
           setUser(currentUser);
         }
 
-        // Find any free subscription
+        // Find any subscription (free or paid)
         if (subData.subscriptions?.length > 0) {
-          const freeSub = subData.subscriptions.find(
-            (sub: Subscription) => sub.isFree
+          // First try to find a SIX_MONTH (699 plan) subscription
+          const sixMonthSub = subData.subscriptions.find(
+            (sub: Subscription) => sub.type === 'SIX_MONTH' && sub.isActive
           );
-          setSubscription(freeSub || null);
+
+          // If no SIX_MONTH, find a FOUR_DAY subscription (free plan)
+          const fourDaySub = subData.subscriptions.find(
+            (sub: Subscription) => sub.type === 'FOUR_DAY' && sub.isActive
+          );
+
+          // Use SIX_MONTH if available, otherwise use FOUR_DAY
+          const selectedSub = sixMonthSub || fourDaySub;
+          setSubscription(selectedSub || null);
 
           console.log('Subscription data:', {
             allSubscriptions: subData.subscriptions,
-            freeSubscription: freeSub,
-            startDate: freeSub?.startDate,
+            sixMonthSubscription: sixMonthSub,
+            fourDaySubscription: fourDaySub,
+            selectedSubscription: selectedSub,
+            startDate: selectedSub?.startDate,
+            subscriptionType: selectedSub?.type,
+            isActive: selectedSub?.isActive,
           });
 
           // Set current video to first video if subscription exists
-          if (freeSub && videoData.videos?.length > 0) {
+          if (selectedSub && videoData.videos?.length > 0) {
             const firstVideo = videoData.videos[0];
             setCurrentVideo(firstVideo);
           } else {
@@ -1438,24 +1451,40 @@ export default function FourDayPlanFree() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Crown className="mb-4 size-8 text-orange-500 sm:size-10 dark:text-orange-400" />
-            <h2 className="mb-2 text-center text-lg font-bold text-gray-800 sm:text-xl dark:text-white">
-              6-Months Premium Subscription
-            </h2>
-
-            {/* Conditional Button Logic */}
-            {subscription && !subscription.isFree ? (
-              // User has 699 plan (premium subscription) - show access button
-              <Button
-                className="w-full rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg sm:py-3 sm:text-base"
-                onClick={() => router.push('/dashboard-premium')}
-              >
-                <Crown className="mr-2 size-4" />
-                Access Premium Content
-              </Button>
-            ) : (
-              // User doesn't have 699 plan - show the original upgrade card content
+            {/* Check if user has 699 plan (SIX_MONTH subscription) */}
+            {subscription &&
+            subscription.type === 'SIX_MONTH' &&
+            subscription.isActive ? (
+              // User has 699 plan - show webinar list access
               <>
+                <Crown className="mb-4 size-8 text-green-500 sm:size-10 dark:text-green-400" />
+                <h2 className="mb-2 text-center text-lg font-bold text-gray-800 sm:text-xl dark:text-white">
+                  Premium Content Access
+                </h2>
+                <p className="mb-4 text-center text-xs text-gray-600 sm:text-sm dark:text-gray-300">
+                  You have access to all premium webinars and content
+                </p>
+                <Button
+                  className="w-full rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg sm:py-3 sm:text-base"
+                  onClick={() => {
+                    console.log(
+                      'Button clicked - redirecting to /users/live-webinar'
+                    );
+                    console.log('Current subscription:', subscription);
+                    router.push('/users/live-webinar');
+                  }}
+                >
+                  <Crown className="mr-2 size-4" />
+                  View Webinar List
+                </Button>
+              </>
+            ) : (
+              // User doesn't have 699 plan - show upgrade card
+              <>
+                <Crown className="mb-4 size-8 text-orange-500 sm:size-10 dark:text-orange-400" />
+                <h2 className="mb-2 text-center text-lg font-bold text-gray-800 sm:text-xl dark:text-white">
+                  6-Months Premium Subscription
+                </h2>
                 <div className="mb-2 flex items-center justify-center gap-2">
                   <span className="text-2xl font-bold text-orange-700 dark:text-orange-300">
                     ₹699
