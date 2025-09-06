@@ -48,6 +48,15 @@ export default function CreateUserPage() {
   const [recentUsers, setRecentUsers] = useState<User[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
+  // Grant access states
+  const [grantEmail, setGrantEmail] = useState('');
+  const [grantPlanType, setGrantPlanType] = useState<'FOUR_DAY' | 'SIX_MONTH'>(
+    'SIX_MONTH'
+  );
+  const [isGrantLoading, setIsGrantLoading] = useState(false);
+  const [grantError, setGrantError] = useState('');
+  const [grantSuccess, setGrantSuccess] = useState('');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -109,16 +118,52 @@ export default function CreateUserPage() {
     }
   };
 
+  const handleGrantAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsGrantLoading(true);
+    setGrantError('');
+    setGrantSuccess('');
+
+    try {
+      const response = await fetch('/api/admin/grant-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: grantEmail,
+          planType: grantPlanType,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setGrantSuccess(
+          `${data.message}\n\nUser Details:\nName: ${data.user.name}\nEmail: ${data.user.email}\nPlan: ${data.user.planType === 'SIX_MONTH' ? '₹699 - 6 Months' : '₹199 - 4 Days'}\n\nUser now has access to the selected plan.`
+        );
+        // Reset form
+        setGrantEmail('');
+        setGrantPlanType('SIX_MONTH');
+      } else {
+        setGrantError(data.error || 'Failed to grant access');
+      }
+    } catch (error) {
+      console.error('Error granting access:', error);
+      setGrantError('Failed to grant access. Please try again.');
+    } finally {
+      setIsGrantLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchRecentUsers();
   }, []);
 
   useEffect(() => {
-    if (success) {
-      // Refresh the user list when a new user is created
+    if (success || grantSuccess) {
+      // Refresh the user list when a new user is created or access is granted
       fetchRecentUsers();
     }
-  }, [success]);
+  }, [success, grantSuccess]);
 
   return (
     <div className="space-y-6">
@@ -539,6 +584,172 @@ export default function CreateUserPage() {
         </form>
       </motion.div>
 
+      {/* Grant Access Section */}
+      <motion.div
+        className="rounded-xl border border-gray-100 bg-white p-6 shadow-md"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.25 }}
+      >
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Grant Access to Existing User
+          </h2>
+          <p className="text-sm text-gray-600">
+            Give plan access to users who have already registered but
+            haven&apos;t purchased a plan.
+          </p>
+        </div>
+
+        {grantError && (
+          <motion.div
+            className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            {grantError}
+          </motion.div>
+        )}
+
+        {grantSuccess && (
+          <motion.div
+            className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-600"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            <div className="whitespace-pre-line">{grantSuccess}</div>
+          </motion.div>
+        )}
+
+        <form onSubmit={handleGrantAccess} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Email Field */}
+            <div>
+              <Label
+                htmlFor="grantEmail"
+                className="text-sm font-medium text-gray-700"
+              >
+                User Email *
+              </Label>
+              <Input
+                id="grantEmail"
+                type="email"
+                placeholder="Enter user's email address"
+                value={grantEmail}
+                onChange={(e) => setGrantEmail(e.target.value)}
+                required
+                className="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Plan Selection */}
+            <div>
+              <Label
+                htmlFor="grantPlanType"
+                className="text-sm font-medium text-gray-700"
+              >
+                Plan Type *
+              </Label>
+              <Select.Root
+                value={grantPlanType}
+                onValueChange={(value: string) =>
+                  setGrantPlanType(value as 'FOUR_DAY' | 'SIX_MONTH')
+                }
+              >
+                <Select.Trigger className="mt-1 flex w-full items-center justify-between rounded-lg border border-gray-300 px-4 py-2 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                  <Select.Value>
+                    {grantPlanType === 'FOUR_DAY'
+                      ? '₹199 - Four Day Plan'
+                      : '₹699 - Six Month Plan'}
+                  </Select.Value>
+                  <Select.Icon>
+                    <ChevronDownIcon className="size-4 opacity-50" />
+                  </Select.Icon>
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Content className="overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg">
+                    <Select.Viewport className="p-1">
+                      <Select.Item
+                        value="FOUR_DAY"
+                        className="relative flex w-full cursor-default select-none items-center rounded-sm py-2 pl-8 pr-2 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      >
+                        <Select.ItemText>₹199 - Four Day Plan</Select.ItemText>
+                        <Select.ItemIndicator className="absolute left-2 inline-flex w-4 items-center justify-center">
+                          <CheckIcon className="size-4" />
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                      <Select.Item
+                        value="SIX_MONTH"
+                        className="relative flex w-full cursor-default select-none items-center rounded-sm py-2 pl-8 pr-2 text-sm outline-none hover:bg-gray-100 focus:bg-gray-100 focus:text-gray-900 data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                      >
+                        <Select.ItemText>₹699 - Six Month Plan</Select.ItemText>
+                        <Select.ItemIndicator className="absolute left-2 inline-flex w-4 items-center justify-center">
+                          <CheckIcon className="size-4" />
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+              <p className="mt-1 text-sm text-gray-500">
+                {grantPlanType === 'FOUR_DAY'
+                  ? 'User will get access to 4-day plan content for 4 days'
+                  : 'User will get access to 6-month plan content for 180 days'}
+              </p>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={isGrantLoading}
+              className="rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-2 font-medium text-white shadow-md transition-all duration-300 hover:shadow-lg disabled:opacity-50"
+            >
+              {isGrantLoading ? (
+                <div className="flex items-center justify-center">
+                  <motion.div
+                    className="mr-2"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: 'linear',
+                    }}
+                  >
+                    <svg
+                      className="size-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                  </motion.div>
+                  <span>Granting Access...</span>
+                </div>
+              ) : (
+                'Grant Access'
+              )}
+            </Button>
+          </div>
+        </form>
+      </motion.div>
+
       {/* Information Card */}
       <motion.div
         className="rounded-xl border border-blue-100 bg-blue-50 p-6"
@@ -569,17 +780,21 @@ export default function CreateUserPage() {
             <div className="mt-2 text-sm text-blue-700">
               <ul className="list-disc space-y-1 pl-5">
                 <li>
-                  Users created through this form will have immediate access to
-                  the selected plan
+                  <strong>Create New User:</strong> Creates a new user account
+                  with immediate plan access
+                </li>
+                <li>
+                  <strong>Grant Access:</strong> Gives plan access to existing
+                  registered users
                 </li>
                 <li>
                   No payment verification is required - access is granted
                   automatically
                 </li>
                 <li>
-                  Users can log in immediately with the credentials you provide
+                  Users can log in immediately with their existing credentials
                 </li>
-                <li>Plan duration starts from the moment of creation</li>
+                <li>Plan duration starts from the moment of access grant</li>
                 <li>
                   All subscription features will be available as if they had
                   paid normally
