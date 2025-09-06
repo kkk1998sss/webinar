@@ -40,9 +40,9 @@ import {
 import { LiveWebinarSection } from '@/components/webinar-list/LiveWebinarSection';
 import { PaidWebinarSection } from '@/components/webinar-list/PaidWebinarSection';
 import { PastWebinarSection } from '@/components/webinar-list/PastWebinarSection';
-import RecordedCoursesSection from '@/components/webinar-list/RecordedCoursesSection';
 import { SeriesSection } from '@/components/webinar-list/SeriesSection';
 import { UpcomingWebinarSection } from '@/components/webinar-list/UpcomingWebinarSection';
+import VimeoRecordedCoursesSection from '@/components/webinar-list/VimeoRecordedCoursesSection';
 import { useMounted } from '@/hooks/use-mounted';
 import { Webinar } from '@/types/user';
 
@@ -860,7 +860,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         </div>
         <SeriesSection />
         <PaidWebinarSection webinars={paidWebinars} />
-        <RecordedCoursesSection />
+        <VimeoRecordedCoursesSection />
         <PastWebinarSection
           webinars={pastWebinars}
           handleJoinWebinar={handleJoinWebinar}

@@ -34,6 +34,11 @@ export async function middleware(request: NextRequest) {
 
     const { pathname } = request.nextUrl;
 
+    // Redirect /dashboard to /dashboard-free
+    if (pathname === '/dashboard') {
+      return NextResponse.redirect(new URL('/dashboard-free', request.url));
+    }
+
     const protectedRoutes = ['/users/live-webinar'];
     const adminRoutes = ['/admin'];
     const authRoutes = ['/auth/login', '/auth/register'];

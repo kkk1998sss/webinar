@@ -166,7 +166,7 @@ export default function CreateUserPage() {
   }, [success, grantSuccess]);
 
   return (
-    <div className="space-y-6">
+    <div className="pb-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <motion.h1
           className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-3xl font-bold text-transparent"
@@ -188,7 +188,7 @@ export default function CreateUserPage() {
 
       {/* Stats Cards */}
       <motion.div
-        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
+        className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.15 }}
@@ -345,7 +345,7 @@ export default function CreateUserPage() {
       </motion.div>
 
       <motion.div
-        className="rounded-xl border border-gray-100 bg-white p-6 shadow-md"
+        className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-md"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -586,7 +586,7 @@ export default function CreateUserPage() {
 
       {/* Grant Access Section */}
       <motion.div
-        className="rounded-xl border border-gray-100 bg-white p-6 shadow-md"
+        className="mb-6 rounded-xl border border-gray-100 bg-white p-6 shadow-md"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.25 }}
@@ -752,7 +752,7 @@ export default function CreateUserPage() {
 
       {/* Information Card */}
       <motion.div
-        className="rounded-xl border border-blue-100 bg-blue-50 p-6"
+        className="mb-6 rounded-xl border border-blue-100 bg-blue-50 p-6"
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
