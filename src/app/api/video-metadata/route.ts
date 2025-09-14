@@ -149,14 +149,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Handle pCloud links (estimate duration)
-    if (videoUrl.includes('pcloud.link')) {
-      return NextResponse.json({
-        duration: 3600, // Default 1 hour for pCloud videos
-        title: 'pCloud Video',
-        provider: 'pcloud',
-      });
-    }
+    // Handle other video URLs
+    return NextResponse.json({
+      duration: 3600, // Default 1 hour for unknown videos
+      title: 'Video',
+      provider: 'unknown',
+    });
 
     return NextResponse.json(
       { error: 'Unsupported video provider' },

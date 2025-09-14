@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -37,20 +37,7 @@ export default function SeriesDetailPage() {
   const params = useParams();
   const seriesId = params.id as string;
 
-  useEffect(() => {
-    if (seriesId) {
-      fetchSeries();
-    }
-  }, [seriesId]);
-
-  useEffect(() => {
-    if (series && series.videos.length > 0) {
-      setCurrentVideo(series.videos[0]);
-      setCurrentIndex(0);
-    }
-  }, [series]);
-
-  const fetchSeries = async () => {
+  const fetchSeries = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/series/${seriesId}`);
@@ -66,7 +53,20 @@ export default function SeriesDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [seriesId, router]);
+
+  useEffect(() => {
+    if (seriesId) {
+      fetchSeries();
+    }
+  }, [seriesId, fetchSeries]);
+
+  useEffect(() => {
+    if (series && series.videos.length > 0) {
+      setCurrentVideo(series.videos[0]);
+      setCurrentIndex(0);
+    }
+  }, [series]);
 
   const formatDuration = (seconds?: number) => {
     if (!seconds) return 'Unknown';

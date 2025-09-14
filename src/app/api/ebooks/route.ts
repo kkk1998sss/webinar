@@ -30,11 +30,11 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ ebooks });
+    return NextResponse.json({ success: true, ebooks });
   } catch (error) {
     console.error('Error fetching ebooks:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch ebooks' },
+      { success: false, error: 'Failed to fetch ebooks' },
       { status: 500 }
     );
   }

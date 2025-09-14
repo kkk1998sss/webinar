@@ -301,11 +301,6 @@ export default function FourDayPlan() {
 
   // Helper for YouTube/Vimeo embed
   function getEmbedUrl(url: string, isLive: boolean, startTime: number = 0) {
-    // Handle pCloud links
-    if (url.includes('pcloud.link')) {
-      return url; // pCloud links are already in the correct format for embedding
-    }
-
     // Handle YouTube links
     const ytMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/

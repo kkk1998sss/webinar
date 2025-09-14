@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { compareAsc, format, isFuture, parseISO } from 'date-fns';
 import { motion } from 'framer-motion';
 import {
-  Book,
   Calendar,
   Clock,
   Cloud,
@@ -15,7 +14,7 @@ import {
   Star,
   Users,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 import WebinarView from '@/app/users/live-webinar/webinar-view';
@@ -255,6 +254,7 @@ function UpcomingPaidWebinars() {
 
 export default function DashboardFree() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -271,41 +271,9 @@ export default function DashboardFree() {
       gradient: 'from-green-400 via-blue-500 to-purple-500',
       icon: <Star className="size-6" />,
     },
-    {
-      id: '2',
-      title: 'Free E-books Collection',
-      description: 'Downloadable meditation guides and spiritual texts',
-      type: 'ebook',
-      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
-      icon: <Book className="size-6" />,
-    },
-    {
-      id: '3',
-      title: '10 Bonus Audios',
-      description: 'Exclusive spiritual audio content and guided sessions',
-      type: 'video',
-      gradient: 'from-purple-400 via-pink-500 to-rose-500',
-      icon: <Play className="size-6" />,
-    },
   ];
 
   const premiumContentItems: ContentItem[] = [
-    {
-      id: '4',
-      title: 'Live Sunday Sessions',
-      description: 'Join our weekly live events with spiritual guidance',
-      type: 'live',
-      gradient: 'from-orange-400 via-red-500 to-pink-500',
-      icon: <Calendar className="size-6" />,
-    },
-    {
-      id: '5',
-      title: 'Premium E-books Collection',
-      description: 'Advanced meditation guides and spiritual texts',
-      type: 'ebook',
-      gradient: 'from-yellow-400 via-orange-500 to-red-500',
-      icon: <Book className="size-6" />,
-    },
     {
       id: '6',
       title: 'All Premium Videos',
@@ -314,15 +282,6 @@ export default function DashboardFree() {
       gradient: 'from-indigo-400 via-purple-500 to-pink-500',
       icon: <Play className="size-6" />,
     },
-    {
-      id: '7',
-      title: 'Access to Direct Cloud Content',
-      description:
-        'Direct access to cloud-stored spiritual content and resources',
-      type: 'cloud',
-      gradient: 'from-cyan-400 via-blue-500 to-indigo-500',
-      icon: <Cloud className="size-6" />,
-    },
   ];
 
   // Add page load effect
@@ -330,10 +289,36 @@ export default function DashboardFree() {
     setIsPageLoaded(true);
   }, []);
 
-  // Reset currentView to dashboard when component mounts
+  // Initialize state from URL parameters
   useEffect(() => {
-    setCurrentView('dashboard');
-  }, []);
+    const view = searchParams.get('view') as ViewType;
+    const tab = searchParams.get('tab') as 'unlocked' | 'locked';
+
+    if (view && ['dashboard', 'fourDay', 'webinar'].includes(view)) {
+      setCurrentView(view);
+    }
+
+    if (tab && ['unlocked', 'locked'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  // Update URL when state changes
+  const updateURL = (view: ViewType, tab?: 'unlocked' | 'locked') => {
+    const params = new URLSearchParams();
+    params.set('view', view);
+    if (tab) {
+      params.set('tab', tab);
+    }
+    router.replace(`/dashboard-free?${params.toString()}`, { scroll: false });
+  };
+
+  // Reset currentView to dashboard when component mounts (only if no URL params)
+  useEffect(() => {
+    if (!searchParams.get('view')) {
+      setCurrentView('dashboard');
+    }
+  }, [searchParams]);
 
   // Fetch subscription data or create free subscription
   useEffect(() => {
@@ -415,29 +400,14 @@ export default function DashboardFree() {
     // 3-Day Spiritual Content should always go to FourDayPlanFree regardless of plan
     if (item.title === '3-Days Shree Suktam webinar') {
       setCurrentView('fourDay');
-      return;
-    }
-
-    // 10 Bonus Audios should always go to audio page regardless of plan
-    if (item.title === '10 Bonus Audios') {
-      router.push('/audio/simple');
-      return;
-    }
-
-    // Free E-books Collection should always go to ebook199 page regardless of plan
-    if (item.type === 'ebook') {
-      router.push('/users/ebook199');
+      updateURL('fourDay', activeTab);
       return;
     }
 
     if (hasActiveSixMonthPlan) {
-      // For users with active 6-month plan
-      if (item.title === 'Live Sunday Sessions') {
-        setCurrentView('webinar');
-        return;
-      }
       // For premium content like "All Premium Videos", redirect to webinar view
       setCurrentView('webinar');
+      updateURL('webinar', activeTab);
       return;
     } else {
       // For now, redirect free users to upgrade
@@ -502,7 +472,10 @@ export default function DashboardFree() {
         {/* Switcher Tabs */}
         <div className="mb-10 flex justify-center gap-4">
           <button
-            onClick={() => setActiveTab('unlocked')}
+            onClick={() => {
+              setActiveTab('unlocked');
+              updateURL(currentView, 'unlocked');
+            }}
             className={`group relative overflow-hidden rounded-xl px-8 py-4 font-semibold transition-all duration-300 ${
               activeTab === 'unlocked'
                 ? 'scale-105 bg-gradient-to-r from-green-500 to-blue-600 text-white shadow-xl'
@@ -515,7 +488,10 @@ export default function DashboardFree() {
             </span>
           </button>
           <button
-            onClick={() => setActiveTab('locked')}
+            onClick={() => {
+              setActiveTab('locked');
+              updateURL(currentView, 'locked');
+            }}
             className={`group relative overflow-hidden rounded-xl px-8 py-4 font-semibold transition-all duration-300 ${
               activeTab === 'locked'
                 ? 'scale-105 bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-xl'
@@ -531,7 +507,7 @@ export default function DashboardFree() {
 
         {/* Content */}
         {activeTab === 'unlocked' && (
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-8 md:grid-cols-1">
             {freeContentItems.map((item, index) => (
               <motion.div
                 key={item.id}
@@ -577,55 +553,8 @@ export default function DashboardFree() {
 
         {activeTab === 'locked' &&
           (hasActiveSixMonthPlan ? (
-            <div className="grid gap-8 md:grid-cols-2">
+            <div className="grid gap-8 md:grid-cols-1">
               {premiumContentItems.map((item, index) => {
-                if (item.title === 'Live Sunday Sessions') {
-                  return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
-                      onClick={() =>
-                        window.open(
-                          'https://shreemahavidyashaktipeeth.com/subscription/',
-                          '_blank'
-                        )
-                      }
-                    >
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
-                      ></div>
-                      <div className="relative z-10">
-                        <div className="mb-6 flex items-center gap-4">
-                          <div
-                            className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
-                          >
-                            {item.icon}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                              {item.title}
-                            </h3>
-                            <p className="leading-relaxed text-gray-600">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
-                        >
-                          <span className="relative z-10 flex items-center justify-center gap-3">
-                            <Play className="size-5" />
-                            Join Live Session
-                          </span>
-                          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
-                        </button>
-                      </div>
-                    </motion.div>
-                  );
-                }
                 if (item.title === 'Access to Direct Cloud Content') {
                   return (
                     <motion.div
@@ -634,12 +563,7 @@ export default function DashboardFree() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       transition={{ delay: 0.8 + index * 0.1 }}
                       className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
-                      onClick={() =>
-                        window.open(
-                          'https://u.pcloud.link/publink/show?code=kZkVPW5ZSUpOo2yY1t4WHD5oG7ONf8KnmtA7',
-                          '_blank'
-                        )
-                      }
+                      onClick={() => window.open('#', '_blank')}
                     >
                       <div
                         className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}

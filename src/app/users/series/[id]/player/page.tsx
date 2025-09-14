@@ -41,11 +41,29 @@ export default function SeriesPlayerPage() {
   const seriesId = params.id as string;
   const videoId = searchParams.get('video');
 
+  const fetchSeries = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/series/${seriesId}`);
+      const data = await response.json();
+      if (data.success) {
+        setSeries(data.series);
+      } else {
+        router.push('/users/live-webinar');
+      }
+    } catch (error) {
+      console.error('Error fetching series:', error);
+      router.push('/users/live-webinar');
+    } finally {
+      setLoading(false);
+    }
+  }, [seriesId, router]);
+
   useEffect(() => {
     if (seriesId) {
       fetchSeries();
     }
-  }, [seriesId]);
+  }, [seriesId, fetchSeries]);
 
   useEffect(() => {
     if (series && series.videos.length > 0) {
@@ -62,24 +80,6 @@ export default function SeriesPlayerPage() {
       setCurrentVideo(series.videos[initialIndex]);
     }
   }, [series, videoId]);
-
-  const fetchSeries = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/series/${seriesId}`);
-      const data = await response.json();
-      if (data.success) {
-        setSeries(data.series);
-      } else {
-        router.push('/users/live-webinar');
-      }
-    } catch (error) {
-      console.error('Error fetching series:', error);
-      router.push('/users/live-webinar');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const playNext = useCallback(() => {
     if (!series || currentIndex >= series.videos.length - 1) return;

@@ -1,16 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Book,
-  Calendar,
-  Crown,
-  Heart,
-  Play,
-  Sparkles,
-  Star,
-  Zap,
-} from 'lucide-react';
+import { Crown, Heart, Play, Sparkles, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
@@ -74,36 +65,12 @@ export default function Dashboard() {
 
   const premiumContentItems: ContentItem[] = [
     {
-      id: '6',
-      title: 'Live Sunday Sessions',
-      description: 'Join our weekly live events with spiritual guidance',
-      type: 'live',
-      gradient: 'from-orange-400 via-red-500 to-pink-500',
-      icon: <Calendar className="size-6" />,
-    },
-    {
-      id: '5',
-      title: 'E-books Collection',
-      description: 'Downloadable meditation guides and spiritual texts',
-      type: 'ebook',
-      gradient: 'from-emerald-400 via-teal-500 to-cyan-500',
-      icon: <Book className="size-6" />,
-    },
-    {
-      id: '7',
-      title: 'All Videos Available Here',
-      description: 'Access our complete video library of teachings',
+      id: '1',
+      title: 'All Premium Videos',
+      description: 'Access our complete premium video library',
       type: 'video',
       gradient: 'from-purple-400 via-pink-500 to-rose-500',
       icon: <Play className="size-6" />,
-    },
-    {
-      id: '3',
-      title: 'Live webinars and Past webinars',
-      description: 'Complete course with detailed explanations',
-      type: 'course',
-      gradient: 'from-blue-400 via-indigo-500 to-purple-500',
-      icon: <Star className="size-6" />,
     },
   ];
 
@@ -242,6 +209,10 @@ export default function Dashboard() {
         setCurrentView('webinar');
         return;
       }
+      if (item.title === 'All Premium Videos') {
+        setCurrentView('webinar');
+        return;
+      }
       if (item.type === 'ebook') {
         router.push('/users/ebooks');
         return;
@@ -358,95 +329,46 @@ export default function Dashboard() {
         {activeTab === 'locked' &&
           (hasSixMonth ? (
             <div className="grid gap-8 md:grid-cols-2">
-              {premiumContentItems.map((item, index) => {
-                if (item.title === 'Live Sunday Sessions') {
-                  return (
-                    <motion.div
-                      key={item.id}
-                      initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ delay: 0.8 + index * 0.1 }}
-                      className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
-                      onClick={() =>
-                        window.open(
-                          'https://shreemahavidyashaktipeeth.com/subscription/',
-                          '_blank'
-                        )
-                      }
-                    >
+              {premiumContentItems.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
+                  onClick={() => handleStartLearning(item)}
+                >
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
+                  ></div>
+                  <div className="relative z-10">
+                    <div className="mb-6 flex items-center gap-4">
                       <div
-                        className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
-                      ></div>
-                      <div className="relative z-10">
-                        <div className="mb-6 flex items-center gap-4">
-                          <div
-                            className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
-                          >
-                            {item.icon}
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                              {item.title}
-                            </h3>
-                            <p className="leading-relaxed text-gray-600">
-                              {item.description}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
-                        >
-                          <span className="relative z-10 flex items-center justify-center gap-3">
-                            <Play className="size-5" />
-                            Join Live Session
-                          </span>
-                          <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
-                        </button>
-                      </div>
-                    </motion.div>
-                  );
-                }
-                return (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                    className="hover:shadow-3xl group relative cursor-pointer overflow-hidden rounded-2xl bg-white/90 p-8 shadow-2xl backdrop-blur-sm transition-all duration-500 hover:scale-105"
-                    onClick={() => handleStartLearning(item)}
-                  >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-5 transition-opacity duration-500 group-hover:opacity-10`}
-                    ></div>
-                    <div className="relative z-10">
-                      <div className="mb-6 flex items-center gap-4">
-                        <div
-                          className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
-                        >
-                          {item.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                            {item.title}
-                          </h3>
-                          <p className="leading-relaxed text-gray-600">
-                            {item.description}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                        className={`flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}
                       >
-                        <span className="relative z-10 flex items-center justify-center gap-3">
-                          <Play className="size-5" />
-                          Start Learning
-                        </span>
-                        <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
-                      </button>
+                        {item.icon}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                          {item.title}
+                        </h3>
+                        <p className="leading-relaxed text-gray-600">
+                          {item.description}
+                        </p>
+                      </div>
                     </div>
-                  </motion.div>
-                );
-              })}
+                    <button
+                      className={`group/btn relative w-full overflow-hidden rounded-xl bg-gradient-to-r ${item.gradient} px-6 py-4 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-3">
+                        <Play className="size-5" />
+                        Start Learning
+                      </span>
+                      <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover/btn:opacity-100"></div>
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12">

@@ -559,11 +559,6 @@ export default function FourDayPlanFree() {
     isLive: boolean = false,
     startTime: number = 0
   ) {
-    // Handle pCloud links
-    if (url.includes('pcloud.link')) {
-      return url;
-    }
-
     // Handle YouTube links - iOS compatible
     const ytMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/
@@ -993,7 +988,7 @@ export default function FourDayPlanFree() {
               >
                 <Button
                   className="rounded-full bg-gradient-to-r from-green-500 to-blue-500 p-3 font-semibold text-white shadow-lg transition-all hover:from-green-600 hover:to-blue-600 hover:shadow-xl"
-                  onClick={() => (window.location.href = '/dashboard-free')}
+                  onClick={() => router.back()}
                 >
                   <ArrowLeft className="size-6" />
                 </Button>

@@ -606,12 +606,6 @@ export default function WebinarPlayingArea({
   function getEmbedUrl(url: string, isLive: boolean, startTime: number = 0) {
     console.log('getEmbedUrl called with:', { url, isLive, startTime });
 
-    // Handle pCloud links
-    if (url.includes('pcloud.link')) {
-      console.log('Detected pCloud link, returning as-is');
-      return url; // pCloud links are already in the correct format for embedding
-    }
-
     // Handle YouTube links
     const ytMatch = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/

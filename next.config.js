@@ -12,6 +12,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com', // ✅ Add Google profile image host
       },
+      {
+        protocol: 'https',
+        hostname: 'i.vimeocdn.com', // ✅ Add Vimeo CDN host
+      },
     ],
   },
 };

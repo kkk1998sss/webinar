@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import {
@@ -16,6 +16,7 @@ import {
   Video,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 import { AddVideoToSeriesModal } from '@/components/Models/AddVideoToSeriesModal';
 import { Series } from '@/types/user';
@@ -35,10 +36,32 @@ export function SeriesSection({ handlePlaySeries }: SeriesSectionProps) {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.isAdmin || false;
+
+  const fetchSeries = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/series');
+      const data = await response.json();
+      if (data.success) {
+        // Show all series for admin, only published series for normal users
+        if (isAdmin) {
+          setSeries(data.series);
+        } else {
+          setSeries(data.series.filter((s: Series) => s.isPublished));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching series:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAdmin]);
 
   useEffect(() => {
     fetchSeries();
-  }, []);
+  }, [fetchSeries]);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
@@ -49,23 +72,6 @@ export function SeriesSection({ handlePlaySeries }: SeriesSectionProps) {
   const scrollRight = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: 400, behavior: 'smooth' });
-    }
-  };
-
-  const fetchSeries = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/series');
-      const data = await response.json();
-      if (data.success) {
-        // For development: show all series regardless of published status
-        // In production, you might want to filter: setSeries(data.series.filter((s: Series) => s.isPublished));
-        setSeries(data.series);
-      }
-    } catch (error) {
-      console.error('Error fetching series:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -309,42 +315,44 @@ export function SeriesSection({ handlePlaySeries }: SeriesSectionProps) {
                 <Folder className="size-12 text-green-500" />
               </div>
 
-              {/* Action Buttons - Top Right */}
-              <div className="absolute right-2 top-2 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <button
-                  onClick={(e) => handleTogglePublished(e, seriesItem)}
-                  className={`flex size-8 items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 hover:scale-110 ${
-                    seriesItem.isPublished
-                      ? 'bg-blue-500 hover:bg-blue-600'
-                      : 'bg-gray-500 hover:bg-gray-600'
-                  }`}
-                  title={
-                    seriesItem.isPublished
-                      ? 'Unpublish series'
-                      : 'Publish series'
-                  }
-                >
-                  {seriesItem.isPublished ? (
-                    <Eye className="size-4" />
-                  ) : (
-                    <EyeOff className="size-4" />
-                  )}
-                </button>
-                <button
-                  onClick={(e) => handleAddVideoClick(e, seriesItem)}
-                  className="flex size-8 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:bg-green-600"
-                  title="Add video to series"
-                >
-                  <Plus className="size-4" />
-                </button>
-                <button
-                  onClick={(e) => handleDeleteClick(e, seriesItem)}
-                  className="flex size-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:bg-red-600"
-                  title="Delete entire series"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
+              {/* Action Buttons - Top Right (Admin Only) */}
+              {isAdmin && (
+                <div className="absolute right-2 top-2 z-10 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                  <button
+                    onClick={(e) => handleTogglePublished(e, seriesItem)}
+                    className={`flex size-8 items-center justify-center rounded-full text-white shadow-lg transition-all duration-200 hover:scale-110 ${
+                      seriesItem.isPublished
+                        ? 'bg-blue-500 hover:bg-blue-600'
+                        : 'bg-gray-500 hover:bg-gray-600'
+                    }`}
+                    title={
+                      seriesItem.isPublished
+                        ? 'Unpublish series'
+                        : 'Publish series'
+                    }
+                  >
+                    {seriesItem.isPublished ? (
+                      <Eye className="size-4" />
+                    ) : (
+                      <EyeOff className="size-4" />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => handleAddVideoClick(e, seriesItem)}
+                    className="flex size-8 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:bg-green-600"
+                    title="Add video to series"
+                  >
+                    <Plus className="size-4" />
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteClick(e, seriesItem)}
+                    className="flex size-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-all duration-200 hover:scale-110 hover:bg-red-600"
+                    title="Delete entire series"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              )}
 
               <div className="p-4">
                 {/* Header */}
@@ -354,7 +362,7 @@ export function SeriesSection({ handlePlaySeries }: SeriesSectionProps) {
                       <h4 className="line-clamp-2 font-semibold text-gray-800 dark:text-slate-100">
                         {seriesItem.title}
                       </h4>
-                      {!seriesItem.isPublished && (
+                      {isAdmin && !seriesItem.isPublished && (
                         <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-600 dark:text-gray-300">
                           Draft
                         </span>

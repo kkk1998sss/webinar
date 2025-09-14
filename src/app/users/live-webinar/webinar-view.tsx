@@ -37,12 +37,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import EBooksSection from '@/components/webinar-list/EBooksSection';
 import { LiveWebinarSection } from '@/components/webinar-list/LiveWebinarSection';
 import { PaidWebinarSection } from '@/components/webinar-list/PaidWebinarSection';
 import { PastWebinarSection } from '@/components/webinar-list/PastWebinarSection';
 import { SeriesSection } from '@/components/webinar-list/SeriesSection';
 import { UpcomingWebinarSection } from '@/components/webinar-list/UpcomingWebinarSection';
-import VimeoRecordedCoursesSection from '@/components/webinar-list/VimeoRecordedCoursesSection';
+import ZataRecordedCoursesSection from '@/components/webinar-list/ZataRecordedCoursesSection';
 import { useMounted } from '@/hooks/use-mounted';
 import { Webinar } from '@/types/user';
 
@@ -377,7 +378,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         >
           <div className="flex items-center gap-4">
             <motion.button
-              onClick={() => window.location.reload()}
+              onClick={() => router.back()}
               className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-md transition-all hover:bg-gray-50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -860,7 +861,8 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         </div>
         <SeriesSection />
         <PaidWebinarSection webinars={paidWebinars} />
-        <VimeoRecordedCoursesSection />
+        <EBooksSection />
+        <ZataRecordedCoursesSection />
         <PastWebinarSection
           webinars={pastWebinars}
           handleJoinWebinar={handleJoinWebinar}
