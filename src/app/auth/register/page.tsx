@@ -71,7 +71,7 @@ function useRegisterRazorpayPayment() {
               }),
             });
             if (onSuccess) onSuccess();
-            else router.push('/dashboard');
+            else router.push('/dashboard-free');
           } catch (error) {
             console.log('Error:', error);
           }
@@ -121,7 +121,7 @@ export default function RegisterPage() {
   }, [router]);
 
   const handlePaymentSuccess = async () => {
-    router.push('/dashboard');
+    router.push('/dashboard-free');
   };
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();

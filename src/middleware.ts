@@ -64,6 +64,11 @@ export async function middleware(request: NextRequest) {
 
     // Check user's subscription status for protected routes
     if (isProtectedRoute && token) {
+      // Allow access to playing area for all authenticated users
+      if (pathname.startsWith('/users/playing-area')) {
+        return NextResponse.next();
+      }
+
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_URL}/api/register-free`,
@@ -184,6 +189,10 @@ export async function middleware(request: NextRequest) {
               }
             } else {
               // If subscription is expired or inactive, redirect to pricing
+              // Allow access to playing area even with expired subscription
+              if (pathname.startsWith('/users/playing-area')) {
+                return NextResponse.next();
+              }
               return NextResponse.redirect(new URL('/', request.url));
             }
           }

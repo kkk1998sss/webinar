@@ -158,7 +158,7 @@ export default function LoginPage() {
         }
         // Check if user is restricted
         if (email === 'user@gmail.com') {
-          router.push('/dashboard');
+          router.push('/dashboard-free');
           return;
         }
         // Fetch user profile to check 'pending' status
@@ -197,11 +197,11 @@ export default function LoginPage() {
             );
             setHasActiveFourDayPlan(hasActiveFourDay);
             if (hasActiveSixMonthPlan || hasExpiredSixMonthPlan) {
-              router.push('/dashboard');
+              router.push('/dashboard-free');
               return;
             }
             if (hasActiveFourDay || hasExpiredFourDay) {
-              router.push('/dashboard');
+              router.push('/dashboard-free');
               return;
             }
           }

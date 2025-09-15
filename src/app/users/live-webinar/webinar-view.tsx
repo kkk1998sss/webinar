@@ -298,7 +298,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       });
 
       return [today, upcoming, past, paid];
-    }, [filteredAndSortedWebinars, currentDate]);
+    }, [filteredAndSortedWebinars]);
 
   // Countdown timer logic
   const getCountdown = (webinarDate: string, webinarTime: string) => {

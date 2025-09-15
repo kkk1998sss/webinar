@@ -45,7 +45,7 @@ export default function ThankYouPage() {
         content_name: 'Thank You Page',
       });
     }
-    router.push('/dashboard');
+    router.push('/dashboard-free');
   };
 
   return (

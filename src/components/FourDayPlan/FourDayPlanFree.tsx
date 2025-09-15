@@ -1463,10 +1463,10 @@ export default function FourDayPlanFree() {
                   className="w-full rounded-lg bg-gradient-to-r from-green-600 to-emerald-600 py-2 text-sm font-semibold text-white shadow transition hover:shadow-lg sm:py-3 sm:text-base"
                   onClick={() => {
                     console.log(
-                      'Button clicked - redirecting to /users/live-webinar'
+                      'Button clicked - redirecting to /dashboard-free'
                     );
                     console.log('Current subscription:', subscription);
-                    router.push('/users/live-webinar');
+                    router.push('/dashboard-free');
                   }}
                 >
                   <Crown className="mr-2 size-4" />

@@ -145,7 +145,7 @@ export const SubscriptionButton = ({
             if (onSuccess) {
               onSuccess();
             } else {
-              router.push('/dashboard');
+              router.push('/dashboard-free');
             }
           } catch (error) {
             console.error('Payment verification failed:', error);
