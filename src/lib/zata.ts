@@ -11,6 +11,14 @@ export interface ZataVideo {
   thumbnailUrl?: string;
   duration?: number;
   description?: string;
+  folder?: string;
+}
+
+export interface ZataFolder {
+  name: string;
+  path: string;
+  videoCount: number;
+  videos: ZataVideo[];
 }
 
 export interface ZataResponse {
@@ -72,16 +80,21 @@ export class ZataService {
       const videos: ZataVideo[] = response.Contents.filter((obj) => {
         const contentType = obj.Key?.toLowerCase() || '';
         return contentType.match(/\.(mp4|avi|mov|mkv|flv|webm|m4v)$/);
-      }).map((obj) => ({
-        id: obj.Key || '', // Keep the full filename as ID
-        name: obj.Key?.replace(/\.[^/.]+$/, '') || '',
-        size: obj.Size || 0,
-        contentType: this.getContentType(obj.Key || ''),
-        lastModified:
-          obj.LastModified?.toISOString() || new Date().toISOString(),
-        url: this.getVideoUrl(obj.Key || ''),
-        thumbnailUrl: this.getThumbnailUrl(obj.Key || ''),
-      }));
+      }).map((obj) => {
+        const key = obj.Key || '';
+        const folder = this.extractFolder(key);
+        return {
+          id: key, // Keep the full filename as ID
+          name: key.replace(/\.[^/.]+$/, '').replace(/^.*\//, ''), // Remove extension and folder path
+          size: obj.Size || 0,
+          contentType: this.getContentType(key),
+          lastModified:
+            obj.LastModified?.toISOString() || new Date().toISOString(),
+          url: this.getVideoUrl(key),
+          thumbnailUrl: this.getThumbnailUrl(key),
+          folder: folder,
+        };
+      });
 
       console.log(`🎬 Found ${videos.length} videos in Zata AI Cloud`);
 
@@ -96,6 +109,104 @@ export class ZataService {
         data: [],
         error:
           error instanceof Error ? error.message : 'Failed to fetch videos',
+      };
+    }
+  }
+
+  /**
+   * Get all folders with their videos
+   */
+  async getFolders(): Promise<{
+    success: boolean;
+    data: ZataFolder[];
+    error?: string;
+  }> {
+    try {
+      console.log('📁 Fetching folders from Zata AI Cloud...');
+
+      const videosResponse = await this.getVideos();
+      if (!videosResponse.success) {
+        return {
+          success: false,
+          data: [],
+          error: videosResponse.error,
+        };
+      }
+
+      // Group videos by folder
+      const folderMap = new Map<string, ZataVideo[]>();
+
+      videosResponse.data.forEach((video) => {
+        const folderName = video.folder || 'Root';
+        if (!folderMap.has(folderName)) {
+          folderMap.set(folderName, []);
+        }
+        folderMap.get(folderName)!.push(video);
+      });
+
+      // Convert to folder array
+      const folders: ZataFolder[] = Array.from(folderMap.entries()).map(
+        ([name, videos]) => ({
+          name,
+          path: name === 'Root' ? '' : name,
+          videoCount: videos.length,
+          videos: videos.sort((a, b) => a.name.localeCompare(b.name)),
+        })
+      );
+
+      console.log(`📁 Found ${folders.length} folders`);
+
+      return {
+        success: true,
+        data: folders.sort((a, b) => a.name.localeCompare(b.name)),
+      };
+    } catch (error) {
+      console.error('❌ Error fetching folders from Zata AI Cloud:', error);
+      return {
+        success: false,
+        data: [],
+        error:
+          error instanceof Error ? error.message : 'Failed to fetch folders',
+      };
+    }
+  }
+
+  /**
+   * Get videos from a specific folder
+   */
+  async getVideosByFolder(folderPath: string): Promise<ZataResponse> {
+    try {
+      console.log(`📁 Fetching videos from folder: ${folderPath}`);
+
+      const videosResponse = await this.getVideos();
+      if (!videosResponse.success) {
+        return videosResponse;
+      }
+
+      // Filter videos by folder
+      const folderVideos = videosResponse.data.filter((video) => {
+        if (folderPath === '' || folderPath === 'Root') {
+          return !video.folder || video.folder === '';
+        }
+        return video.folder === folderPath;
+      });
+
+      return {
+        success: true,
+        data: folderVideos,
+      };
+    } catch (error) {
+      console.error(
+        `❌ Error fetching videos from folder ${folderPath}:`,
+        error
+      );
+      return {
+        success: false,
+        data: [],
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch folder videos',
       };
     }
   }
@@ -245,6 +356,17 @@ export class ZataService {
   private getThumbnailUrl(key: string): string {
     // Return the video URL itself - we'll use it in a video element for thumbnails
     return this.getVideoUrl(key);
+  }
+
+  /**
+   * Extract folder path from S3 key
+   */
+  private extractFolder(key: string): string {
+    const parts = key.split('/');
+    if (parts.length <= 1) {
+      return ''; // Root folder
+    }
+    return parts.slice(0, -1).join('/'); // All parts except the filename
   }
 
   /**

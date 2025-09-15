@@ -39,9 +39,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard-free', request.url));
     }
 
-    const protectedRoutes = ['/users/live-webinar'];
+    const protectedRoutes = ['/users/live-webinar', '/users/playing-area'];
     const adminRoutes = ['/admin'];
-    const authRoutes = ['/auth/login', '/auth/register'];
+    const authRoutes = ['/auth/login-free', '/auth/register-free'];
     // const pricingRoute = '/pricing';
 
     const isProtectedRoute = protectedRoutes.some((route) =>
@@ -59,14 +59,14 @@ export async function middleware(request: NextRequest) {
     }
 
     if (isProtectedRoute && !token) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+      return NextResponse.redirect(new URL('/auth/login-free', request.url));
     }
 
     // Check user's subscription status for protected routes
     if (isProtectedRoute && token) {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/register`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/register-free`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -145,7 +145,7 @@ export async function middleware(request: NextRequest) {
       // After login, redirect to appropriate page based on subscription
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/register`,
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/register-free`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

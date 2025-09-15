@@ -166,6 +166,42 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     [sortOrder]
   );
 
+  // Helper function to check if webinar is actually live (started)
+  const isWebinarLive = (webinarDate: string, webinarTime: string) => {
+    const parsedDate = parseISO(webinarDate);
+    const datePart = format(parsedDate, 'yyyy-MM-dd');
+    const combined = `${datePart} ${webinarTime}`;
+    const finalDate = parse(combined, 'yyyy-MM-dd HH:mm', new Date());
+
+    if (!isValid(finalDate)) {
+      return false;
+    }
+
+    const now = new Date();
+    const diffSeconds = differenceInSeconds(finalDate, now);
+
+    // Consider webinar live if it has started (diffSeconds <= 0)
+    return diffSeconds <= 0;
+  };
+
+  // Helper function to check if webinar is upcoming (scheduled for today but not started yet)
+  const isWebinarUpcomingToday = (webinarDate: string, webinarTime: string) => {
+    const parsedDate = parseISO(webinarDate);
+    const datePart = format(parsedDate, 'yyyy-MM-dd');
+    const combined = `${datePart} ${webinarTime}`;
+    const finalDate = parse(combined, 'yyyy-MM-dd HH:mm', new Date());
+
+    if (!isValid(finalDate)) {
+      return false;
+    }
+
+    const now = new Date();
+    const diffSeconds = differenceInSeconds(finalDate, now);
+
+    // Consider upcoming if it's today but hasn't started yet (diffSeconds > 0)
+    return isToday(parsedDate) && diffSeconds > 0;
+  };
+
   // Memoize filtered and sorted webinars
   const filteredAndSortedWebinars = useMemo(() => {
     return sortWebinars(filterWebinars(webinars));
@@ -187,9 +223,15 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           title: webinar.webinarTitle,
           isPaid: webinar.isPaid,
           date: webinar.webinarDate,
+          time: webinar.webinarTime,
           parsedDate: date,
           isToday: isToday(date),
           isFuture: isFuture(date),
+          isLive: isWebinarLive(webinar.webinarDate, webinar.webinarTime),
+          isUpcomingToday: isWebinarUpcomingToday(
+            webinar.webinarDate,
+            webinar.webinarTime
+          ),
         });
 
         // PAID LOGIC - Add to paid section if isPaid is true, regardless of date
@@ -202,7 +244,19 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         if (isToday(date)) {
           // Only add to today if it's not a paid webinar
           if (!webinar.isPaid) {
-            today.push(webinar);
+            // Check if webinar is actually live (started) or upcoming today
+            if (isWebinarLive(webinar.webinarDate, webinar.webinarTime)) {
+              // Webinar has started - add to live/today section
+              today.push(webinar);
+            } else if (
+              isWebinarUpcomingToday(webinar.webinarDate, webinar.webinarTime)
+            ) {
+              // Webinar is scheduled for today but hasn't started yet - add to upcoming
+              upcoming.push(webinar);
+            } else {
+              // Fallback: if it's today but time logic fails, add to upcoming
+              upcoming.push(webinar);
+            }
           }
         } else if (isFuture(date)) {
           // Only add to upcoming if it's not a paid webinar
@@ -244,7 +298,7 @@ export default function WebinarDashboard({ session }: { session: Session }) {
       });
 
       return [today, upcoming, past, paid];
-    }, [filteredAndSortedWebinars]);
+    }, [filteredAndSortedWebinars, currentDate]);
 
   // Countdown timer logic
   const getCountdown = (webinarDate: string, webinarTime: string) => {
@@ -271,9 +325,10 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     return `${String(diffHours).padStart(2, '0')}:${String(remainingMinutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
-  // Countdown effect
+  // Countdown effect - update countdowns and trigger re-categorization
   useEffect(() => {
     const interval = setInterval(() => {
+      // Update countdowns for live webinars
       setCountdowns((prev) => {
         const newCountdowns = { ...prev };
         todaysWebinars.forEach((webinar) => {
@@ -286,6 +341,10 @@ export default function WebinarDashboard({ session }: { session: Session }) {
           ? prev
           : newCountdowns;
       });
+
+      // Force re-categorization by updating a dependency
+      // This will cause the useMemo to recalculate categorization
+      setCurrentDate(new Date());
     }, 1000);
 
     return () => clearInterval(interval);
@@ -861,8 +920,8 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         </div>
         <SeriesSection />
         <PaidWebinarSection webinars={paidWebinars} />
-        <EBooksSection />
         <ZataRecordedCoursesSection />
+        <EBooksSection />
         <PastWebinarSection
           webinars={pastWebinars}
           handleJoinWebinar={handleJoinWebinar}
