@@ -157,6 +157,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     <div
       className="fixed inset-0 z-[9999] flex h-screen w-screen overflow-hidden bg-black"
       style={{ margin: 0, padding: 0 }}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Close Button */}
       {onClose && (
@@ -180,6 +181,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
           onEnded={nextVideo}
+          onContextMenu={(e) => e.preventDefault()}
           autoPlay
         />
 

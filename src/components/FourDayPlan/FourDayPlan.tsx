@@ -33,6 +33,7 @@ interface VideoData {
   title: string;
   description: string;
   videoUrl: string;
+  zataVideoUrl?: string | null;
   day: number;
   createdAt: string;
 }
@@ -74,6 +75,7 @@ export default function FourDayPlan() {
     title: string;
   } | null>(null);
   const playerRef = useRef<HTMLIFrameElement | null>(null);
+  const videoPlayerRef = useRef<HTMLVideoElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
@@ -121,7 +123,7 @@ export default function FourDayPlan() {
         timerRef.current = null;
       }
     }
-  }, [isLiveMode, currentVideo, subscription]);
+  }, [isLiveMode, currentVideo, subscription, calculateSessionElapsed]);
 
   // Load saved video progress from localStorage
   useEffect(() => {
@@ -142,13 +144,19 @@ export default function FourDayPlan() {
 
   // Fetch videos and subscription
   useEffect(() => {
+    let isMounted = true; // Flag to prevent state updates if component unmounts
+
     const fetchData = async () => {
       setLoading(true);
       try {
+        console.log('🔄 Fetching data for FourDayPlan...');
         const [videoRes, subRes] = await Promise.all([
           fetch('/api/four-day'),
           fetch('/api/subscription'),
         ]);
+
+        if (!isMounted) return; // Exit if component unmounted
+
         const videoData = await videoRes.json();
         const subData = await subRes.json();
 
@@ -176,10 +184,18 @@ export default function FourDayPlan() {
       } catch (err) {
         console.error('Fetch error:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchData();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Fetch webinars for paid section
@@ -297,33 +313,9 @@ export default function FourDayPlan() {
     isLiveMode,
     currentTime,
     videoMetadata,
+    shouldBeInLiveMode,
+    shouldMarkAsCompleted,
   ]);
-
-  // Helper for YouTube/Vimeo embed
-  function getEmbedUrl(url: string, isLive: boolean, startTime: number = 0) {
-    // Handle YouTube links
-    const ytMatch = url.match(
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/
-    );
-    if (ytMatch) {
-      const baseParams = isLive
-        ? 'autoplay=1&controls=0&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=0&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=2&wmode=transparent'
-        : 'controls=1&modestbranding=1&rel=0&enablejsapi=1';
-
-      const startTimeParam = startTime > 0 ? `&start=${startTime}` : '';
-      return `https://www.youtube.com/embed/${ytMatch[1]}?${baseParams}${startTimeParam}`;
-    }
-
-    // Handle Vimeo links
-    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-    if (vimeoMatch) {
-      const baseParams = isLive ? 'autoplay=1&controls=0' : 'controls=1';
-      const startTimeParam = startTime > 0 ? `#t=${startTime}s` : '';
-      return `https://player.vimeo.com/video/${vimeoMatch[1]}?${baseParams}${startTimeParam}`;
-    }
-
-    return url;
-  }
 
   // Handle video completion
   const markVideoCompleted = useCallback(() => {
@@ -343,8 +335,12 @@ export default function FourDayPlan() {
 
   // Check if video is still playing (for persistence across refreshes)
   const checkVideoStatus = useCallback(() => {
+    const currentPlayer = currentVideo?.videoUrl.includes('idr01.zata.ai')
+      ? videoPlayerRef.current
+      : playerRef.current;
+
     if (
-      playerRef.current &&
+      currentPlayer &&
       isLiveMode &&
       !videoCompleted &&
       videoMetadata?.duration
@@ -519,7 +515,7 @@ export default function FourDayPlan() {
     return () => document.removeEventListener('fullscreenchange', exitHandler);
   }, [isFullscreen]);
 
-  // Helper: Get unlock time for a video (10:33 PM on the correct day) - FOR TESTING
+  // Helper: Get unlock time for a video (9:00 PM on the correct day based on subscription start date)
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
     return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00 (9:00 PM)
@@ -1033,7 +1029,10 @@ export default function FourDayPlan() {
                 });
 
                 return (
-                  <div className="flex h-full flex-col">
+                  <div
+                    className="flex h-full flex-col"
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
                     {/* Overlay: LIVE badge - only show in live mode */}
                     {isLiveMode && (
                       <div className="absolute left-2 top-2 z-10 sm:left-4 sm:top-4">
@@ -1043,20 +1042,36 @@ export default function FourDayPlan() {
                       </div>
                     )}
 
-                    {/* Video Iframe */}
-                    <iframe
-                      ref={playerRef}
-                      src={getEmbedUrl(
-                        currentVideo.videoUrl,
-                        isLiveMode,
-                        videoStartTime
-                      )}
+                    {/* Video Player - Only Zata AI videos */}
+                    <video
+                      ref={videoPlayerRef}
+                      src={
+                        (currentVideo as VideoData & { zataVideoUrl?: string })
+                          .zataVideoUrl || currentVideo.videoUrl
+                      }
                       title={currentVideo.title}
                       className={`absolute left-0 top-0 size-full ${isFullscreen ? 'z-10' : ''}`}
-                      allow="autoplay; encrypted-media; fullscreen"
-                      allowFullScreen
-                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                      style={{ pointerEvents: isLiveMode ? 'none' : 'auto' }} // disable interaction only in live mode
+                      controls={!isLiveMode}
+                      autoPlay={isLiveMode}
+                      muted={false}
+                      playsInline
+                      preload="metadata"
+                      onContextMenu={(e) => e.preventDefault()}
+                      onError={(e) => {
+                        console.error('Video loading error:', e);
+                        console.error(
+                          'Video src:',
+                          (
+                            currentVideo as VideoData & {
+                              zataVideoUrl?: string;
+                            }
+                          ).zataVideoUrl || currentVideo.videoUrl
+                        );
+                      }}
+                      onLoadStart={() => console.log('Video loading started')}
+                      onCanPlay={() => console.log('Video can play')}
+                      onLoadedData={() => console.log('Video data loaded')}
+                      style={{ pointerEvents: isLiveMode ? 'none' : 'auto' }}
                     />
 
                     {/* Overlay layer to block all controls/interactions in live mode */}

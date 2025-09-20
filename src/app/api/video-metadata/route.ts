@@ -149,6 +149,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Handle Zata AI URLs
+    if (videoUrl.includes('zata.ai')) {
+      console.log('🎬 Processing Zata AI video:', videoUrl);
+
+      // For Zata AI videos, we can't easily get duration from the URL
+      // We'll return a default duration and let the user know
+      return NextResponse.json({
+        duration: 3600, // Default 1 hour
+        title: 'Zata AI Video',
+        provider: 'zata',
+        warning:
+          'Duration not available for Zata AI videos. Please enter manually.',
+      });
+    }
+
     // Handle other video URLs
     return NextResponse.json({
       duration: 3600, // Default 1 hour for unknown videos

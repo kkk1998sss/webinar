@@ -172,6 +172,7 @@ export default function CustomVideoPlayer({
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
       onMouseMove={() => setShowControls(true)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Video Element */}
       <video
@@ -186,6 +187,7 @@ export default function CustomVideoPlayer({
         onCanPlay={handleCanPlay}
         onError={handleError}
         onClick={togglePlay}
+        onContextMenu={(e) => e.preventDefault()}
         preload="metadata"
       />
 

@@ -25,6 +25,14 @@ type FourDayPlanVideo = {
   videoUrl: string;
   day: number;
   createdAt: string;
+  source?: 'database' | 'bucket'; // Optional source field
+};
+
+type FormData = {
+  title: string;
+  description: string;
+  videoUrl: string;
+  day: number;
 };
 
 export default function FourDayPlanVideosPage() {
@@ -33,7 +41,7 @@ export default function FourDayPlanVideosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDay, setFilterDay] = useState<number | 'all'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormData>({
     title: '',
     description: '',
     videoUrl: '',
@@ -50,7 +58,7 @@ export default function FourDayPlanVideosPage() {
 
   // Edit dialog state
   const [editId, setEditId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<FormData>({
     title: '',
     description: '',
     videoUrl: '',
@@ -64,18 +72,44 @@ export default function FourDayPlanVideosPage() {
     // eslint-disable-next-line
   }, []);
 
+  // Ensure form state is always properly initialized
+  useEffect(() => {
+    if (isModalOpen) {
+      setForm({
+        title: '',
+        description: '',
+        videoUrl: '',
+        day: 1,
+      } as FormData);
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    if (editDialogOpen) {
+      setEditForm({
+        title: '',
+        description: '',
+        videoUrl: '',
+        day: 1,
+      } as FormData);
+    }
+  }, [editDialogOpen]);
+
   const fetchVideos = async () => {
     setLoading(true);
     setFormError(null);
     try {
+      // Fetch videos from main API (now includes both database and bucket videos)
       const res = await fetch('/api/four-day');
       const data = await res.json();
+
       if (Array.isArray(data.videos)) {
         setVideos(data.videos);
       } else {
         setFormError(data.message || 'Failed to fetch videos');
       }
-    } catch {
+    } catch (error) {
+      console.error('Error fetching videos:', error);
       setFormError('Failed to fetch videos');
     } finally {
       setLoading(false);
@@ -95,12 +129,19 @@ export default function FourDayPlanVideosPage() {
     setFormLoading(true);
     setFormError(null);
     setFormSuccess(false);
+
     try {
+      const videoUrl = form.videoUrl;
+
       const res = await fetch('/api/four-day', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          videoUrl,
+        }),
       });
+
       const data = await res.json();
       if (res.ok && (data.success || data.video)) {
         setFormSuccess(true);
@@ -113,8 +154,10 @@ export default function FourDayPlanVideosPage() {
       } else {
         setFormError(data.message || 'Failed to add video');
       }
-    } catch {
-      setFormError('Failed to add video');
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error.message : 'Failed to add video'
+      );
     } finally {
       setFormLoading(false);
     }
@@ -212,6 +255,22 @@ export default function FourDayPlanVideosPage() {
           </motion.button>
         </motion.div>
       </div>
+
+      {/* Description */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20"
+      >
+        <p className="text-sm text-blue-800 dark:text-blue-200">
+          <strong>Database Videos:</strong> Videos stored in your database (can
+          be edited/deleted)
+          <br />
+          <strong>Bucket Videos:</strong> Videos from Zata AI bucket
+          &quot;shre3days&quot; (read-only, managed by bucket)
+        </p>
+      </motion.div>
 
       <motion.div
         className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"
@@ -335,7 +394,13 @@ export default function FourDayPlanVideosPage() {
                         <td className="p-2 text-center">{index + 1}</td>
                         <td className="p-2">{video.day}</td>
                         <td className="flex items-center gap-2 p-2 font-medium">
-                          <FaVideo className="text-blue-400" /> {video.title}
+                          <FaVideo className="text-blue-400" />
+                          <span>{video.title}</span>
+                          {video.source === 'bucket' && (
+                            <span className="rounded bg-green-100 px-2 py-1 text-xs text-green-800">
+                              Bucket
+                            </span>
+                          )}
                         </td>
                         <td className="p-2">
                           <p className="line-clamp-2">{video.description}</p>
@@ -356,18 +421,24 @@ export default function FourDayPlanVideosPage() {
                         <td className="p-2">
                           <div className="flex items-center gap-2">
                             <button
-                              className="rounded p-2 text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/50"
+                              className="rounded p-2 text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-900/50"
                               onClick={() => {
                                 setDeleteId(video.id);
                                 setDeleteDialogOpen(true);
                               }}
-                              disabled={deleteLoading}
-                              title="Delete"
+                              disabled={
+                                deleteLoading || video.source === 'bucket'
+                              }
+                              title={
+                                video.source === 'bucket'
+                                  ? 'Cannot delete bucket videos'
+                                  : 'Delete'
+                              }
                             >
                               <FaTrash />
                             </button>
                             <button
-                              className="rounded p-2 text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/50"
+                              className="rounded p-2 text-blue-600 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/50"
                               onClick={() => {
                                 setEditId(video.id);
                                 setEditForm({
@@ -378,8 +449,14 @@ export default function FourDayPlanVideosPage() {
                                 });
                                 setEditDialogOpen(true);
                               }}
-                              disabled={editLoading}
-                              title="Edit"
+                              disabled={
+                                editLoading || video.source === 'bucket'
+                              }
+                              title={
+                                video.source === 'bucket'
+                                  ? 'Cannot edit bucket videos'
+                                  : 'Edit'
+                              }
                             >
                               <FaEdit />
                             </button>
@@ -406,9 +483,17 @@ export default function FourDayPlanVideosPage() {
         open={isModalOpen}
         onOpenChange={(open) => {
           setIsModalOpen(open);
-          setFormError(null);
-          setFormSuccess(false);
-          setForm({ title: '', description: '', videoUrl: '', day: 1 });
+          if (!open) {
+            // Only reset when closing
+            setFormError(null);
+            setFormSuccess(false);
+            setForm({
+              title: '',
+              description: '',
+              videoUrl: '',
+              day: 1,
+            } as FormData);
+          }
         }}
       >
         <Dialog.Portal>
@@ -430,7 +515,7 @@ export default function FourDayPlanVideosPage() {
                   type="number"
                   min={1}
                   max={4}
-                  value={form.day}
+                  value={form.day ?? 1}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, day: Number(e.target.value) }))
                   }
@@ -448,7 +533,7 @@ export default function FourDayPlanVideosPage() {
                 <input
                   id="title"
                   type="text"
-                  value={form.title}
+                  value={form.title ?? ''}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, title: e.target.value }))
                   }
@@ -465,7 +550,7 @@ export default function FourDayPlanVideosPage() {
                 </label>
                 <textarea
                   id="description"
-                  value={form.description}
+                  value={form.description ?? ''}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, description: e.target.value }))
                   }
@@ -483,12 +568,13 @@ export default function FourDayPlanVideosPage() {
                 <input
                   id="videoUrl"
                   type="url"
-                  value={form.videoUrl}
+                  value={form.videoUrl ?? ''}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, videoUrl: e.target.value }))
                   }
                   className="mt-1 w-full rounded border px-3 py-2 focus:border-blue-500 focus:outline-none"
                   required
+                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
               <div className="flex justify-end">
@@ -586,9 +672,17 @@ export default function FourDayPlanVideosPage() {
         open={editDialogOpen}
         onOpenChange={(open) => {
           setEditDialogOpen(open);
-          setFormError(null);
-          setFormSuccess(false);
-          setEditForm({ title: '', description: '', videoUrl: '', day: 1 });
+          if (!open) {
+            // Only reset when closing
+            setFormError(null);
+            setFormSuccess(false);
+            setEditForm({
+              title: '',
+              description: '',
+              videoUrl: '',
+              day: 1,
+            } as FormData);
+          }
         }}
       >
         <Dialog.Portal>
@@ -605,10 +699,16 @@ export default function FourDayPlanVideosPage() {
                 setEditLoading(true);
                 setFormError(null);
                 try {
+                  const videoUrl = editForm.videoUrl;
+
                   const res = await fetch('/api/four-day', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: editId, ...editForm }),
+                    body: JSON.stringify({
+                      id: editId,
+                      ...editForm,
+                      videoUrl,
+                    }),
                   });
                   const data = await res.json();
                   if (res.ok && data.success) {
@@ -618,8 +718,12 @@ export default function FourDayPlanVideosPage() {
                   } else {
                     setFormError(data.message || 'Failed to update video');
                   }
-                } catch {
-                  setFormError('Failed to update video');
+                } catch (error) {
+                  setFormError(
+                    error instanceof Error
+                      ? error.message
+                      : 'Failed to update video'
+                  );
                 } finally {
                   setEditLoading(false);
                 }
@@ -637,7 +741,7 @@ export default function FourDayPlanVideosPage() {
                   type="number"
                   min={1}
                   max={4}
-                  value={editForm.day}
+                  value={editForm.day ?? 1}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, day: Number(e.target.value) }))
                   }
@@ -655,7 +759,7 @@ export default function FourDayPlanVideosPage() {
                 <input
                   id="edit-title"
                   type="text"
-                  value={editForm.title}
+                  value={editForm.title ?? ''}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, title: e.target.value }))
                   }
@@ -672,7 +776,7 @@ export default function FourDayPlanVideosPage() {
                 </label>
                 <textarea
                   id="edit-description"
-                  value={editForm.description}
+                  value={editForm.description ?? ''}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, description: e.target.value }))
                   }
@@ -690,12 +794,13 @@ export default function FourDayPlanVideosPage() {
                 <input
                   id="edit-videoUrl"
                   type="url"
-                  value={editForm.videoUrl}
+                  value={editForm.videoUrl ?? ''}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, videoUrl: e.target.value }))
                   }
                   className="mt-1 w-full rounded border px-3 py-2 focus:border-blue-500 focus:outline-none"
                   required
+                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
               <div className="flex justify-end gap-2">

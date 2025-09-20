@@ -234,6 +234,7 @@ export default function CustomVideoStreamPlayer({
     return (
       <div
         className={`relative overflow-hidden rounded-xl bg-black shadow-2xl ${className}`}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <iframe
           src={`https://player.vimeo.com/video/${videoId}?autoplay=0&controls=1&loop=0&muted=0&responsive=1&show_title=1&show_byline=1&show_portrait=0&transparent=0`}
@@ -256,6 +257,7 @@ export default function CustomVideoStreamPlayer({
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
       onMouseMove={() => setShowControls(true)}
+      onContextMenu={(e) => e.preventDefault()}
     >
       {/* Video Element */}
       <video
@@ -270,6 +272,7 @@ export default function CustomVideoStreamPlayer({
         onCanPlay={handleCanPlay}
         onError={handleError}
         onClick={togglePlay}
+        onContextMenu={(e) => e.preventDefault()}
         preload="metadata"
         controls={false}
       >

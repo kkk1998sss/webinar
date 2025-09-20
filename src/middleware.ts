@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
-import { middleware as paraglide } from '@/lib/i18n';
+// import { middleware as paraglide } from '@/lib/i18n';
 
 interface Subscription {
   id: string;
@@ -21,7 +21,11 @@ interface User {
 
 export async function middleware(request: NextRequest) {
   try {
-    const response = paraglide(request);
+    // Temporarily disable paraglide middleware to fix headers issue
+    // const paraglideResponse = paraglide(request);
+    // if (paraglideResponse && paraglideResponse !== request) {
+    //   return paraglideResponse;
+    // }
 
     const token = await getToken({
       req: request,
@@ -205,7 +209,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    return response;
+    return NextResponse.next();
   } catch (error) {
     console.error('Middleware error:', error);
     return NextResponse.redirect(new URL('/error?type=500', request.url));

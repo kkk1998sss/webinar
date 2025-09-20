@@ -26,6 +26,7 @@ interface VideoData {
   title: string;
   description: string;
   videoUrl: string;
+  zataVideoUrl?: string | null;
   day: number;
   createdAt: string;
 }
@@ -72,8 +73,8 @@ export default function FourDayPlanFree() {
   } | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [videoLoadError, setVideoLoadError] = useState(false);
   const playerRef = useRef<HTMLIFrameElement | null>(null);
+  const videoPlayerRef = useRef<HTMLVideoElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
@@ -150,7 +151,7 @@ export default function FourDayPlanFree() {
         timerRef.current = null;
       }
     }
-  }, [isLiveMode, currentVideo, subscription]);
+  }, [isLiveMode, currentVideo, subscription, calculateSessionElapsed]);
 
   // Load saved video progress from localStorage
   useEffect(() => {
@@ -171,14 +172,20 @@ export default function FourDayPlanFree() {
 
   // Fetch videos, subscription, and user data
   useEffect(() => {
+    let isMounted = true; // Flag to prevent state updates if component unmounts
+
     const fetchData = async () => {
       setLoading(true);
       try {
+        console.log('🔄 Fetching data for FourDayPlanFree...');
         const [videoRes, subRes, userRes] = await Promise.all([
           fetch('/api/four-day'),
           fetch('/api/subscription'), // Changed from /api/subscription/free to /api/subscription
           fetch('/api/register'), // Get user info including registration date
         ]);
+
+        if (!isMounted) return; // Exit if component unmounted
+
         const videoData = await videoRes.json();
         const subData = await subRes.json();
         const userData = await userRes.json();
@@ -234,10 +241,18 @@ export default function FourDayPlanFree() {
       } catch (err) {
         console.error('Fetch error:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     fetchData();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Fetch webinars for paid section (Commented Out)
@@ -253,38 +268,49 @@ export default function FourDayPlanFree() {
 
   // iOS-specific video player optimization
   const optimizeForIOS = useCallback(() => {
-    if (!isIOS || !playerRef.current) return;
+    const currentPlayer = currentVideo?.videoUrl.includes('idr01.zata.ai')
+      ? videoPlayerRef.current
+      : playerRef.current;
+
+    if (!isIOS || !currentPlayer) return;
 
     try {
-      // Force iframe to be interactive on iOS
-      const iframe = playerRef.current;
+      // For iframe players (YouTube/Vimeo)
+      if (currentPlayer === playerRef.current) {
+        // Force iframe to be interactive on iOS
+        const iframe = playerRef.current;
 
-      // Add touch event listeners for iOS
-      iframe.addEventListener(
-        'touchstart',
-        (e) => {
-          e.stopPropagation();
-        },
-        { passive: true }
-      );
+        // Add touch event listeners for iOS
+        iframe.addEventListener(
+          'touchstart',
+          (e) => {
+            e.stopPropagation();
+          },
+          { passive: true }
+        );
 
-      iframe.addEventListener(
-        'touchmove',
-        (e) => {
-          e.stopPropagation();
-        },
-        { passive: true }
-      );
+        iframe.addEventListener(
+          'touchmove',
+          (e) => {
+            e.stopPropagation();
+          },
+          { passive: true }
+        );
 
-      // iOS Safari specific optimizations
-      iframe.style.webkitTransform = 'translateZ(0)';
-      iframe.style.transform = 'translateZ(0)';
+        // iOS Safari specific optimizations
+        iframe.style.webkitTransform = 'translateZ(0)';
+        iframe.style.transform = 'translateZ(0)';
 
-      console.log('iOS video player optimized');
+        console.log('iOS iframe video player optimized');
+      }
+      // For video elements (Zata AI), no special optimization needed
+      else {
+        console.log('iOS video element player - no optimization needed');
+      }
     } catch (error) {
       console.error('Error optimizing for iOS:', error);
     }
-  }, [isIOS]);
+  }, [isIOS, currentVideo?.videoUrl]);
 
   // Fetch video metadata when current video changes
   useEffect(() => {
@@ -360,6 +386,8 @@ export default function FourDayPlanFree() {
     isLiveMode,
     currentTime,
     videoMetadata,
+    shouldBeInLiveMode,
+    shouldMarkAsCompleted,
   ]);
 
   // Memoize paid webinars - same logic as webinar-view.tsx (Commented Out)
@@ -553,39 +581,6 @@ export default function FourDayPlanFree() {
     }
   }
 
-  // Helper for YouTube/Vimeo embed
-  function getEmbedUrl(
-    url: string,
-    isLive: boolean = false,
-    startTime: number = 0
-  ) {
-    // Handle YouTube links - iOS compatible
-    const ytMatch = url.match(
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/
-    );
-    if (ytMatch) {
-      // iOS Safari compatible parameters - autoplay for live mode, controls for playback mode
-      const baseParams = isLive
-        ? `autoplay=1&controls=1&disablekb=1&modestbranding=1&rel=0&showinfo=0&fs=1&iv_load_policy=3&playsinline=1&cc_load_policy=0&enablejsapi=1&autohide=2&wmode=transparent&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.origin)}`
-        : `controls=1&modestbranding=1&rel=0&enablejsapi=1&playsinline=1&fs=1&origin=${encodeURIComponent(window.location.origin)}&enablejsapi=1&widget_referrer=${encodeURIComponent(window.location.origin)}`;
-
-      const startTimeParam = startTime > 0 ? `&start=${startTime}` : '';
-      return `https://www.youtube.com/embed/${ytMatch[1]}?${baseParams}${startTimeParam}`;
-    }
-
-    // Handle Vimeo links - iOS compatible
-    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-    if (vimeoMatch) {
-      const baseParams = isLive
-        ? 'autoplay=1&controls=1&playsinline=1&dnt=1&transparent=0'
-        : 'controls=1&playsinline=1&dnt=1&transparent=0';
-      const startTimeParam = startTime > 0 ? `#t=${startTime}s` : '';
-      return `https://player.vimeo.com/video/${vimeoMatch[1]}?${baseParams}${startTimeParam}`;
-    }
-
-    return url;
-  }
-
   // Handle video completion
   const markVideoCompleted = useCallback(() => {
     if (currentVideo) {
@@ -604,8 +599,12 @@ export default function FourDayPlanFree() {
 
   // Check if video is still playing (for persistence across refreshes)
   const checkVideoStatus = useCallback(() => {
+    const currentPlayer = currentVideo?.videoUrl.includes('idr01.zata.ai')
+      ? videoPlayerRef.current
+      : playerRef.current;
+
     if (
-      playerRef.current &&
+      currentPlayer &&
       isLiveMode &&
       !videoCompleted &&
       videoMetadata?.duration
@@ -646,6 +645,7 @@ export default function FourDayPlanFree() {
     user,
     currentTime,
     markVideoCompleted,
+    subscription?.startDate,
   ]);
 
   // Listen for player state messages
@@ -1185,7 +1185,10 @@ export default function FourDayPlanFree() {
                 });
 
                 return (
-                  <div className="flex h-full flex-col">
+                  <div
+                    className="flex h-full flex-col"
+                    onContextMenu={(e) => e.preventDefault()}
+                  >
                     {/* Overlay: LIVE badge - only show in live mode */}
                     {isLiveMode && (
                       <div className="absolute left-2 top-2 z-10 sm:left-4 sm:top-4">
@@ -1195,19 +1198,35 @@ export default function FourDayPlanFree() {
                       </div>
                     )}
 
-                    {/* Video Iframe */}
-                    <iframe
-                      ref={playerRef}
-                      src={getEmbedUrl(
-                        currentVideo.videoUrl,
-                        isLiveMode,
-                        videoStartTime
-                      )}
+                    {/* Video Player - Only Zata AI videos */}
+                    <video
+                      ref={videoPlayerRef}
+                      src={
+                        (currentVideo as VideoData & { zataVideoUrl?: string })
+                          .zataVideoUrl || currentVideo.videoUrl
+                      }
                       title={currentVideo.title}
                       className={`absolute left-0 top-0 size-full ${isFullscreen ? 'z-10' : ''}`}
-                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture; web-share"
-                      allowFullScreen
-                      sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation allow-top-navigation"
+                      controls={!isLiveMode}
+                      autoPlay={isLiveMode}
+                      muted={false}
+                      playsInline
+                      preload="metadata"
+                      onContextMenu={(e) => e.preventDefault()}
+                      onError={(e) => {
+                        console.error('Video loading error:', e);
+                        console.error(
+                          'Video src:',
+                          (
+                            currentVideo as VideoData & {
+                              zataVideoUrl?: string;
+                            }
+                          ).zataVideoUrl || currentVideo.videoUrl
+                        );
+                      }}
+                      onLoadStart={() => console.log('Video loading started')}
+                      onCanPlay={() => console.log('Video can play')}
+                      onLoadedData={() => console.log('Video data loaded')}
                       style={{
                         pointerEvents: isLiveMode ? 'none' : 'auto',
                         width: '100%',
@@ -1216,9 +1235,6 @@ export default function FourDayPlanFree() {
                         WebkitUserSelect: 'none',
                         WebkitTouchCallout: 'none',
                       }}
-                      loading="lazy"
-                      onError={() => setVideoLoadError(true)}
-                      onLoad={() => setVideoLoadError(false)}
                     />
 
                     {/* Simple iOS Play Button - Only for iOS devices in live mode */}
@@ -1226,37 +1242,52 @@ export default function FourDayPlanFree() {
                       <div className="absolute left-2 top-12 z-10 sm:left-4 sm:top-16">
                         <button
                           onClick={() => {
-                            if (playerRef.current) {
+                            const currentPlayer =
+                              currentVideo?.videoUrl.includes('idr01.zata.ai')
+                                ? videoPlayerRef.current
+                                : playerRef.current;
+
+                            if (currentPlayer) {
                               // Try multiple strategies to start the video
                               try {
-                                // Strategy 1: Force iframe reload
-                                const currentSrc = playerRef.current.src;
-                                playerRef.current.src = '';
-                                setTimeout(() => {
-                                  if (playerRef.current) {
-                                    playerRef.current.src = currentSrc;
+                                // For Zata AI video elements
+                                if (currentPlayer === videoPlayerRef.current) {
+                                  const video = videoPlayerRef.current;
+                                  if (video) {
+                                    video.play().catch(console.error);
                                   }
-                                }, 100);
+                                }
+                                // For iframe players (YouTube/Vimeo)
+                                else if (currentPlayer === playerRef.current) {
+                                  // Strategy 1: Force iframe reload
+                                  const currentSrc = playerRef.current.src;
+                                  playerRef.current.src = '';
+                                  setTimeout(() => {
+                                    if (playerRef.current) {
+                                      playerRef.current.src = currentSrc;
+                                    }
+                                  }, 100);
 
-                                // Strategy 2: Try to trigger autoplay via postMessage for YouTube
-                                setTimeout(() => {
-                                  try {
-                                    if (
-                                      playerRef.current &&
-                                      playerRef.current.contentWindow
-                                    ) {
-                                      playerRef.current.contentWindow.postMessage(
-                                        '{"event":"command","func":"playVideo","args":""}',
-                                        '*'
+                                  // Strategy 2: Try to trigger autoplay via postMessage for YouTube
+                                  setTimeout(() => {
+                                    try {
+                                      if (
+                                        playerRef.current &&
+                                        playerRef.current.contentWindow
+                                      ) {
+                                        playerRef.current.contentWindow.postMessage(
+                                          '{"event":"command","func":"playVideo","args":""}',
+                                          '*'
+                                        );
+                                      }
+                                    } catch (e) {
+                                      console.log(
+                                        'YouTube postMessage failed:',
+                                        e
                                       );
                                     }
-                                  } catch (e) {
-                                    console.log(
-                                      'YouTube postMessage failed:',
-                                      e
-                                    );
-                                  }
-                                }, 500);
+                                  }, 500);
+                                }
                               } catch (e) {
                                 console.log('iOS play button failed:', e);
                               }
@@ -1286,28 +1317,6 @@ export default function FourDayPlanFree() {
                         >
                           <X className="size-5" />
                         </button>
-                      </div>
-                    )}
-
-                    {/* Video load error fallback */}
-                    {videoLoadError && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white">
-                        <div className="p-4 text-center">
-                          <p className="mb-2 text-lg font-semibold">
-                            Video Loading Issue
-                          </p>
-                          <p className="mb-4 text-sm">
-                            {isIOS
-                              ? 'On iOS devices, please try refreshing the page or check your internet connection.'
-                              : 'Please check your internet connection and try again.'}
-                          </p>
-                          <button
-                            onClick={() => window.location.reload()}
-                            className="rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700"
-                          >
-                            Refresh Page
-                          </button>
-                        </div>
                       </div>
                     )}
 
@@ -1359,7 +1368,7 @@ export default function FourDayPlanFree() {
 
                     {/* Bottom overlays: playback mode */}
                     {!isLiveMode && (
-                      <div className="z-5 pointer-events-none absolute inset-x-0 bottom-10 flex items-center justify-between px-6">
+                      <div className="z-5 pointer-events-none absolute inset-x-0 bottom-14 flex items-center justify-between px-6">
                         <div className="pointer-events-auto inline-block rounded-full bg-green-600 px-3 py-1 text-xs text-white">
                           {isCompleted
                             ? '✅ COMPLETED: Full playback available'

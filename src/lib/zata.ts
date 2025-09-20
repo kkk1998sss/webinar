@@ -47,7 +47,7 @@ export class ZataService {
   private bucketName: string;
 
   constructor() {
-    this.bucketName = process.env.ZATA_BUCKET_NAME || 'shremasterclass';
+    this.bucketName = process.env.ZATA_BUCKET_NAME || 'shre3days';
   }
 
   /**
@@ -263,12 +263,18 @@ export class ZataService {
   async uploadVideo(
     file: Buffer | Uint8Array | string,
     fileName: string,
-    contentType: string = 'video/mp4'
+    contentType: string = 'video/mp4',
+    folderPath?: string
   ): Promise<{ success: boolean; videoId?: string; error?: string }> {
     try {
       console.log(`🎬 Uploading video ${fileName} to Zata AI Cloud...`);
 
-      const key = fileName; // Store directly in bucket root
+      // Create the key with folder path if provided
+      const key = folderPath ? `${folderPath}/${fileName}` : fileName;
+
+      console.log(`📁 Uploading to folder: ${folderPath || 'Root'}`);
+      console.log(`🔑 Full key: ${key}`);
+
       const params = {
         Bucket: this.bucketName,
         Key: key,
@@ -283,7 +289,7 @@ export class ZataService {
 
       return {
         success: true,
-        videoId: fileName.replace(/\.[^/.]+$/, ''),
+        videoId: key, // Return the full key including folder path
       };
     } catch (error) {
       console.error(

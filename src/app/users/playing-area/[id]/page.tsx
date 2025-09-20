@@ -66,6 +66,7 @@ export default function WebinarPlayingArea({
   const [sessionNotes, setSessionNotes] = useState<string>('');
 
   const playerRef = useRef<HTMLIFrameElement | null>(null);
+  const videoPlayerRef = useRef<HTMLVideoElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
@@ -73,18 +74,31 @@ export default function WebinarPlayingArea({
   // Set current time on client side only to avoid hydration issues
   useEffect(() => {
     setCurrentTime(new Date());
+
+    // Update current time every second to keep it accurate
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timeInterval);
   }, []);
 
-  // Load saved video progress from localStorage
+  // Cleanup on unmount
   useEffect(() => {
-    const savedProgress = localStorage.getItem('webinarVideoProgress');
-    if (savedProgress) {
-      try {
-        setVideoProgress(JSON.parse(savedProgress));
-      } catch (e) {
-        console.error('Failed to parse video progress:', e);
+    return () => {
+      // Clean up any remaining sync intervals
+      const videoElement = videoPlayerRef.current;
+      if (
+        videoElement &&
+        (videoElement as HTMLVideoElement & { syncInterval?: NodeJS.Timeout })
+          .syncInterval
+      ) {
+        clearInterval(
+          (videoElement as HTMLVideoElement & { syncInterval?: NodeJS.Timeout })
+            .syncInterval
+        );
       }
-    }
+    };
   }, []);
 
   // Save video progress to localStorage whenever it changes
@@ -213,7 +227,7 @@ export default function WebinarPlayingArea({
         timerRef.current = null;
       }
     }
-  }, [isLiveMode, webinarStartTime, currentTime]);
+  }, [isLiveMode, webinarStartTime, currentTime, calculateSessionElapsed]);
 
   // Determine live mode and completion status
   useEffect(() => {
@@ -996,100 +1010,402 @@ export default function WebinarPlayingArea({
                   ),
                 });
 
+                // Check if this is a Zata AI video (direct video URL)
+                const isZataVideo =
+                  videoUrl.includes('zata.ai') ||
+                  videoUrl.match(/\.(mp4|avi|mov|mkv|flv|webm|m4v)$/i);
+
                 return (
                   <div className="flex h-full flex-col">
-                    {/* Overlay: LIVE badge - only show in live mode */}
+                    {/* Overlay: LIVE badge and Volume Control - only show in live mode */}
                     {isLiveMode && (
-                      <div className="absolute left-2 top-2 z-10 sm:left-4 sm:top-4">
+                      <div className="absolute right-4 top-4 z-10 flex items-center space-x-2">
                         <span className="animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white shadow">
                           LIVE
                         </span>
+                        {isZataVideo && (
+                          <button
+                            onClick={() => {
+                              const video = videoPlayerRef.current;
+                              if (video) {
+                                video.muted = !video.muted;
+                                console.log(
+                                  'Volume toggled, muted:',
+                                  video.muted,
+                                  'volume:',
+                                  video.volume
+                                );
+                              }
+                            }}
+                            className="flex size-8 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+                            title="Toggle Volume"
+                          >
+                            <svg
+                              className="size-4"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.793L5.293 13H3a1 1 0 01-1-1V8a1 1 0 011-1h2.293l3.09-3.793a1 1 0 011-.131zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                        {/* Volume Status Indicator */}
+                        {isZataVideo && (
+                          <div className="rounded bg-black/50 px-2 py-1 text-xs text-white">
+                            {(() => {
+                              const video = videoPlayerRef.current;
+                              if (video) {
+                                return video.muted ? '🔇' : '🔊';
+                              }
+                              return '🔊';
+                            })()}
+                          </div>
+                        )}
                       </div>
                     )}
 
-                    {/* Video Iframe - Only show when webinar has started */}
+                    {/* Video Player - Only show when webinar has started */}
                     {webinarStartTime &&
                     currentTime &&
                     isAfter(currentTime, webinarStartTime) ? (
-                      <iframe
-                        ref={playerRef}
-                        src={getEmbedUrl(
-                          videoUrl || '',
-                          isLiveMode,
-                          videoStartTime
-                        )}
-                        title={webinar.video?.title || webinar.webinarTitle}
-                        className="absolute left-0 top-0 size-full"
-                        allow="autoplay; encrypted-media; fullscreen; clipboard-write"
-                        allowFullScreen
-                        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
-                        style={{
-                          pointerEvents: isLiveMode ? 'none' : 'auto',
-                          border: 'none',
-                          outline: 'none',
-                          backgroundColor: 'black',
-                        }}
-                        onLoad={() => {
-                          console.log('Video iframe loaded successfully');
-                          console.log(
-                            'Iframe src:',
-                            getEmbedUrl(
+                      <>
+                        {isZataVideo ? (
+                          // Zata AI Video Player (HTML5 video element)
+                          <video
+                            ref={videoPlayerRef}
+                            src={videoUrl}
+                            title={webinar.video?.title || webinar.webinarTitle}
+                            className="absolute left-0 top-0 size-full"
+                            controls={!isLiveMode}
+                            autoPlay={isLiveMode}
+                            muted={false}
+                            playsInline
+                            preload="metadata"
+                            onContextMenu={(e) => e.preventDefault()}
+                            onLoadStart={() => {
+                              console.log('Zata AI video loading started');
+                            }}
+                            onCanPlay={() => {
+                              console.log('Zata AI video can play');
+                              // Try to unmute the video if it's muted by browser policy
+                              const video = videoPlayerRef.current;
+                              if (video && video.muted) {
+                                console.log(
+                                  'Video was muted by browser, attempting to unmute'
+                                );
+                                video.muted = false;
+                                video.volume = 1.0;
+                                console.log(
+                                  'Video unmuted, volume set to:',
+                                  video.volume
+                                );
+                              }
+
+                              // Calculate and seek to current live position (fallback if onLoadedData didn't work)
+                              if (
+                                isLiveMode &&
+                                webinarStartTime &&
+                                currentTime &&
+                                video &&
+                                video.duration > 0
+                              ) {
+                                const timeSinceStart = differenceInSeconds(
+                                  currentTime,
+                                  webinarStartTime
+                                );
+                                console.log(
+                                  'Live mode - seeking to current time (onCanPlay):',
+                                  {
+                                    timeSinceStart,
+                                    videoDuration: video.duration,
+                                    currentVideoTime: video.currentTime,
+                                  }
+                                );
+
+                                if (
+                                  timeSinceStart > 0 &&
+                                  timeSinceStart < video.duration &&
+                                  video.currentTime < timeSinceStart - 5
+                                ) {
+                                  video.currentTime = timeSinceStart;
+                                  console.log(
+                                    'Seeked to live position (onCanPlay):',
+                                    timeSinceStart,
+                                    'seconds'
+                                  );
+                                }
+                              }
+                            }}
+                            onLoadedData={() => {
+                              console.log('Zata AI video data loaded');
+                              // Ensure volume is set correctly after data loads
+                              const video = videoPlayerRef.current;
+                              if (video) {
+                                console.log('Video volume status:', {
+                                  muted: video.muted,
+                                  volume: video.volume,
+                                  readyState: video.readyState,
+                                });
+                                if (video.muted) {
+                                  video.muted = false;
+                                  video.volume = 1.0;
+                                  console.log('Video unmuted after data load');
+                                }
+
+                                // Calculate and seek to current live position
+                                if (
+                                  isLiveMode &&
+                                  webinarStartTime &&
+                                  currentTime
+                                ) {
+                                  const timeSinceStart = differenceInSeconds(
+                                    currentTime,
+                                    webinarStartTime
+                                  );
+                                  console.log(
+                                    'Live mode - seeking to current time:',
+                                    {
+                                      timeSinceStart,
+                                      webinarStartTime:
+                                        webinarStartTime.toISOString(),
+                                      currentTime: currentTime.toISOString(),
+                                      videoDuration: video.duration,
+                                    }
+                                  );
+
+                                  if (
+                                    timeSinceStart > 0 &&
+                                    timeSinceStart < video.duration
+                                  ) {
+                                    video.currentTime = timeSinceStart;
+                                    console.log(
+                                      'Seeked to live position:',
+                                      timeSinceStart,
+                                      'seconds'
+                                    );
+                                  } else if (timeSinceStart >= video.duration) {
+                                    // If webinar duration exceeded, mark as completed
+                                    console.log(
+                                      'Webinar duration exceeded, marking as completed'
+                                    );
+                                    markVideoCompleted();
+                                  }
+                                }
+                              }
+                            }}
+                            onPlay={() => {
+                              console.log('Zata AI video started playing');
+                              // Ensure volume is enabled when video starts playing
+                              const video = videoPlayerRef.current;
+                              if (video && video.muted) {
+                                video.muted = false;
+                                video.volume = 1.0;
+                                console.log(
+                                  'Video unmuted on play, volume:',
+                                  video.volume
+                                );
+                              }
+
+                              // Start periodic time synchronization for live mode
+                              if (
+                                isLiveMode &&
+                                webinarStartTime &&
+                                currentTime
+                              ) {
+                                console.log(
+                                  'Starting live time synchronization'
+                                );
+                                const syncInterval = setInterval(() => {
+                                  if (
+                                    video &&
+                                    webinarStartTime &&
+                                    currentTime
+                                  ) {
+                                    const timeSinceStart = differenceInSeconds(
+                                      new Date(),
+                                      webinarStartTime
+                                    );
+                                    const expectedTime = timeSinceStart;
+                                    const currentVideoTime = video.currentTime;
+                                    const timeDiff = Math.abs(
+                                      expectedTime - currentVideoTime
+                                    );
+
+                                    // Only sync if there's a significant difference (more than 10 seconds)
+                                    if (
+                                      timeDiff > 10 &&
+                                      expectedTime < video.duration
+                                    ) {
+                                      console.log(
+                                        'Live sync - adjusting time:',
+                                        {
+                                          expectedTime,
+                                          currentVideoTime,
+                                          timeDiff,
+                                          videoDuration: video.duration,
+                                        }
+                                      );
+                                      video.currentTime = expectedTime;
+                                    }
+                                  }
+                                }, 30000); // Check every 30 seconds
+
+                                // Store interval ID for cleanup
+                                (
+                                  video as HTMLVideoElement & {
+                                    syncInterval?: NodeJS.Timeout;
+                                  }
+                                ).syncInterval = syncInterval;
+                              }
+                            }}
+                            onPause={() => {
+                              console.log('Zata AI video paused');
+                              // Clean up sync interval
+                              const video = videoPlayerRef.current;
+                              if (
+                                video &&
+                                (
+                                  video as HTMLVideoElement & {
+                                    syncInterval?: NodeJS.Timeout;
+                                  }
+                                ).syncInterval
+                              ) {
+                                clearInterval(
+                                  (
+                                    video as HTMLVideoElement & {
+                                      syncInterval?: NodeJS.Timeout;
+                                    }
+                                  ).syncInterval
+                                );
+                                (
+                                  video as HTMLVideoElement & {
+                                    syncInterval?: NodeJS.Timeout;
+                                  }
+                                ).syncInterval = undefined;
+                                console.log('Live sync interval cleared');
+                              }
+                            }}
+                            onEnded={() => {
+                              console.log('Zata AI video ended');
+                              // Clean up sync interval
+                              const video = videoPlayerRef.current;
+                              if (
+                                video &&
+                                (
+                                  video as HTMLVideoElement & {
+                                    syncInterval?: NodeJS.Timeout;
+                                  }
+                                ).syncInterval
+                              ) {
+                                clearInterval(
+                                  (
+                                    video as HTMLVideoElement & {
+                                      syncInterval?: NodeJS.Timeout;
+                                    }
+                                  ).syncInterval
+                                );
+                                (
+                                  video as HTMLVideoElement & {
+                                    syncInterval?: NodeJS.Timeout;
+                                  }
+                                ).syncInterval = undefined;
+                                console.log('Live sync interval cleared');
+                              }
+                            }}
+                            style={{
+                              pointerEvents: isLiveMode ? 'none' : 'auto',
+                              backgroundColor: 'black',
+                            }}
+                          />
+                        ) : (
+                          // YouTube/Vimeo Video Player (iframe)
+                          <iframe
+                            ref={playerRef}
+                            src={getEmbedUrl(
                               videoUrl || '',
                               isLiveMode,
                               videoStartTime
-                            )
-                          );
-                          console.log('Iframe dimensions:', {
-                            width: playerRef.current?.offsetWidth,
-                            height: playerRef.current?.offsetHeight,
-                            containerWidth: document.getElementById(
-                              'video-player-container'
-                            )?.offsetWidth,
-                            containerHeight: document.getElementById(
-                              'video-player-container'
-                            )?.offsetHeight,
-                          });
-
-                          // Check if we should still be in live mode after iframe loads
-                          if (webinarStartTime && currentTime && webinar) {
-                            const timeSinceStart = differenceInSeconds(
-                              currentTime,
-                              webinarStartTime
-                            );
-                            const expectedDuration =
-                              (webinar.durationHours * 60 +
-                                webinar.durationMinutes) *
-                              60;
-
-                            if (
-                              timeSinceStart >= expectedDuration &&
-                              isLiveMode
-                            ) {
+                            )}
+                            title={webinar.video?.title || webinar.webinarTitle}
+                            className="absolute left-0 top-0 size-full"
+                            allow="autoplay; encrypted-media; fullscreen; clipboard-write"
+                            allowFullScreen
+                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
+                            style={{
+                              pointerEvents: isLiveMode ? 'none' : 'auto',
+                              border: 'none',
+                              outline: 'none',
+                              backgroundColor: 'black',
+                            }}
+                            onLoad={() => {
+                              console.log('Video iframe loaded successfully');
                               console.log(
-                                'Iframe loaded but webinar duration exceeded - switching to playback mode'
+                                'Iframe src:',
+                                getEmbedUrl(
+                                  videoUrl || '',
+                                  isLiveMode,
+                                  videoStartTime
+                                )
                               );
-                              markVideoCompleted();
-                            } else if (isLiveMode) {
-                              console.log(
-                                'Attempting to force autoplay for live mode'
-                              );
-                              // Try to trigger autoplay by sending a message to the iframe
-                              try {
-                                const iframe = playerRef.current;
-                                if (iframe && iframe.contentWindow) {
-                                  iframe.contentWindow.postMessage(
-                                    '{"event":"command","func":"playVideo","args":""}',
-                                    '*'
+                              console.log('Iframe dimensions:', {
+                                width: playerRef.current?.offsetWidth,
+                                height: playerRef.current?.offsetHeight,
+                                containerWidth: document.getElementById(
+                                  'video-player-container'
+                                )?.offsetWidth,
+                                containerHeight: document.getElementById(
+                                  'video-player-container'
+                                )?.offsetHeight,
+                              });
+
+                              // Check if we should still be in live mode after iframe loads
+                              if (webinarStartTime && currentTime && webinar) {
+                                const timeSinceStart = differenceInSeconds(
+                                  currentTime,
+                                  webinarStartTime
+                                );
+                                const expectedDuration =
+                                  (webinar.durationHours * 60 +
+                                    webinar.durationMinutes) *
+                                  60;
+
+                                if (
+                                  timeSinceStart >= expectedDuration &&
+                                  isLiveMode
+                                ) {
+                                  console.log(
+                                    'Iframe loaded but webinar duration exceeded - switching to playback mode'
                                   );
+                                  markVideoCompleted();
+                                } else if (isLiveMode) {
+                                  console.log(
+                                    'Attempting to force autoplay for live mode'
+                                  );
+                                  // Try to trigger autoplay by sending a message to the iframe
+                                  try {
+                                    const iframe = playerRef.current;
+                                    if (iframe && iframe.contentWindow) {
+                                      iframe.contentWindow.postMessage(
+                                        '{"event":"command","func":"playVideo","args":""}',
+                                        '*'
+                                      );
+                                    }
+                                  } catch (e) {
+                                    console.log('Could not force autoplay:', e);
+                                  }
                                 }
-                              } catch (e) {
-                                console.log('Could not force autoplay:', e);
                               }
+                            }}
+                            onError={(e) =>
+                              console.error('Video iframe error:', e)
                             }
-                          }
-                        }}
-                        onError={(e) => console.error('Video iframe error:', e)}
-                      />
+                          />
+                        )}
+                      </>
                     ) : (
                       // Placeholder when webinar hasn't started yet
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-900 text-white">
