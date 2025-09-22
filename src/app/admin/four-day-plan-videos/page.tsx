@@ -577,6 +577,7 @@ export default function FourDayPlanVideosPage() {
                   placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
+
               <div className="flex justify-end">
                 <motion.button
                   type="submit"
@@ -803,6 +804,7 @@ export default function FourDayPlanVideosPage() {
                   placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
+
               <div className="flex justify-end gap-2">
                 <button
                   type="button"

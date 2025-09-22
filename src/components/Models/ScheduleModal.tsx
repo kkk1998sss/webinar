@@ -109,6 +109,28 @@ export function ScheduleModal({
   // const handleAddUrl = async () => { ... };
   // const handleDelete = async (index: number) => { ... };
 
+  // Auto thumbnail generation function
+  const generateThumbnail = async (videoUrl: string) => {
+    if (!videoUrl) return null;
+
+    try {
+      const response = await fetch('/api/generate-thumbnail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoUrl }),
+      });
+
+      const data = await response.json();
+      if (data.success && data.thumbnailUrl) {
+        console.log('✅ Thumbnail generated:', data.thumbnailUrl);
+        return data.thumbnailUrl;
+      }
+    } catch (error) {
+      console.error('❌ Failed to generate thumbnail:', error);
+    }
+    return null;
+  };
+
   // Fetch bucket videos when modal opens
   const fetchBucketVideos = async () => {
     setLoadingVideos(true);
@@ -343,11 +365,20 @@ export function ScheduleModal({
                       setTitle(selectedVideo.title);
                       console.log('🎬 Title set to:', selectedVideo.title);
                     }
-                    setSelectedThumbnailUrl(selectedVideo.thumbnailUrl || '');
-                    console.log(
-                      '🎬 Thumbnail URL set to:',
-                      selectedVideo.thumbnailUrl
-                    );
+
+                    // Try to generate thumbnail if not already available
+                    let thumbnailUrl = selectedVideo.thumbnailUrl || '';
+                    if (!thumbnailUrl && selectedVideo.url) {
+                      console.log(
+                        '🎬 Generating thumbnail for:',
+                        selectedVideo.url
+                      );
+                      thumbnailUrl =
+                        (await generateThumbnail(selectedVideo.url)) || '';
+                    }
+
+                    setSelectedThumbnailUrl(thumbnailUrl);
+                    console.log('🎬 Thumbnail URL set to:', thumbnailUrl);
 
                     // Auto-fill duration by fetching video metadata
                     try {
@@ -416,6 +447,42 @@ export function ScheduleModal({
                 ))}
               </select>
             </div>
+
+            {/* Manual Thumbnail Generation Button */}
+            {selectedVideoId && (
+              <div className="mt-3">
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    const selectedVideo = bucketVideos.find(
+                      (v) => v.id === selectedVideoId
+                    );
+                    if (selectedVideo && selectedVideo.url) {
+                      toast.loading('Generating thumbnail...', {
+                        id: 'thumbnail-gen',
+                      });
+                      const thumbnailUrl = await generateThumbnail(
+                        selectedVideo.url
+                      );
+                      if (thumbnailUrl) {
+                        setSelectedThumbnailUrl(thumbnailUrl);
+                        toast.success('Thumbnail generated successfully!', {
+                          id: 'thumbnail-gen',
+                        });
+                      } else {
+                        toast.error('Failed to generate thumbnail', {
+                          id: 'thumbnail-gen',
+                        });
+                      }
+                    }
+                  }}
+                  className="rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
+                >
+                  🖼️ Generate Thumbnail
+                </Button>
+              </div>
+            )}
+
             <div className="mt-2 space-y-1">
               {/* Debug Information */}
               <div className="rounded border bg-slate-900/50 p-2 text-xs text-slate-500">
@@ -566,20 +633,51 @@ export function ScheduleModal({
                   </div>
                   <div className="flex-1">
                     <p className="text-sm text-slate-300">
-                      Thumbnail automatically selected from video
+                      Thumbnail automatically generated from video
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
                       This thumbnail will be used for the webinar preview
                     </p>
                   </div>
                   <div className="shrink-0">
-                    <Button
-                      type="button"
-                      onClick={() => setSelectedThumbnailUrl('')}
-                      className="rounded-md bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700"
-                    >
-                      Remove
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        onClick={async () => {
+                          const selectedVideo = bucketVideos.find(
+                            (v) => v.id === selectedVideoId
+                          );
+                          if (selectedVideo && selectedVideo.url) {
+                            toast.loading('Regenerating thumbnail...', {
+                              id: 'thumbnail-regen',
+                            });
+                            const thumbnailUrl = await generateThumbnail(
+                              selectedVideo.url
+                            );
+                            if (thumbnailUrl) {
+                              setSelectedThumbnailUrl(thumbnailUrl);
+                              toast.success('Thumbnail regenerated!', {
+                                id: 'thumbnail-regen',
+                              });
+                            } else {
+                              toast.error('Failed to regenerate thumbnail', {
+                                id: 'thumbnail-regen',
+                              });
+                            }
+                          }
+                        }}
+                        className="rounded-md bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                      >
+                        🔄
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setSelectedThumbnailUrl('')}
+                        className="rounded-md bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700"
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -675,8 +773,9 @@ export function ScheduleModal({
               )}
             </div>
             {duration && selectedVideoId && (
-              <p className="mt-1 text-xs text-green-400">
-                ✅ Duration automatically fetched from selected video
+              <p className="mt-1 text-xs text-yellow-400">
+                ⚠️ Duration automatically fetched from selected video - please
+                confirm the duration once as it may not be correct
               </p>
             )}
           </div>

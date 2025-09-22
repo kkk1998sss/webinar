@@ -102,6 +102,12 @@ export function LiveWebinarSection({ webinars, handleJoinWebinar }: Props) {
                           <span className="text-xl">🔴</span>
                         </div>
                       </div>
+                      {/* Completion Status Indicator */}
+                      {webinar.webinarSettings?.status === 'Completed' && (
+                        <div className="mt-2 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                          ✅ Completed
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

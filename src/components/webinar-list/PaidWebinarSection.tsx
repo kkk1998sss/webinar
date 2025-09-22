@@ -348,7 +348,7 @@ export function PaidWebinarSection({ webinars }: Props) {
       >
         <div className="mb-8 flex justify-center">
           <h2 className="rounded-lg bg-gradient-to-r from-red-500 to-yellow-500 px-8 py-2 text-3xl font-bold text-white shadow-xl">
-            Upcoming Events
+            Upcoming Paid Events
           </h2>
         </div>
         <div className="flex justify-center p-12">

@@ -94,6 +94,15 @@ export default function WebinarDashboard({ session }: { session: Session }) {
     }
   }, []);
 
+  // Auto-refresh webinars every 30 seconds to catch status changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchWebinars();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchWebinars]);
+
   useEffect(() => {
     // Simulate page load animation
     const timer = setTimeout(() => {
@@ -244,8 +253,12 @@ export default function WebinarDashboard({ session }: { session: Session }) {
         if (isToday(date)) {
           // Only add to today if it's not a paid webinar
           if (!webinar.isPaid) {
-            // Check if webinar is actually live (started) or upcoming today
-            if (isWebinarLive(webinar.webinarDate, webinar.webinarTime)) {
+            // Check webinar status first - if completed, move to past
+            if (webinar.webinarSettings?.status === 'Completed') {
+              past.push(webinar);
+            } else if (
+              isWebinarLive(webinar.webinarDate, webinar.webinarTime)
+            ) {
               // Webinar has started - add to live/today section
               today.push(webinar);
             } else if (

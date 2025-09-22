@@ -71,6 +71,33 @@ export default function WebinarPlayingArea({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
 
+  // Function to update webinar status in database
+  const updateWebinarStatus = async (webinarId: string, status: string) => {
+    try {
+      const response = await fetch('/api/webinar/status', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          webinarId,
+          status,
+        }),
+      });
+
+      if (response.ok) {
+        console.log(`✅ Webinar ${webinarId} status updated to: ${status}`);
+      } else {
+        console.error(
+          '❌ Failed to update webinar status:',
+          await response.text()
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error updating webinar status:', error);
+    }
+  };
+
   // Set current time on client side only to avoid hydration issues
   useEffect(() => {
     setCurrentTime(new Date());
@@ -273,6 +300,8 @@ export default function WebinarPlayingArea({
       if (shouldMarkCompleted && !isCompleted) {
         // Auto-mark as completed if enough time has passed
         console.log('Auto-marking webinar as completed due to time elapsed');
+
+        // Update local state
         setVideoProgress((prev) => ({
           ...prev,
           [webinar.id]: {
@@ -283,6 +312,9 @@ export default function WebinarPlayingArea({
         }));
         setVideoCompleted(true);
         setIsLiveMode(false);
+
+        // Update webinar status in database
+        updateWebinarStatus(webinar.id, 'Completed');
       } else if (isCompleted) {
         // Webinar already completed, show in playback mode
         console.log('Setting to playback mode (completed)');
@@ -318,6 +350,9 @@ export default function WebinarPlayingArea({
       }));
       setVideoCompleted(true);
       setIsLiveMode(false);
+
+      // Update webinar status in database
+      updateWebinarStatus(webinar.id, 'Completed');
     }
   }, [webinar, currentTime]);
 

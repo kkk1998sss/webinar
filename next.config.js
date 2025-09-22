@@ -16,6 +16,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'i.vimeocdn.com', // ✅ Add Vimeo CDN host
       },
+      {
+        protocol: 'https',
+        hostname: 'idr01.zata.ai', // ✅ Add Zata AI host for video thumbnails
+      },
     ],
   },
 };
