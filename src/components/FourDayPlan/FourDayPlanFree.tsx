@@ -402,7 +402,8 @@ export default function FourDayPlanFree() {
         return 0; // Start from beginning if before 9:00 PM
       }
 
-      return 0; // Start from beginning if before 9:00 PM
+      // Return the actual time elapsed since unlock (in seconds)
+      return Math.floor(timeSinceUnlock / 1000);
     },
     [currentTime]
   );
@@ -527,8 +528,8 @@ export default function FourDayPlanFree() {
       const now = currentTime || new Date();
       const timeSinceUnlock = now.getTime() - unlockTime.getTime();
 
-      // Use actual video duration if available, otherwise fallback to 2 hours
-      const actualDurationSeconds = videoMetadata?.duration || 2 * 60 * 60; // 2 hours fallback in seconds
+      // Use actual video duration if available, otherwise fallback to 74 minutes (actual video duration)
+      const actualDurationSeconds = videoMetadata?.duration || 74 * 60; // 74 minutes fallback in seconds
       const videoDurationMs = actualDurationSeconds * 1000; // Convert seconds to milliseconds
 
       console.log('Completion check:', {
