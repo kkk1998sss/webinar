@@ -159,20 +159,22 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       style={{ margin: 0, padding: 0 }}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {/* Close Button */}
-      {onClose && (
+      {/* Close Button - Hidden to avoid blocking playlist */}
+      {/* {onClose && (
         <button
           onClick={onClose}
           className="absolute right-4 top-4 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
         >
           <X className="size-6" />
         </button>
-      )}
+      )} */}
 
       {/* Main Video Player */}
       <div
         ref={playerRef}
-        className={`relative flex-1 ${showPlaylist ? 'mr-96' : ''} transition-all duration-300`}
+        className={`relative flex-1 transition-all duration-300 ${
+          showPlaylist ? 'mr-0 sm:mr-96' : ''
+        }`}
       >
         <video
           ref={videoRef}
@@ -186,9 +188,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         />
 
         {/* Video Controls Overlay */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 sm:p-4">
           {/* Progress Bar */}
-          <div className="mb-4">
+          <div className="mb-2 sm:mb-4">
             <input
               type="range"
               min="0"
@@ -197,7 +199,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
               onChange={handleSeek}
               className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-white/30"
             />
-            <div className="mt-1 flex justify-between text-sm text-white">
+            <div className="mt-1 flex justify-between text-xs text-white sm:text-sm">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
@@ -205,23 +207,23 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
           {/* Control Buttons */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <button
                 onClick={previousVideo}
                 disabled={currentVideoIndex === 0}
                 className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30 disabled:opacity-50"
               >
-                <ChevronLeft className="size-5" />
+                <ChevronLeft className="size-4 sm:size-5" />
               </button>
 
               <button
                 onClick={togglePlay}
-                className="rounded-full bg-white/20 p-3 text-white hover:bg-white/30"
+                className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30 sm:p-3"
               >
                 {isPlaying ? (
-                  <Pause className="size-6" />
+                  <Pause className="size-5 sm:size-6" />
                 ) : (
-                  <Play className="size-6" />
+                  <Play className="size-5 sm:size-6" />
                 )}
               </button>
 
@@ -230,15 +232,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 disabled={currentVideoIndex === videos.length - 1}
                 className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30 disabled:opacity-50"
               >
-                <ChevronRight className="size-5" />
+                <ChevronRight className="size-4 sm:size-5" />
               </button>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 <button onClick={toggleMute} className="text-white">
                   {isMuted ? (
-                    <VolumeX className="size-5" />
+                    <VolumeX className="size-4 sm:size-5" />
                   ) : (
-                    <Volume2 className="size-5" />
+                    <Volume2 className="size-4 sm:size-5" />
                   )}
                 </button>
                 <input
@@ -248,34 +250,45 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   step="0.1"
                   value={volume}
                   onChange={handleVolumeChange}
-                  className="w-20"
+                  className="w-16 sm:w-20"
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <button
                 onClick={() => setShowPlaylist(!showPlaylist)}
                 className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30"
+                title={showPlaylist ? 'Hide Playlist' : 'Show Playlist'}
               >
-                <List className="size-5" />
+                <List className="size-4 sm:size-5" />
               </button>
               <button
                 onClick={toggleFullscreen}
                 className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30"
+                title="Toggle Fullscreen"
               >
-                <Maximize className="size-5" />
+                <Maximize className="size-4 sm:size-5" />
               </button>
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="rounded-full bg-white/20 p-2 text-white hover:bg-white/30"
+                  title="Close Player"
+                >
+                  <X className="size-4 sm:size-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Video Title Overlay */}
-        <div className="absolute left-0 top-0 bg-gradient-to-r from-black/80 to-transparent p-4">
-          <h2 className="text-xl font-semibold text-white">
+        <div className="absolute left-0 top-0 bg-gradient-to-r from-black/80 to-transparent p-2 sm:p-4">
+          <h2 className="text-sm font-semibold text-white sm:text-xl">
             {currentVideo.name}
           </h2>
-          <p className="text-sm text-white/80">
+          <p className="text-xs text-white/80 sm:text-sm">
             {currentVideoIndex + 1} of {videos.length}
           </p>
         </div>
@@ -289,12 +302,21 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 20 }}
-            className="absolute right-0 top-0 h-full w-96 overflow-y-auto bg-gray-900/95 backdrop-blur-sm"
+            className="absolute right-0 top-0 size-full overflow-y-auto bg-gray-900/95 backdrop-blur-sm sm:w-96"
           >
-            <div className="p-4">
-              <h3 className="mb-4 text-lg font-semibold text-white">
-                Playlist ({videos.length})
-              </h3>
+            <div className="p-2 sm:p-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-base font-semibold text-white sm:text-lg">
+                  Playlist ({videos.length})
+                </h3>
+                <button
+                  onClick={() => setShowPlaylist(false)}
+                  className="rounded-full bg-white/20 p-1 text-white hover:bg-white/30 sm:hidden"
+                  title="Close Playlist"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
               <div className="space-y-2">
                 {videos.map((video, index) => (
                   <motion.div
@@ -302,26 +324,28 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => selectVideo(index)}
-                    className={`cursor-pointer rounded-lg p-3 transition-all ${
+                    className={`cursor-pointer rounded-lg p-2 transition-all sm:p-3 ${
                       index === currentVideoIndex
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <div className="shrink-0">
                         {index === currentVideoIndex && isPlaying ? (
-                          <div className="flex size-8 items-center justify-center rounded-full bg-white/20">
-                            <div className="size-2 animate-pulse rounded-full bg-white"></div>
+                          <div className="flex size-6 items-center justify-center rounded-full bg-white/20 sm:size-8">
+                            <div className="size-1.5 animate-pulse rounded-full bg-white sm:size-2"></div>
                           </div>
                         ) : (
-                          <div className="flex size-8 items-center justify-center rounded-full bg-gray-600">
-                            <Play className="size-4" />
+                          <div className="flex size-6 items-center justify-center rounded-full bg-gray-600 sm:size-8">
+                            <Play className="size-3 sm:size-4" />
                           </div>
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="truncate font-medium">{video.name}</h4>
+                        <h4 className="truncate text-sm font-medium sm:text-base">
+                          {video.name}
+                        </h4>
                         <p className="text-xs opacity-75">
                           {video.duration
                             ? formatTime(video.duration)
