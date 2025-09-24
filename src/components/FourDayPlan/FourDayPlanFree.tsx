@@ -236,7 +236,7 @@ export default function FourDayPlanFree() {
           const selectedSub = sixMonthSub || fourDaySub;
           setSubscription(selectedSub || null);
 
-          console.log('Subscription data:', {
+          console.log('FourDayPlan: Subscription data:', {
             allSubscriptions: subData.subscriptions,
             sixMonthSubscription: sixMonthSub,
             fourDaySubscription: fourDaySub,
@@ -336,7 +336,9 @@ export default function FourDayPlanFree() {
       fetchVideoMetadata(currentVideo.videoUrl).then((metadata) => {
         if (metadata) {
           setVideoMetadata(metadata);
-          console.log('Video metadata loaded:', metadata);
+          console.log('FourDayPlan: Video metadata loaded:', metadata);
+        } else {
+          console.log('FourDayPlan: No video metadata received');
         }
       });
 
@@ -451,10 +453,17 @@ export default function FourDayPlanFree() {
   //   return paid;
   // }, [webinars]);
 
-  // Helper: Get unlock time for a video (9:00 PM on the correct day based on subscription start date)
+  // Helper: Get unlock time for a video (10:00 PM on the correct day based on subscription start date)
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
-    return setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00 (9:00 PM)
+    const unlockTime = setSeconds(setMinutes(setHours(base, 22), 0), 0); // 22:00:00 (10:00 PM)
+    console.log(`FourDayPlan: Unlock time for day ${day}:`, {
+      startDate,
+      baseDate: base.toISOString(),
+      unlockTime: unlockTime.toISOString(),
+      currentTime: new Date().toISOString(),
+    });
+    return unlockTime;
   }
 
   // Simple video event listeners (like FourDayPlan.tsx)
@@ -588,11 +597,24 @@ export default function FourDayPlanFree() {
       const shouldBeLive = shouldBeInLiveMode(unlockTime, isCompleted);
       const shouldMarkCompleted = shouldMarkAsCompleted(unlockTime);
 
-      // Removed console.log to prevent spam
+      // Debug the main live mode determination
+      console.log('FourDayPlan: Main live mode determination:', {
+        currentVideo: currentVideo?.title,
+        subscriptionStartDate: subscription.startDate,
+        videoDay: currentVideo.day,
+        unlockTime: unlockTime.toISOString(),
+        currentTime: currentTime?.toISOString(),
+        isCompleted,
+        shouldBeLive,
+        shouldMarkCompleted,
+        videoMetadata: videoMetadata?.duration,
+      });
 
       // Auto-mark as completed if enough time has passed (but be more conservative in production)
       if (shouldMarkCompleted && !isCompleted) {
-        console.log('Auto-marking video as completed due to time elapsed');
+        console.log(
+          'FourDayPlan: Auto-marking video as completed due to time elapsed'
+        );
         // Only auto-complete if we have actual video metadata, not fallback duration
         if (videoMetadata?.duration) {
           setVideoProgress((prev) => ({
@@ -606,22 +628,22 @@ export default function FourDayPlanFree() {
           setIsLiveMode(false);
         } else {
           console.log(
-            'Not auto-completing - no video metadata available (using fallback duration)'
+            'FourDayPlan: Not auto-completing - no video metadata available (using fallback duration)'
           );
         }
       } else if (isCompleted) {
         // Video already completed, show in playback mode
-        console.log('Setting to playback mode (completed)');
+        console.log('FourDayPlan: Setting to playback mode (completed)');
         setIsLiveMode(false);
         setVideoCompleted(true);
       } else if (shouldBeLive) {
         // Video should be in live mode
-        console.log('Setting to live mode');
+        console.log('FourDayPlan: Setting to live mode');
         setIsLiveMode(true);
         setVideoCompleted(false);
       } else {
         // Video is not yet unlocked or past live window
-        console.log('Setting to waiting mode');
+        console.log('FourDayPlan: Setting to waiting mode');
         setIsLiveMode(false);
         setVideoCompleted(false);
       }
@@ -1669,7 +1691,7 @@ export default function FourDayPlanFree() {
                         <div className="pointer-events-auto inline-block rounded-full bg-green-600 px-3 py-1 text-xs text-white">
                           {isCompleted
                             ? '✅ COMPLETED: Full playback available'
-                            : '⏸️ WAITING: Video unlocks at 9:00 PM'}
+                            : '⏸️ WAITING: Video unlocks at 10:00 PM'}
                         </div>
                         <button
                           onClick={
