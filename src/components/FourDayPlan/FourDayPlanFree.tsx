@@ -433,9 +433,9 @@ export default function FourDayPlanFree() {
         return 0; // Start from beginning if expired
       }
 
-      // If we're before 11:00 PM, start from beginning
+      // If we're before 9:00 PM, start from beginning
       if (timeSinceUnlock < 0) {
-        return 0; // Start from beginning if before 11:00 PM
+        return 0; // Start from beginning if before 9:00 PM
       }
 
       // Return the actual time elapsed since unlock (in seconds)
@@ -481,8 +481,8 @@ export default function FourDayPlanFree() {
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
     // Use the actual webinar time from database instead of hardcoded time
-    // Set to 23:00 (11:00 PM) for production
-    const unlockTime = setSeconds(setMinutes(setHours(base, 23), 0), 0); // 23:00:00 (11:00 PM)
+    // Set to 21:00 (9:00 PM) for production
+    const unlockTime = setSeconds(setMinutes(setHours(base, 21), 0), 0); // 21:00:00 (9:00 PM)
     console.log(`FourDayPlan: Unlock time for day ${day}:`, {
       startDate,
       baseDate: base.toISOString(),
@@ -1661,7 +1661,7 @@ export default function FourDayPlanFree() {
                       <div className="z-5 pointer-events-none absolute inset-x-0 bottom-6 flex items-center justify-between px-6">
                         <div className="flex items-center gap-3">
                           <div className="pointer-events-auto inline-block animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white">
-                            🎥 LIVE SESSION: Started at 11:00 PM - Running Live
+                            🎥 LIVE SESSION: Started at 9:00 PM - Running Live
                             Session {sessionElapsed}
                           </div>
                         </div>
@@ -1696,7 +1696,7 @@ export default function FourDayPlanFree() {
                         <div className="pointer-events-auto inline-block rounded-full bg-green-600 px-3 py-1 text-xs text-white">
                           {isCompleted
                             ? '✅ COMPLETED: Full playback available'
-                            : '⏸️ WAITING: Video unlocks at 11:00 PM'}
+                            : '⏸️ WAITING: Video unlocks at 9:00 PM'}
                         </div>
                         <button
                           onClick={
