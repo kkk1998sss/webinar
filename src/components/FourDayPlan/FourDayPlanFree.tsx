@@ -493,7 +493,16 @@ export default function FourDayPlanFree() {
 
       // If it's within the first 24 hours after unlock, it's in live mode
       const shouldBeLive = timeSinceUnlock >= 0;
-      // Removed console.log to prevent spam
+
+      // Add debugging for production timezone issues
+      console.log('Live mode check:', {
+        unlockTime: unlockTime.toISOString(),
+        currentTime: now.toISOString(),
+        timeSinceUnlock: Math.floor(timeSinceUnlock / 1000),
+        shouldBeLive,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+
       return shouldBeLive;
     },
     [currentTime]
@@ -507,11 +516,23 @@ export default function FourDayPlanFree() {
       const now = currentTime || new Date();
       const timeSinceUnlock = now.getTime() - unlockTime.getTime();
 
-      // Use actual video duration if available, otherwise fallback to 74 minutes (actual video duration)
-      const actualDurationSeconds = videoMetadata?.duration || 74 * 60; // 74 minutes fallback in seconds
-      const videoDurationMs = actualDurationSeconds * 1000; // Convert seconds to milliseconds
+      // Use actual video duration if available, otherwise use a longer fallback to prevent premature completion
+      // Only mark as completed if we have actual video metadata OR if it's been more than 2 hours
+      const actualDurationSeconds = videoMetadata?.duration;
+      const fallbackDurationSeconds = 2 * 60 * 60; // 2 hours fallback instead of 74 minutes
+      const videoDurationMs = actualDurationSeconds
+        ? actualDurationSeconds * 1000
+        : fallbackDurationSeconds * 1000;
 
-      // Removed console.log to prevent spam
+      // Add debugging for production issues
+      console.log('Completion check:', {
+        unlockTime: unlockTime.toISOString(),
+        currentTime: now.toISOString(),
+        timeSinceUnlock: Math.floor(timeSinceUnlock / 1000),
+        videoDuration: actualDurationSeconds || 'using 2h fallback',
+        shouldComplete: timeSinceUnlock >= videoDurationMs,
+        hasVideoMetadata: !!videoMetadata?.duration,
+      });
 
       return timeSinceUnlock >= videoDurationMs;
     },
@@ -569,18 +590,25 @@ export default function FourDayPlanFree() {
 
       // Removed console.log to prevent spam
 
-      // Auto-mark as completed if enough time has passed
+      // Auto-mark as completed if enough time has passed (but be more conservative in production)
       if (shouldMarkCompleted && !isCompleted) {
         console.log('Auto-marking video as completed due to time elapsed');
-        setVideoProgress((prev) => ({
-          ...prev,
-          [currentVideo.id]: {
-            completed: true,
-            timestamp: currentTime ? currentTime.getTime() : Date.now(),
-          },
-        }));
-        setVideoCompleted(true);
-        setIsLiveMode(false);
+        // Only auto-complete if we have actual video metadata, not fallback duration
+        if (videoMetadata?.duration) {
+          setVideoProgress((prev) => ({
+            ...prev,
+            [currentVideo.id]: {
+              completed: true,
+              timestamp: currentTime ? currentTime.getTime() : Date.now(),
+            },
+          }));
+          setVideoCompleted(true);
+          setIsLiveMode(false);
+        } else {
+          console.log(
+            'Not auto-completing - no video metadata available (using fallback duration)'
+          );
+        }
       } else if (isCompleted) {
         // Video already completed, show in playback mode
         console.log('Setting to playback mode (completed)');
@@ -615,6 +643,7 @@ export default function FourDayPlanFree() {
     videoUrl: string
   ): Promise<{ duration: number; title: string } | null> {
     try {
+      console.log('Fetching video metadata for:', videoUrl);
       const response = await fetch('/api/video-metadata', {
         method: 'POST',
         headers: {
@@ -625,8 +654,14 @@ export default function FourDayPlanFree() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Video metadata:', data);
+        console.log('Video metadata received:', data);
         return { duration: data.duration, title: data.title };
+      } else {
+        console.error(
+          'Failed to fetch video metadata:',
+          response.status,
+          response.statusText
+        );
       }
 
       return null;
