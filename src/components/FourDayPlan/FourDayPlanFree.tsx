@@ -76,10 +76,15 @@ export default function FourDayPlanFree() {
   const [videoDuration, setVideoDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showRefreshPlayButton, setShowRefreshPlayButton] = useState(false);
+  const [cachedIsLiveMode, setCachedIsLiveMode] = useState<boolean>(false);
+  const [cachedDayUnlockStatus, setCachedDayUnlockStatus] = useState<{
+    [key: number]: { isUnlocked: boolean; unlockTime: Date | null };
+  }>({});
   const playerRef = useRef<HTMLIFrameElement | null>(null);
   const videoPlayerRef = useRef<HTMLVideoElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const initialTimeSetRef = useRef<boolean>(false);
   const router = useRouter();
 
   // Dummy session object for handleJoinWebinar (Commented Out)
@@ -147,11 +152,7 @@ export default function FourDayPlanFree() {
       timerRef.current = setInterval(() => {
         const now = new Date();
         const elapsed = calculateSessionElapsedWithTime(unlockTime, now);
-        console.log('Timer update:', {
-          unlockTime: unlockTime.toISOString(),
-          currentTime: now.toISOString(),
-          elapsed,
-        });
+        // Removed console.log to prevent spam
         setSessionElapsed(elapsed);
       }, 1000);
 
@@ -417,71 +418,6 @@ export default function FourDayPlanFree() {
     [currentTime]
   );
 
-  // Simple video start time setting (like FourDayPlan.tsx)
-  useEffect(() => {
-    const video = videoPlayerRef.current;
-    if (!video || !currentVideo || !subscription?.startDate) return;
-
-    if (isLiveMode) {
-      const unlockTime = getUnlockTime(
-        subscription.startDate,
-        currentVideo.day
-      );
-      const videoStartTime = getVideoStartTime(unlockTime);
-
-      console.log('Setting video start time for live mode:', {
-        videoStartTime,
-        unlockTime: unlockTime.toISOString(),
-        currentTime: new Date().toISOString(),
-        timeSinceUnlock: Math.floor(
-          (new Date().getTime() - unlockTime.getTime()) / 1000
-        ),
-      });
-
-      // Set the video to start from the correct time
-      if (videoStartTime > 0) {
-        video.currentTime = videoStartTime;
-      }
-
-      // Auto-play the video after setting the correct time (for refresh recovery)
-      const playVideo = () => {
-        if (video.paused) {
-          video.play().catch((error) => {
-            console.log('Auto-play failed after refresh:', error);
-            // If autoplay fails and page was refreshed, show the play button
-            const wasRefreshed =
-              sessionStorage.getItem('wasRefreshed') === 'true';
-            if (wasRefreshed) {
-              setShowRefreshPlayButton(true);
-              // Clear the refresh flag
-              sessionStorage.removeItem('wasRefreshed');
-            }
-            setIsPlaying(false);
-          });
-        }
-      };
-
-      // Try to play immediately
-      playVideo();
-
-      // Also try after a short delay in case the video needs time to load
-      const playTimeout = setTimeout(() => {
-        playVideo();
-        // If still paused after delay and page was refreshed, show button
-        if (video.paused) {
-          const wasRefreshed =
-            sessionStorage.getItem('wasRefreshed') === 'true';
-          if (wasRefreshed) {
-            setShowRefreshPlayButton(true);
-            sessionStorage.removeItem('wasRefreshed');
-          }
-        }
-      }, 500);
-
-      return () => clearTimeout(playTimeout);
-    }
-  }, [currentVideo, subscription, isLiveMode, getVideoStartTime]);
-
   // Memoize paid webinars - same logic as webinar-view.tsx (Commented Out)
   // const paidWebinars = useMemo(() => {
   //   const paid: Webinar[] = [];
@@ -557,10 +493,7 @@ export default function FourDayPlanFree() {
 
       // If it's within the first 24 hours after unlock, it's in live mode
       const shouldBeLive = timeSinceUnlock >= 0;
-      console.log('Live mode check:', {
-        timeSinceUnlock: Math.floor(timeSinceUnlock / 1000),
-        shouldBeLive,
-      });
+      // Removed console.log to prevent spam
       return shouldBeLive;
     },
     [currentTime]
@@ -578,12 +511,7 @@ export default function FourDayPlanFree() {
       const actualDurationSeconds = videoMetadata?.duration || 74 * 60; // 74 minutes fallback in seconds
       const videoDurationMs = actualDurationSeconds * 1000; // Convert seconds to milliseconds
 
-      console.log('Completion check:', {
-        timeSinceUnlock: Math.floor(timeSinceUnlock / 1000),
-        videoDurationSeconds: actualDurationSeconds,
-        videoDurationMs,
-        shouldComplete: timeSinceUnlock >= videoDurationMs,
-      });
+      // Removed console.log to prevent spam
 
       return timeSinceUnlock >= videoDurationMs;
     },
@@ -606,8 +534,29 @@ export default function FourDayPlanFree() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 
+  // Cache day unlock status to prevent repeated calculations
+  useEffect(() => {
+    if (subscription?.startDate && currentTime) {
+      const newCachedStatus: {
+        [key: number]: { isUnlocked: boolean; unlockTime: Date | null };
+      } = {};
+
+      [1, 2, 3].forEach((day) => {
+        const unlockTime = getUnlockTime(subscription.startDate, day);
+        const isUnlocked = isAfter(currentTime, unlockTime);
+        newCachedStatus[day] = { isUnlocked, unlockTime };
+      });
+
+      setCachedDayUnlockStatus(newCachedStatus);
+    }
+  }, [subscription?.startDate, currentTime]);
+
   // Reset live mode when video changes
   useEffect(() => {
+    // Reset the initial time flag and cached values when video changes
+    initialTimeSetRef.current = false;
+    setCachedIsLiveMode(false);
+
     if (currentVideo && subscription?.startDate) {
       const videoStatus = videoProgress[currentVideo.id];
       const unlockTime = getUnlockTime(
@@ -618,14 +567,7 @@ export default function FourDayPlanFree() {
       const shouldBeLive = shouldBeInLiveMode(unlockTime, isCompleted);
       const shouldMarkCompleted = shouldMarkAsCompleted(unlockTime);
 
-      console.log('Live mode state update:', {
-        videoId: currentVideo.id,
-        isCompleted,
-        shouldBeLive,
-        shouldMarkCompleted,
-        videoDuration: videoMetadata?.duration,
-        currentIsLiveMode: isLiveMode,
-      });
+      // Removed console.log to prevent spam
 
       // Auto-mark as completed if enough time has passed
       if (shouldMarkCompleted && !isCompleted) {
@@ -1023,6 +965,86 @@ export default function FourDayPlanFree() {
     }
   };
 
+  // Video start time setting - only run once when entering live mode
+  useEffect(() => {
+    const video = videoPlayerRef.current;
+    if (!video || !currentVideo || !subscription?.startDate) return;
+
+    // Calculate unlock time and video state
+    const unlockTime = getUnlockTime(subscription.startDate, currentVideo.day);
+    const videoStatus = videoProgress[currentVideo.id];
+    const isCompleted = videoStatus?.completed || false;
+    const shouldBeLive = shouldBeInLiveMode(unlockTime, isCompleted);
+    const videoStartTime = getVideoStartTime(unlockTime);
+
+    // Cache the calculated values to prevent repeated calculations
+    setCachedIsLiveMode(shouldBeLive);
+
+    // Only set video time if we're in live mode and haven't set it yet
+    if (shouldBeLive && !initialTimeSetRef.current) {
+      console.log('Setting video start time for live mode (one-time):', {
+        videoStartTime,
+        unlockTime: unlockTime.toISOString(),
+        currentTime: new Date().toISOString(),
+        timeSinceUnlock: Math.floor(
+          (new Date().getTime() - unlockTime.getTime()) / 1000
+        ),
+      });
+
+      // Set the video to start from the correct time (only once)
+      if (videoStartTime > 0) {
+        video.currentTime = videoStartTime;
+      }
+
+      // Mark that we've set the initial time
+      initialTimeSetRef.current = true;
+    }
+
+    // Auto-play the video after setting the correct time (for refresh recovery)
+    const playVideo = () => {
+      if (video.paused) {
+        video.play().catch((error) => {
+          console.log('Auto-play failed after refresh:', error);
+          // If autoplay fails and page was refreshed, show the play button
+          const wasRefreshed =
+            sessionStorage.getItem('wasRefreshed') === 'true';
+          if (wasRefreshed) {
+            setShowRefreshPlayButton(true);
+            // Clear the refresh flag
+            sessionStorage.removeItem('wasRefreshed');
+          }
+          setIsPlaying(false);
+        });
+      }
+    };
+
+    // Try to play immediately
+    playVideo();
+
+    // Also try after a short delay in case the video needs time to load
+    const playTimeout = setTimeout(() => {
+      playVideo();
+      // If still paused after delay and page was refreshed, show button
+      if (video.paused) {
+        const wasRefreshed = sessionStorage.getItem('wasRefreshed') === 'true';
+        if (wasRefreshed) {
+          setShowRefreshPlayButton(true);
+          sessionStorage.removeItem('wasRefreshed');
+        }
+      }
+    }, 500);
+
+    return () => clearTimeout(playTimeout);
+  }, [
+    currentVideo,
+    subscription,
+    videoProgress,
+    currentTime,
+    videoMetadata,
+    shouldBeInLiveMode,
+    getVideoStartTime,
+  ]);
+
   // Exit fullscreen on ESC or when fullscreen is closed
   useEffect(() => {
     const exitHandler = () => {
@@ -1160,20 +1182,10 @@ export default function FourDayPlanFree() {
             <div className="grid flex-1 grid-cols-3 gap-4">
               {[1, 2, 3].map((day) => {
                 const video = videos.find((v) => v.day === day);
-                // Only unlock if subscription exists and time has passed
-                let isUnlocked = false;
-                let unlockTime: Date | null = null;
-                if (subscription?.startDate) {
-                  unlockTime = getUnlockTime(subscription.startDate, day);
-                  isUnlocked = isAfter(currentTime, unlockTime);
-
-                  console.log(`Day ${day} unlock check:`, {
-                    startDate: subscription.startDate,
-                    unlockTime: unlockTime?.toISOString(),
-                    currentTime: currentTime?.toISOString(),
-                    isUnlocked,
-                  });
-                }
+                // Use cached values to prevent repeated calculations
+                const cachedStatus = cachedDayUnlockStatus[day];
+                const isUnlocked = cachedStatus?.isUnlocked || false;
+                const unlockTime = cachedStatus?.unlockTime || null;
                 const isCurrent = currentVideo?.day === day;
 
                 return (
@@ -1335,16 +1347,10 @@ export default function FourDayPlanFree() {
                 // --- NEW VIDEO PLAYER CODE WITH LIVE MODE LOGIC ---
                 const videoStatus = videoProgress[currentVideo.id];
                 const isCompleted = videoStatus?.completed || false;
-                const isLiveMode = shouldBeInLiveMode(unlockTime, isCompleted);
-                const videoStartTime = getVideoStartTime(unlockTime);
 
-                console.log('Video player state:', {
-                  videoId: currentVideo.id,
-                  isCompleted,
-                  isLiveMode,
-                  videoStartTime,
-                  unlockTime: unlockTime?.toISOString(),
-                });
+                // Use cached values to prevent repeated calculations
+                const isLiveMode = cachedIsLiveMode;
+                // const videoStartTime = cachedVideoStartTime;
 
                 return (
                   <div
