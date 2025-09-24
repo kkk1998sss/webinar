@@ -7,6 +7,7 @@ import Script from 'next/script';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
+// import { VideoPlayer } from '@/components/VideoPlayer';
 import { Webinar } from '@/types/user';
 
 interface Props {

@@ -6,6 +6,7 @@ import Script from 'next/script';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 
+import { VideoPlayer } from '@/components/VideoPlayer';
 import { Webinar } from '@/types/user';
 
 interface Props {
@@ -55,6 +56,8 @@ export function PaidWebinarSection({ webinars }: Props) {
   const [webinarToDelete, setWebinarToDelete] = useState<Webinar | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [selectedWebinar, setSelectedWebinar] = useState<Webinar | null>(null);
   const router = useRouter();
   const { data: session } = useSession();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -69,6 +72,40 @@ export function PaidWebinarSection({ webinars }: Props) {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollBy({ left: 520, behavior: 'smooth' });
     }
+  };
+
+  // Helper: Check if webinar is past (more than 2 hours old)
+  const isPastWebinar = (webinar: Webinar): boolean => {
+    if (!webinar.webinarDate || !webinar.webinarTime) return false;
+
+    const webinarDate = new Date(webinar.webinarDate);
+    const [hours, minutes] = webinar.webinarTime.split(':').map(Number);
+    const webinarStartTime = new Date(webinarDate);
+    webinarStartTime.setHours(hours, minutes, 0, 0);
+
+    const now = new Date();
+    const timeSinceStart = now.getTime() - webinarStartTime.getTime();
+    const twoHours = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+
+    return timeSinceStart > twoHours;
+  };
+
+  // Helper: Convert webinar to ZataVideo format for VideoPlayer
+  const convertWebinarToZataVideo = (webinar: Webinar) => {
+    const videoUrl = webinar.youtubeLink || webinar.video?.url;
+    if (!videoUrl) return [];
+
+    return [
+      {
+        id: webinar.id,
+        name: webinar.webinarTitle,
+        url: videoUrl,
+        size: 0,
+        contentType: 'video/mp4',
+        lastModified: webinar.createdAt || new Date().toISOString(),
+        duration: 0,
+      },
+    ];
   };
 
   // Check user's payment history on component mount
@@ -142,8 +179,12 @@ export function PaidWebinarSection({ webinars }: Props) {
     if (webinar?.showThankYouPage) {
       // Show thank you page if manually enabled
       router.push('/thank-you');
+    } else if (webinar && isPastWebinar(webinar)) {
+      // For past webinars, open video player directly
+      setSelectedWebinar(webinar);
+      setShowVideoPlayer(true);
     } else {
-      // Default behavior: redirect to playing area
+      // For live/future webinars, redirect to playing area
       toast.success('Redirecting to playing area...');
       router.push(`/users/playing-area/${id}`);
     }
@@ -154,8 +195,12 @@ export function PaidWebinarSection({ webinars }: Props) {
     if (webinar.showThankYouPage) {
       toast.success('Redirecting to thank you page...');
       router.push('/thank-you');
+    } else if (isPastWebinar(webinar)) {
+      // For past webinars, open video player directly
+      setSelectedWebinar(webinar);
+      setShowVideoPlayer(true);
     } else {
-      // Default behavior: redirect to playing area
+      // For live/future webinars, redirect to playing area
       toast.success('Redirecting to playing area...');
       router.push(`/users/playing-area/${webinar.id}`);
     }
@@ -771,6 +816,18 @@ export function PaidWebinarSection({ webinars }: Props) {
             </div>
           </motion.div>
         </div>
+      )}
+
+      {/* Video Player Modal for Past Webinars */}
+      {showVideoPlayer && selectedWebinar && (
+        <VideoPlayer
+          videos={convertWebinarToZataVideo(selectedWebinar)}
+          initialVideoIndex={0}
+          onClose={() => {
+            setShowVideoPlayer(false);
+            setSelectedWebinar(null);
+          }}
+        />
       )}
     </>
   );

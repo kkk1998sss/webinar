@@ -346,12 +346,35 @@ export class ZataService {
       const params = {
         Bucket: this.bucketName,
         Key: key,
-        Expires: 3600, // 1 hour
+        Expires: 86400 * 7, // 7 days (maximum allowed for SigV4)
       };
 
       return s3.getSignedUrl('getObject', params);
     } catch (error) {
       console.error('Error generating video URL:', error);
+      return '';
+    }
+  }
+
+  /**
+   * Generate a fresh presigned URL for video streaming (public API)
+   */
+  public getFreshVideoUrl(key: string): string {
+    try {
+      console.log(`🔄 Generating fresh video URL for: ${key}`);
+      const params = {
+        Bucket: this.bucketName,
+        Key: key,
+        Expires: 86400 * 7, // 7 days (maximum allowed for SigV4)
+      };
+
+      const freshUrl = s3.getSignedUrl('getObject', params);
+      console.log(
+        `✅ Fresh video URL generated: ${freshUrl.substring(0, 100)}...`
+      );
+      return freshUrl;
+    } catch (error) {
+      console.error('Error generating fresh video URL:', error);
       return '';
     }
   }

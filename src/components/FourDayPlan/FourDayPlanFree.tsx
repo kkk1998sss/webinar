@@ -75,6 +75,7 @@ export default function FourDayPlanFree() {
   const [videoCurrentTime, setVideoCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showRefreshPlayButton, setShowRefreshPlayButton] = useState(false);
   const playerRef = useRef<HTMLIFrameElement | null>(null);
   const videoPlayerRef = useRef<HTMLVideoElement | null>(null);
   const videoCheckRef = useRef<NodeJS.Timeout | null>(null);
@@ -101,6 +102,14 @@ export default function FourDayPlanFree() {
     setIsIOS(isIOSDevice);
 
     console.log('Device detection:', { isIOS: isIOSDevice, userAgent });
+
+    // Detect if page was refreshed (for mobile play button)
+    const wasRefreshed = performance.navigation.type === 1;
+    if (wasRefreshed) {
+      console.log('Page was refreshed - will show play button if needed');
+      // Set a flag that we'll check when live mode is active
+      sessionStorage.setItem('wasRefreshed', 'true');
+    }
 
     // For iOS devices, try to enable autoplay by triggering a user interaction
     if (isIOSDevice) {
@@ -433,6 +442,43 @@ export default function FourDayPlanFree() {
       if (videoStartTime > 0) {
         video.currentTime = videoStartTime;
       }
+
+      // Auto-play the video after setting the correct time (for refresh recovery)
+      const playVideo = () => {
+        if (video.paused) {
+          video.play().catch((error) => {
+            console.log('Auto-play failed after refresh:', error);
+            // If autoplay fails and page was refreshed, show the play button
+            const wasRefreshed =
+              sessionStorage.getItem('wasRefreshed') === 'true';
+            if (wasRefreshed) {
+              setShowRefreshPlayButton(true);
+              // Clear the refresh flag
+              sessionStorage.removeItem('wasRefreshed');
+            }
+            setIsPlaying(false);
+          });
+        }
+      };
+
+      // Try to play immediately
+      playVideo();
+
+      // Also try after a short delay in case the video needs time to load
+      const playTimeout = setTimeout(() => {
+        playVideo();
+        // If still paused after delay and page was refreshed, show button
+        if (video.paused) {
+          const wasRefreshed =
+            sessionStorage.getItem('wasRefreshed') === 'true';
+          if (wasRefreshed) {
+            setShowRefreshPlayButton(true);
+            sessionStorage.removeItem('wasRefreshed');
+          }
+        }
+      }, 500);
+
+      return () => clearTimeout(playTimeout);
     }
   }, [currentVideo, subscription, isLiveMode, getVideoStartTime]);
 
@@ -1452,65 +1498,61 @@ export default function FourDayPlanFree() {
                       </div>
                     )}
 
-                    {/* Simple iOS Play Button - Only for iOS devices in live mode */}
-                    {isIOS && isLiveMode && (
-                      <div className="absolute left-2 top-12 z-10 sm:left-4 sm:top-16">
+                    {/* Mobile Play Button - Only after page refresh in live mode */}
+                    {isLiveMode && showRefreshPlayButton && (
+                      <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 sm:hidden">
                         <button
                           onClick={() => {
-                            const currentPlayer =
-                              currentVideo?.videoUrl.includes('idr01.zata.ai')
-                                ? videoPlayerRef.current
-                                : playerRef.current;
+                            const video = videoPlayerRef.current;
+                            if (
+                              video &&
+                              currentVideo &&
+                              subscription?.startDate
+                            ) {
+                              // Calculate correct start time for live mode
+                              const unlockTime = getUnlockTime(
+                                subscription.startDate,
+                                currentVideo.day
+                              );
+                              const videoStartTime =
+                                getVideoStartTime(unlockTime);
 
-                            if (currentPlayer) {
-                              // Try multiple strategies to start the video
-                              try {
-                                // For Zata AI video elements
-                                if (currentPlayer === videoPlayerRef.current) {
-                                  const video = videoPlayerRef.current;
-                                  if (video) {
-                                    video.play().catch(console.error);
-                                  }
+                              console.log(
+                                'Manual play button - setting correct time:',
+                                {
+                                  videoStartTime,
+                                  unlockTime: unlockTime.toISOString(),
                                 }
-                                // For iframe players (YouTube/Vimeo)
-                                else if (currentPlayer === playerRef.current) {
-                                  // Strategy 1: Force iframe reload
-                                  const currentSrc = playerRef.current.src;
-                                  playerRef.current.src = '';
-                                  setTimeout(() => {
-                                    if (playerRef.current) {
-                                      playerRef.current.src = currentSrc;
-                                    }
-                                  }, 100);
+                              );
 
-                                  // Strategy 2: Try to trigger autoplay via postMessage for YouTube
-                                  setTimeout(() => {
-                                    try {
-                                      if (
-                                        playerRef.current &&
-                                        playerRef.current.contentWindow
-                                      ) {
-                                        playerRef.current.contentWindow.postMessage(
-                                          '{"event":"command","func":"playVideo","args":""}',
-                                          '*'
-                                        );
-                                      }
-                                    } catch (e) {
-                                      console.log(
-                                        'YouTube postMessage failed:',
-                                        e
-                                      );
-                                    }
-                                  }, 500);
-                                }
-                              } catch (e) {
-                                console.log('iOS play button failed:', e);
+                              // Set the correct time and play
+                              if (videoStartTime > 0) {
+                                video.currentTime = videoStartTime;
                               }
+
+                              // Try to play the video
+                              video.play().catch((error) => {
+                                console.log('Manual play failed:', error);
+                                // If still fails, reload the video
+                                video.load();
+                                setTimeout(() => {
+                                  if (videoStartTime > 0) {
+                                    video.currentTime = videoStartTime;
+                                  }
+                                  video.play().catch(console.error);
+                                }, 200);
+                              });
+
+                              // Hide the button after clicking
+                              setShowRefreshPlayButton(false);
                             }
                           }}
-                          className="rounded bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700"
+                          className="flex size-16 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transition-all hover:scale-110 hover:bg-red-700"
+                          style={{
+                            backdropFilter: 'blur(4px)',
+                          }}
                         >
-                          ▶️ Play
+                          <Play className="ml-1 size-8" />
                         </button>
                       </div>
                     )}
@@ -1552,8 +1594,7 @@ export default function FourDayPlanFree() {
                       <div className="z-5 pointer-events-none absolute inset-x-0 bottom-6 flex items-center justify-between px-6">
                         <div className="flex items-center gap-3">
                           <div className="pointer-events-auto inline-block animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white">
-                            🎥 LIVE SESSION: Started at 9:00 PM - Running Live
-                            Session {sessionElapsed}
+                            🎥 Running Live Session {sessionElapsed}
                           </div>
                         </div>
                         <button
