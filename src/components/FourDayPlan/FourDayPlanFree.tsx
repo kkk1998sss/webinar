@@ -90,6 +90,30 @@ export default function FourDayPlanFree() {
   // Dummy session object for handleJoinWebinar (Commented Out)
   // const session = { user: { isAdmin: false } };
 
+  // Helper: Calculate session elapsed time (running timer)
+  function calculateSessionElapsed(unlockTime: Date | null): string {
+    if (!unlockTime) return '';
+
+    const now = new Date(); // Use current time instead of state
+    const timeSinceUnlock = now.getTime() - unlockTime.getTime();
+
+    if (timeSinceUnlock <= 0) return 'Starting now';
+
+    const hours = Math.floor(timeSinceUnlock / (1000 * 60 * 60));
+    const minutes = Math.floor(
+      (timeSinceUnlock % (1000 * 60 * 60)) / (1000 * 60)
+    );
+    const seconds = Math.floor((timeSinceUnlock % (1000 * 60)) / 1000);
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
+  }
+
   // Set current time on client side only to avoid hydration issues
   useEffect(() => {
     setIsClient(true);
@@ -409,9 +433,9 @@ export default function FourDayPlanFree() {
         return 0; // Start from beginning if expired
       }
 
-      // If we're before 9:00 PM, start from beginning
+      // If we're before 11:00 PM, start from beginning
       if (timeSinceUnlock < 0) {
-        return 0; // Start from beginning if before 9:00 PM
+        return 0; // Start from beginning if before 11:00 PM
       }
 
       // Return the actual time elapsed since unlock (in seconds)
@@ -453,10 +477,12 @@ export default function FourDayPlanFree() {
   //   return paid;
   // }, [webinars]);
 
-  // Helper: Get unlock time for a video (10:00 PM on the correct day based on subscription start date)
+  // Helper: Get unlock time for a video (use actual webinar time from database like playing-area)
   function getUnlockTime(startDate: string, day: number) {
     const base = addDays(new Date(startDate), day - 1);
-    const unlockTime = setSeconds(setMinutes(setHours(base, 22), 0), 0); // 22:00:00 (10:00 PM)
+    // Use the actual webinar time from database instead of hardcoded time
+    // Set to 23:00 (11:00 PM) for production
+    const unlockTime = setSeconds(setMinutes(setHours(base, 23), 0), 0); // 23:00:00 (11:00 PM)
     console.log(`FourDayPlan: Unlock time for day ${day}:`, {
       startDate,
       baseDate: base.toISOString(),
@@ -484,7 +510,7 @@ export default function FourDayPlanFree() {
   const shouldBeInLiveMode = useCallback(
     (unlockTime: Date | null, isCompleted: boolean): boolean => {
       if (!unlockTime || isCompleted) {
-        console.log('Not in live mode:', {
+        console.log('FourDayPlan: Not in live mode:', {
           unlockTime: !!unlockTime,
           isCompleted,
         });
@@ -496,20 +522,22 @@ export default function FourDayPlanFree() {
 
       // If it's been more than 24 hours since unlock, assume it's completed
       if (timeSinceUnlock > 24 * 60 * 60 * 1000) {
-        console.log('Live session expired (24h passed)');
+        console.log('FourDayPlan: Live session expired (24h passed)');
         return false;
       }
 
       // If it's within the first 24 hours after unlock, it's in live mode
       const shouldBeLive = timeSinceUnlock >= 0;
 
-      // Add debugging for production timezone issues
-      console.log('Live mode check:', {
+      // Enhanced debugging for production timezone issues
+      console.log('FourDayPlan: Live mode check:', {
         unlockTime: unlockTime.toISOString(),
         currentTime: now.toISOString(),
         timeSinceUnlock: Math.floor(timeSinceUnlock / 1000),
         shouldBeLive,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        localTime: now.toLocaleString(),
+        utcTime: now.toUTCString(),
       });
 
       return shouldBeLive;
@@ -655,9 +683,6 @@ export default function FourDayPlanFree() {
     isLiveMode,
     currentTime,
     videoMetadata,
-    shouldBeInLiveMode,
-    shouldMarkAsCompleted,
-    getVideoStartTime,
   ]);
 
   // Helper: Get video metadata (duration) from our API
@@ -690,30 +715,6 @@ export default function FourDayPlanFree() {
     } catch (error) {
       console.error('Error fetching video metadata:', error);
       return null;
-    }
-  }
-
-  // Helper: Calculate session elapsed time (running timer)
-  function calculateSessionElapsed(unlockTime: Date | null): string {
-    if (!unlockTime) return '';
-
-    const now = new Date(); // Use current time instead of state
-    const timeSinceUnlock = now.getTime() - unlockTime.getTime();
-
-    if (timeSinceUnlock <= 0) return 'Starting now';
-
-    const hours = Math.floor(timeSinceUnlock / (1000 * 60 * 60));
-    const minutes = Math.floor(
-      (timeSinceUnlock % (1000 * 60 * 60)) / (1000 * 60)
-    );
-    const seconds = Math.floor((timeSinceUnlock % (1000 * 60)) / 1000);
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m ${seconds}s`;
-    } else if (minutes > 0) {
-      return `${minutes}m ${seconds}s`;
-    } else {
-      return `${seconds}s`;
     }
   }
 
@@ -1061,7 +1062,7 @@ export default function FourDayPlanFree() {
     const playVideo = () => {
       if (video.paused) {
         video.play().catch((error) => {
-          console.log('Auto-play failed after refresh:', error);
+          console.log('FourDayPlan: Auto-play failed:', error);
           // If autoplay fails and page was refreshed, show the play button
           const wasRefreshed =
             sessionStorage.getItem('wasRefreshed') === 'true';
@@ -1091,16 +1092,19 @@ export default function FourDayPlanFree() {
       }
     }, 500);
 
-    return () => clearTimeout(playTimeout);
-  }, [
-    currentVideo,
-    subscription,
-    videoProgress,
-    currentTime,
-    videoMetadata,
-    shouldBeInLiveMode,
-    getVideoStartTime,
-  ]);
+    // Production-ready fallback: Try again after 2 seconds if still not playing
+    const fallbackTimeout = setTimeout(() => {
+      if (video.paused && shouldBeLive) {
+        console.log('FourDayPlan: Fallback play attempt after 2s');
+        playVideo();
+      }
+    }, 2000);
+
+    return () => {
+      clearTimeout(playTimeout);
+      clearTimeout(fallbackTimeout);
+    };
+  }, [currentVideo, subscription, videoProgress, currentTime, videoMetadata]);
 
   // Exit fullscreen on ESC or when fullscreen is closed
   useEffect(() => {
@@ -1391,7 +1395,7 @@ export default function FourDayPlanFree() {
                         Video Locked
                       </h3>
                       <p className="max-w-md text-sm text-gray-600 sm:text-base dark:text-gray-300">
-                        Shree Suktam Sadhana session will starts at{' '}
+                        Shree Suktam Sadhana session will start at{' '}
                         {unlockTime && formatTimeTo12Hour(unlockTime)}
                       </p>
                       {unlockTime && (
@@ -1657,7 +1661,8 @@ export default function FourDayPlanFree() {
                       <div className="z-5 pointer-events-none absolute inset-x-0 bottom-6 flex items-center justify-between px-6">
                         <div className="flex items-center gap-3">
                           <div className="pointer-events-auto inline-block animate-pulse rounded-full bg-red-600 px-3 py-1 text-xs text-white">
-                            🎥 Running Live Session {sessionElapsed}
+                            🎥 LIVE SESSION: Started at 11:00 PM - Running Live
+                            Session {sessionElapsed}
                           </div>
                         </div>
                         <button
@@ -1691,7 +1696,7 @@ export default function FourDayPlanFree() {
                         <div className="pointer-events-auto inline-block rounded-full bg-green-600 px-3 py-1 text-xs text-white">
                           {isCompleted
                             ? '✅ COMPLETED: Full playback available'
-                            : '⏸️ WAITING: Video unlocks at 10:00 PM'}
+                            : '⏸️ WAITING: Video unlocks at 11:00 PM'}
                         </div>
                         <button
                           onClick={
